@@ -1,4 +1,4 @@
-use utility::{uint, int};
+use taurus::utility::{uint, int};
 use coord::Coord;
 
 /// Data structure for the player, enemies, NPCs, etc.

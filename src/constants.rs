@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use utility::uint;
+use taurus::utility::uint;
 
 pub const TITLE: &'static str = "Taurus";
 pub const SCR_WIDTH: uint = 80;

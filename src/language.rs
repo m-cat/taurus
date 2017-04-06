@@ -1,4 +1,3 @@
-use constants;
 use utility::{dice, rand_range};
 
 /// Capitalize the first letter of the string
@@ -9,21 +8,21 @@ pub fn cap(s: &String) -> String {
 }
 
 /// Return a randomly-generated name
-pub fn name_gen() -> String {
+pub fn name_gen(max_len: usize) -> String {
     // Define the list of consonant, double consonant, etc. sequences
     let consonants = "bdfgklmnprsstvx";
     let start_consonants = "bdfghklmnprsstvwjz";
     let end_consonants = "bdfghklnprsstx";
     let dconsonants = "brchcttrthghdrmmttllstqu";
-    let start_dconsonants = "brchcltrthdrslwhphblcrfrwrgrstqu";
+    let start_dconsonants = "brchcltrthdrslphblcrfrgrstquvrwhwr";
     let end_dconsonants = "chthghstrm";
-    let tconsonants = "strthrchr";
+    let tconsonants = "chrstrthr";
     let vowels = "aaeeiioouy";
     let end_vowels = "aio";
     let dvowels = "ioiaai";
     let end_dvowels = "ia";
 
-    let mut word = String::with_capacity(constants::MAX_NAME_LEN);
+    let mut word = String::with_capacity(max_len);
 
     // Pick starting sequence
     let mut is_vowel = dice(1, 3); // start with vowel?
@@ -40,7 +39,7 @@ pub fn name_gen() -> String {
 
     // Alternate between choosing vowel and consonant sequences
     let mut m = rand_range(2, 5);
-    while m > 0 && word.len() < constants::MAX_NAME_LEN {
+    while m > 0 && word.len() < max_len {
         m -= 1;
         is_vowel = !is_vowel;
         if is_vowel {

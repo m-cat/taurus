@@ -21,11 +21,15 @@ Leave the physical universe for 1 turn. A voidwalked mystic cannot interact with
 ** Hammers 
 * Wanderers
 Legends have it that the dungeon is haunted by the lost souls of adventurers who once sought its divine rewards. Many of these beings have been driven mad by what they have seen, or have been lost for so long that they cannot remember what it was that they were seeking. Now these lost souls are doomed to wander the dungeon until some adventurer provides them the mercy of death.
+** Ethron
 ** Hyl
 ** Navyva
 ** Otrox
-** Trammus
+** Thrammus
+** Vrenix
 ** Whammag
+** Ychra
+** Ytyst
 * Glossary
 ** identification
 See [[*Identification][Identification]]
@@ -35,3 +39,5 @@ A distinct depth of the dungeon. Sometimes referred to as a "dungeon level".
 See [[*Traits][Traits]]
 ** turn
 The main unit of game time. See [[*Turns][Turns]]
+** wanderer
+See [[*Wanderers][Wanderers]]

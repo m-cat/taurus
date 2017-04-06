@@ -1,15 +1,13 @@
-extern crate rand;
-extern crate num;
-
 extern crate tcod;
 
+extern crate taurus;
+
 mod constants;
-mod utility;
 mod actor;
 
 use constants::*;
-use utility::language;
-use utility::coord;
+use taurus::language;
+use taurus::coord;
 use tcod::console::*;
 use tcod::colors;
 
@@ -30,6 +28,6 @@ fn main() {
     }
 
     for _ in 1..1000 {
-        println!("{}", language::name_gen());
+        println!("{}", language::name_gen(constants::MAX_NAME_LEN));
     }
 }
