@@ -1,0 +1,9 @@
+[package]
+name = "taurus"
+version = "0.1.0"
+authors = ["m-cat <scatman@bu.edu>"]
+
+[dependencies]
+rand="0.3.0"
+num="0.1"
+tcod = "0.11"
