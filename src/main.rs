@@ -1,3 +1,6 @@
+//! Taurus - main.rs
+//! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
+
 extern crate tcod;
 
 extern crate taurus;

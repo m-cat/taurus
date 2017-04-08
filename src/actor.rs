@@ -1,3 +1,8 @@
+//! Taurus - actor.rs
+//! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
+
+#![allow(dead_code)]
+
 use taurus::utility::{uint, int};
 use coord::Coord;
 

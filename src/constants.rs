@@ -1,3 +1,6 @@
+//! Taurus - constants.rs
+//! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
+
 #![allow(dead_code)]
 
 use taurus::utility::uint;
@@ -8,6 +11,11 @@ pub const SCR_HEIGHT: uint = 50;
 pub const FPS: uint = 60;
 
 pub const MAX_NAME_LEN: usize = 20;
+
+// GAME DATA LOCATIONS
+
+pub const ORG_DIRECTORY: &'static str = "org";
+pub const ORG_MANUAL: &'static str = "manual.org";
 
 // DEFAULT SETTINGS
 

@@ -1,14 +1,18 @@
 * Gameplay
 ** Traits
-Traits impart some unusual or extraordinary qualities to a creature.
-*** Strong
+Traits signify some unusual or extraordinary qualities in a creature.
+*** Horned
+This trait signifies the presence of horns on a creature that usually does not have them. Such creatures may or may not know how to use this potential weapon to their advantage.
 *** Beefy
 ** Items
 *** Stacks
+Items in the dungeon can occur either individually or in stacks. A stack is formed when two or more items occupy the same tile. You can only see the top-most item in a stack from afar, but you can examine an entire stack when you occupy the same tile. 
 ** Identification
 To identify an item means to find out either what it is, in the case of something like a potion, or what its attributes are, in the case of equipable items like swords and shields. There are several different means of identification, such as spells, scrolls of identify, and simple usage of the item in question. Identification is not always required, as is the case with low-level equipment and common items such as healing potions.
 ** Turns
 A turn is a unit of game time, during which each entity in the game gets a "turn" to perform an action. Actions include things like walking one square, eating, and attacking, and usually they take up a single turn. For example, in a typical battle the player may attack, after which one or more enemies will also attack once each. If the player survives, he gets to make another move. You may find that as you progress through the dungeon this typical scenario occurs less and less frequently as faster monsters begin appearing. This is because the amount an entity can perform in one turn is determined by its speed. An entity with the most common speed of 1 can perform 1 action a turn; this same entity when hasted will have a speed of .5, allowing it to perform 2 actions every turn.
+** Wanderers
+Legends have it that the dungeon is haunted by the lost souls of adventurers who once sought its divine rewards. Many of these beings have been driven mad by what they have seen, or have been lost for so long that they cannot remember what it was that they were seeking. Now these lost souls are doomed to wander the dungeon until some adventurer provides them the mercy of death.
 * Races
 * Classes
 ** Mystics
@@ -19,22 +23,13 @@ A turn is a unit of game time, during which each entity in the game gets a "turn
 Leave the physical universe for 1 turn. A voidwalked mystic cannot interact with the game in any way during this turn.
 * Weapons
 ** Hammers 
-* Wanderers
-Legends have it that the dungeon is haunted by the lost souls of adventurers who once sought its divine rewards. Many of these beings have been driven mad by what they have seen, or have been lost for so long that they cannot remember what it was that they were seeking. Now these lost souls are doomed to wander the dungeon until some adventurer provides them the mercy of death.
-** Ethron
-** Hyl
-** Navyva
-** Otrox
-** Thrammus
-** Vrenix
-** Whammag
-** Ychra
-** Ytyst
 * Glossary
 ** identification
 See [[*Identification][Identification]]
 ** layer
 A distinct depth of the dungeon. Sometimes referred to as a "dungeon level".
+** soul
+The soul is the essence of being that animates all conscious lifeforms. Not everyone believes in the existence of souls.
 ** trait
 See [[*Traits][Traits]]
 ** turn

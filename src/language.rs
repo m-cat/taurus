@@ -1,3 +1,6 @@
+//! Taurus - language.rs
+//! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
+
 use utility::{dice, rand_range};
 
 /// Capitalize the first letter of the string
@@ -15,11 +18,11 @@ pub fn name_gen(max_len: usize) -> String {
     let end_consonants = "bdfghklnprsstx";
     let dconsonants = "brchcttrthghdrmmttllstqu";
     let start_dconsonants = "brchcltrthdrslphblcrfrgrstquvrwhwr";
-    let end_dconsonants = "chthghstrm";
+    let end_dconsonants = "chghrmstth";
     let tconsonants = "chrstrthr";
     let vowels = "aaeeiioouy";
     let end_vowels = "aio";
-    let dvowels = "ioiaai";
+    let dvowels = "aiiaio";
     let end_dvowels = "ia";
 
     let mut word = String::with_capacity(max_len);

@@ -1,2 +1,2 @@
-# taurus
-captivating roguelike game
+# Taurus
+

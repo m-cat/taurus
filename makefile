@@ -1,17 +1,17 @@
-run: test build
+run: build
 	cargo run
 
 build: format
 	cargo build
 
 format:
-	cargo fmt    # run rustfmt
+	cargo fmt # run rustfmt
 
 test:
 	cargo test
 
 clippy:
-	cargo clippy # run clippy
+	cargo clippy
 
 clean:
 	rm src/*.bk

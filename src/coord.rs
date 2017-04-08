@@ -1,3 +1,6 @@
+//! Taurus - coord.rs
+//! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
+
 use utility;
 use utility::uint;
 
