@@ -4,10 +4,10 @@
 use utility;
 use utility::uint;
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Hash)]
 pub struct Coord {
-    pub x: uint,
-    pub y: uint,
+    x: uint,
+    y: uint,
 }
 
 impl Coord {

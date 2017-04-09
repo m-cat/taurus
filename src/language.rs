@@ -21,8 +21,8 @@ pub fn name_gen(max_len: usize) -> String {
     let end_dconsonants = "chghrmstth";
     let tconsonants = "chrstrthr";
     let vowels = "aaeeiioouy";
-    let end_vowels = "aio";
-    let dvowels = "aiiaio";
+    let end_vowels = "aou";
+    let dvowels = "iaio";
     let end_dvowels = "ia";
 
     let mut word = String::with_capacity(max_len);
@@ -50,13 +50,13 @@ pub fn name_gen(max_len: usize) -> String {
             if m == 0 {
                 // Last sequence
                 let c = match rand_range(1, 100) {
-                    1...80 => pick_seq(&end_vowels, 1),
+                    1...90 => pick_seq(&end_vowels, 1),
                     _ => pick_seq(&end_dvowels, 2),
                 };
                 word.push_str(c);
             } else {
                 let c = match rand_range(1, 100) {
-                    1...80 => pick_seq(&vowels, 1),
+                    1...85 => pick_seq(&vowels, 1),
                     _ => pick_seq(&dvowels, 2),
                 };
                 word.push_str(c);

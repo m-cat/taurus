@@ -3,17 +3,23 @@
 
 #![allow(dead_code)]
 
+use std::cmp::Ordering;
+
 use taurus::utility::{uint, int};
 use coord::Coord;
 
-/// Data structure for the player, enemies, NPCs, etc.
+/// An actor is any entity which could conceivably `act`, that is, have a turn.
+/// Only one actor can occupy a tile at a time.
+/// For things like doors and traps, we have a separate struct named Object.
+/// An object can share a tile with an actor.
 pub struct Actor {
     kind: ActorEnum,
     /// Character to draw with
     c: char,
-
     /// Coordinate location in level
     xy: Coord,
+    /// Current turn
+    turn: uint,
 
     // STATS
     hp_cur: int,
@@ -32,4 +38,10 @@ enum ActorEnum {
 }
 
 enum AggrEnum {
+}
+
+impl Ord for Actor {
+    fn cmp(&self, other: &Actor) -> Ordering {
+
+    }
 }

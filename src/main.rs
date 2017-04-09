@@ -7,6 +7,8 @@ extern crate taurus;
 
 mod constants;
 mod actor;
+mod tile;
+mod dungeon;
 
 use constants::*;
 use taurus::language;

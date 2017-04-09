@@ -22,5 +22,3 @@ fn test_process_org() {
 
     fs::remove_file(path2).unwrap();
 }
-
-

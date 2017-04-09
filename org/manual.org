@@ -16,6 +16,7 @@ Legends have it that the dungeon is haunted by the lost souls of adventurers who
 * Races
 * Classes
 ** Mystics
+** Empaths
 * Abilities
 ** Mysticism
 *** Mindflay
