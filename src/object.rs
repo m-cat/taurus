@@ -1,6 +1,7 @@
 //! Taurus - object.rs
 //! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
 
+use taurus::coord::Coord;
 
 /// A data structure for things like doors and traps which
 /// can be interacted with. For more about the differences
@@ -13,6 +14,20 @@ pub struct Object {
 }
 
 pub enum ObjectClass {
-    Door(DoorKind),
-    Trap(TrapKind),
+    Door(DoorKind, DoorState),
+    Trap(TrapKind, TrapState),
+}
+
+pub enum DoorKind {}
+
+pub enum DoorState {
+    Open,
+    Closed,
+}
+
+pub enum TrapKind {}
+
+pub enum TrapState {
+    Active,
+    Inactive,
 }

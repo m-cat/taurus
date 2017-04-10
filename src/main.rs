@@ -7,6 +7,8 @@ extern crate taurus;
 
 mod constants;
 mod actor;
+mod object;
+mod item;
 mod tile;
 mod dungeon;
 

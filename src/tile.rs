@@ -25,10 +25,14 @@ pub enum HoleKind {}
 
 impl Tile {
     fn about(&self) -> &str {
-        match TileClass {
-            Floor(f) => match f {
-                Stone => "a stone floor",
-            },
-            Wall(w) => match w {},
-            Hole(h) => match h {},
+        match self.class {
+            TileClass::Floor(f) => {
+                match f {
+                    Stone => "a stone floor",
+                }
+            }
+            TileClass::Wall(w) => match w {},
+            TileClass::Hole(h) => match h {},
+        }
     }
+}

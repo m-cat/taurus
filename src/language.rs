@@ -4,8 +4,8 @@
 use utility::{dice, rand_range};
 
 /// Capitalize the first letter of the string
-pub fn cap(s: &String) -> String {
-    debug_assert!(s.len() > 0, format!("Assert failed: cap({})", s));
+pub fn cap(s: &str) -> String {
+    debug_assert!(!s.is_empty(), format!("Assert failed: cap({})", s));
     let c = &s[0..1];
     format!("{}{}", c.to_uppercase(), &s[1..])
 }
@@ -30,12 +30,12 @@ pub fn name_gen(max_len: usize) -> String {
     // Pick starting sequence
     let mut is_vowel = dice(1, 3); // start with vowel?
     if is_vowel {
-        word.push_str(pick_seq(&vowels, 1));
+        word.push_str(pick_seq(vowels, 1));
     } else {
         let c = match rand_range(1, 100) {
-            1...40 => pick_seq(&start_consonants, 1),
-            41...80 => pick_seq(&start_dconsonants, 2),
-            _ => pick_seq(&tconsonants, 3),
+            1...40 => pick_seq(start_consonants, 1),
+            41...80 => pick_seq(start_dconsonants, 2),
+            _ => pick_seq(tconsonants, 3),
         };
         word.push_str(c);
     }
@@ -50,14 +50,14 @@ pub fn name_gen(max_len: usize) -> String {
             if m == 0 {
                 // Last sequence
                 let c = match rand_range(1, 100) {
-                    1...90 => pick_seq(&end_vowels, 1),
-                    _ => pick_seq(&end_dvowels, 2),
+                    1...90 => pick_seq(end_vowels, 1),
+                    _ => pick_seq(end_dvowels, 2),
                 };
                 word.push_str(c);
             } else {
                 let c = match rand_range(1, 100) {
-                    1...85 => pick_seq(&vowels, 1),
-                    _ => pick_seq(&dvowels, 2),
+                    1...85 => pick_seq(vowels, 1),
+                    _ => pick_seq(dvowels, 2),
                 };
                 word.push_str(c);
             }
@@ -66,16 +66,16 @@ pub fn name_gen(max_len: usize) -> String {
             if m == 0 {
                 // Last sequence
                 let c = match rand_range(1, 100) {
-                    1...60 => pick_seq(&end_consonants, 1),
-                    _ => pick_seq(&end_dconsonants, 2),
+                    1...60 => pick_seq(end_consonants, 1),
+                    _ => pick_seq(end_dconsonants, 2),
                 };
                 word.push_str(c);
             } else {
                 // Middle sequence
                 let c = match rand_range(1, 100) {
-                    1...60 => pick_seq(&consonants, 1),
-                    61...90 => pick_seq(&dconsonants, 2),
-                    _ => pick_seq(&tconsonants, 3),
+                    1...60 => pick_seq(consonants, 1),
+                    61...90 => pick_seq(dconsonants, 2),
+                    _ => pick_seq(tconsonants, 3),
                 };
                 word.push_str(c);
             }

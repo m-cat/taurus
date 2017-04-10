@@ -55,13 +55,13 @@ pub fn process_org(path: &Path) -> io::Result<Org> {
 }
 
 /// Recursively process subtrees, converting from strings to Org struct representation
-fn process_subtree(org: &mut Org, contents: &Vec<String>, index: usize) -> usize {
+fn process_subtree(org: &mut Org, contents: &[String], index: usize) -> usize {
     let depth = org.depth;
     let mut i = index;
 
     while i < contents.len() {
         let line = &contents[i];
-        let (heading, level) = get_heading(&line);
+        let (heading, level) = get_heading(line);
 
         if level == 0 {
             // Found content
@@ -79,7 +79,7 @@ fn process_subtree(org: &mut Org, contents: &Vec<String>, index: usize) -> usize
                 subtrees: Vec::new(),
                 closed: false,
             };
-            i = process_subtree(&mut subtree, &contents, i + 1);
+            i = process_subtree(&mut subtree, contents, i + 1);
             org.subtrees.push(subtree);
         }
     }
@@ -89,7 +89,7 @@ fn process_subtree(org: &mut Org, contents: &Vec<String>, index: usize) -> usize
 }
 
 /// Get the heading title and level from a line
-fn get_heading(line: &String) -> (String, usize) {
+fn get_heading(line: &str) -> (String, usize) {
     let mut level = 0;
 
     // Get the heading level
@@ -115,9 +115,9 @@ fn get_heading(line: &String) -> (String, usize) {
 pub fn write_org(path: &Path, org: &Org) -> io::Result<()> {
     let mut contents: Vec<String> = Vec::new();
 
-    write_subtree(&org, &mut contents);
+    write_subtree(org, &mut contents);
 
-    utility::write_file_vec(&path, &contents)
+    utility::write_file_vec(path, &contents)
 }
 
 /// Push an Org struct to a Vec of Strings
@@ -131,7 +131,7 @@ fn write_subtree(org: &Org, mut contents: &mut Vec<String>) {
     }
 
     for subtree in &org.subtrees {
-        write_subtree(&subtree, &mut contents);
+        write_subtree(subtree, &mut contents);
     }
 }
 

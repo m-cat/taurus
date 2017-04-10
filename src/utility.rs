@@ -2,6 +2,7 @@
 //! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
 
 #![allow(non_camel_case_types)]
+#![allow(unknown_lints)]
 
 use std::fmt::Display;
 
@@ -52,6 +53,7 @@ pub fn diff<T>(a: T, b: T) -> T
 }
 
 /// Return true if n is between a and b
+#[allow(needless_pass_by_value)]
 pub fn between<T>(n: T, a: T, b: T) -> bool
     where T: Integer
 {
@@ -63,6 +65,7 @@ pub fn between<T>(n: T, a: T, b: T) -> bool
 }
 
 /// Return true if a and b are within n units of each other
+#[allow(needless_pass_by_value)]
 pub fn in_range<T>(a: T, b: T, n: T) -> bool
     where T: Integer
 {
@@ -90,6 +93,7 @@ pub fn rand_range<T>(x: T, y: T) -> T
 }
 
 /// Return true with x in y chance
+#[allow(needless_pass_by_value)]
 pub fn dice<T>(x: T, y: T) -> bool
     where T: Integer + SampleRange + Display
 {
@@ -143,15 +147,15 @@ pub fn write_file_str(path: &Path, contents: &str) -> io::Result<()> {
 }
 
 /// Write a Vec<String> to a file with a given path
-pub fn write_file_vec(path: &Path, contents: &Vec<String>) -> io::Result<()> {
+pub fn write_file_vec(path: &Path, contents: &[String]) -> io::Result<()> {
     // Open a file in write-only mode, returns `io::Result<File>`
     let mut file = File::create(&path)?;
-    let newline = "\n".as_bytes();
+    let newline = b"\n";
 
     // Write each string to `file`, returns `io::Result<()>`
     for line in contents {
-        file.write(line.as_bytes())?;
-        file.write(newline)?;
+        file.write_all(line.as_bytes())?;
+        file.write_all(newline)?;
     }
 
     Ok(())
@@ -160,11 +164,11 @@ pub fn write_file_vec(path: &Path, contents: &Vec<String>) -> io::Result<()> {
 /// Compare two files for equality
 /// Written in order to test the org module
 pub fn files_equal(path1: &Path, path2: &Path) -> io::Result<bool> {
-    let s1 = match read_file_str(&path1) {
+    let s1 = match read_file_str(path1) {
         Ok(s) => s,
         Err(e) => return Err(e),
     };
-    let s2 = match read_file_str(&path2) {
+    let s2 = match read_file_str(path2) {
         Ok(s) => s,
         Err(e) => return Err(e),
     };

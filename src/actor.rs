@@ -7,6 +7,8 @@ use std::cmp::Ordering;
 
 use taurus::utility::{uint, int};
 use coord::Coord;
+use tile::Tile;
+use dungeon::Dungeon;
 
 /// An actor is any entity which could conceivably `act`, that is, have a turn.
 /// Only one actor can occupy a tile at a time.
@@ -40,8 +42,31 @@ enum ActorEnum {
 enum AggrEnum {
 }
 
+// Traits for priority queue
+
+impl Eq for Actor {}
+impl PartialEq for Actor {
+    /// a1 == a2 iff their `turn` values are equal
+    fn eq(&self, other: &Actor) -> bool {
+        self.turn == other.turn
+    }
+}
+
 impl Ord for Actor {
     fn cmp(&self, other: &Actor) -> Ordering {
-
+        other.turn.cmp(&self.turn)
     }
+}
+impl PartialOrd for Actor {
+    fn partial_cmp(&self, other: &Actor) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+// Actor methods
+
+impl Actor {
+    /// Act out the actor's turn.
+    /// Could change itself or the dungeon as a side effect.
+    fn act(&mut self, dungeon: &mut Dungeon) {}
 }

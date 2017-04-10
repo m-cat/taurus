@@ -1,7 +1,7 @@
-run: build
+run: format build clean
 	cargo run
 
-build: format
+build:
 	cargo build
 
 format:
@@ -10,7 +10,7 @@ format:
 test:
 	cargo test
 
-clippy:
+lint:
 	cargo clippy
 
 clean:
