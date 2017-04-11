@@ -1,4 +1,4 @@
-//! Taurus - utility.rs
+//! Taurus - util.rs
 //! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
 
 #![allow(non_camel_case_types)]
@@ -180,7 +180,7 @@ pub fn files_equal(path1: &Path, path2: &Path) -> io::Result<bool> {
 
 #[cfg(test)]
 mod tests {
-    use utility::*;
+    use util::*;
 
     #[test]
     fn test_diff() {

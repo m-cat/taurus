@@ -3,7 +3,7 @@
 
 #![allow(dead_code)]
 
-use taurus::utility::uint;
+use taurus::util::uint;
 
 pub const TITLE: &'static str = "Taurus";
 pub const SCR_WIDTH: uint = 80;

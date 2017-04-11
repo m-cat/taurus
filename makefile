@@ -1,4 +1,4 @@
-run: format build clean
+run: test format build clean
 	cargo run
 
 build:
@@ -10,8 +10,14 @@ format:
 test:
 	cargo test
 
+check:
+	cargo check # run compiler checks without building
+
 lint:
 	cargo clippy
 
+modules:
+	cargo modules # display module structure
+
 clean:
-	rm src/*.bk
+	rm -f -r src/*.bk

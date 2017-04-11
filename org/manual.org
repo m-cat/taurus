@@ -27,8 +27,8 @@ Leave the physical universe for 1 turn. A voidwalked mystic cannot interact with
 * Glossary
 ** identification
 See [[*Identification][Identification]]
-** layer
-A distinct depth of the dungeon. Sometimes referred to as a "dungeon level".
+** depth
+A distinct layer of the dungeon. Sometimes referred to as a "dungeon level".
 ** soul
 The soul is the essence of being that animates all conscious lifeforms. Not everyone believes in the existence of souls.
 ** trait

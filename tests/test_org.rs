@@ -1,7 +1,7 @@
 extern crate taurus;
 
 use taurus::org::*;
-use taurus::utility::*;
+use taurus::util::*;
 
 use std::fs;
 

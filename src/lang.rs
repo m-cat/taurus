@@ -1,7 +1,7 @@
-//! Taurus - language.rs
+//! Taurus - lang.rs
 //! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
 
-use utility::{dice, rand_range};
+use util::{dice, rand_range};
 
 /// Capitalize the first letter of the string
 pub fn cap(s: &str) -> String {
@@ -90,11 +90,11 @@ fn pick_seq(s: &str, n: usize) -> &str {
     &s[n * i..n * (i + 1)]
 }
 
-/// Language unit tests
+/// Lang unit tests
 #[cfg(test)]
 mod tests {
     use std::str::*;
-    use language::*;
+    use lang::*;
 
     #[test]
     fn test_cap() {

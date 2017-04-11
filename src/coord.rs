@@ -1,10 +1,11 @@
 //! Taurus - coord.rs
 //! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
 
-use utility;
-use utility::uint;
+use util;
+use util::uint;
 
-#[derive(PartialEq, Eq, Debug, Hash)]
+// Very simple but indispensible struct
+#[derive(PartialEq, Eq, Debug, Hash, Clone, Copy)]
 pub struct Coord {
     x: uint,
     y: uint,
@@ -13,7 +14,7 @@ pub struct Coord {
 impl Coord {
     /// Return true if two Coords are adjacent and NOT equal
     pub fn adjacent(&self, other: &Self) -> bool {
-        utility::in_one(self.x, other.x) && utility::in_one(self.y, other.y) && self != other
+        util::in_one(self.x, other.x) && util::in_one(self.y, other.y) && self != other
     }
 }
 

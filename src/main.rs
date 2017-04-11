@@ -2,39 +2,38 @@
 //! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
 
 extern crate tcod;
-
 extern crate taurus;
 
 mod constants;
+mod console;
+mod database;
+mod tile;
 mod actor;
 mod object;
 mod item;
-mod tile;
 mod dungeon;
+mod game;
 
-use constants::*;
-use taurus::language;
+use taurus::lang;
 use taurus::coord;
-use tcod::console::*;
-use tcod::colors;
+use dungeon::*;
+use game::Game;
 
 fn main() {
-    let mut root = Root::initializer()
-        .font(FONT_DEFAULT, FontLayout::Tcod)
-        .font_type(FontType::Greyscale)
-        .size(SCR_WIDTH as i32, SCR_HEIGHT as i32)
-        .title(TITLE)
-        .init();
-    tcod::system::set_fps(FPS as i32);
+    let mut game = Game::new();
 
-    while !root.window_closed() {
-        root.set_default_foreground(colors::WHITE);
-        root.put_char(1, 1, '@', BackgroundFlag::None);
-        root.flush();
-        root.wait_for_keypress(true);
+    // TODO: move the following to game.run()
+
+    let mut dungeon = Dungeon::new();
+
+    // Main game loop
+    match dungeon.run_loop(&mut game) {
+        LoopResult::PlayerKilled => {}
+        LoopResult::NoActors => {}
+        LoopResult::None => {}
     }
 
-    for _ in 1..1000 {
-        println!("{}", language::name_gen(constants::MAX_NAME_LEN));
+    for _ in 1..100 {
+        println!("{}", lang::name_gen(constants::MAX_NAME_LEN));
     }
 }

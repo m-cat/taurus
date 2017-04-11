@@ -12,7 +12,7 @@
 use std::path::Path;
 use std::io;
 
-use utility;
+use util;
 
 /// Org data structure
 pub struct Org {
@@ -36,7 +36,7 @@ impl Org {
 
 /// Given a file path, return Org struct
 pub fn process_org(path: &Path) -> io::Result<Org> {
-    let file_contents: Vec<String> = match utility::read_file_vec(path) {
+    let file_contents: Vec<String> = match util::read_file_vec(path) {
         Ok(v) => v,
         Err(e) => return Err(e),
     };
@@ -117,7 +117,7 @@ pub fn write_org(path: &Path, org: &Org) -> io::Result<()> {
 
     write_subtree(org, &mut contents);
 
-    utility::write_file_vec(path, &contents)
+    util::write_file_vec(path, &contents)
 }
 
 /// Push an Org struct to a Vec of Strings

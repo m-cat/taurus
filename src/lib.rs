@@ -4,7 +4,7 @@
 extern crate rand;
 extern crate num;
 
-pub mod utility;
-pub mod language;
+pub mod util;
+pub mod lang;
 pub mod coord;
 pub mod org;
