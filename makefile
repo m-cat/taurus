@@ -1,4 +1,4 @@
-run: test format build clean
+run: format test build clean
 	cargo run
 
 build:

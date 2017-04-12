@@ -10,6 +10,8 @@ pub const SCR_WIDTH: uint = 80;
 pub const SCR_HEIGHT: uint = 50;
 pub const FPS: uint = 60;
 
+pub const NUM_DUNGEONS: usize = 27;
+
 pub const MAX_NAME_LEN: usize = 20;
 
 // GAME DATA LOCATIONS

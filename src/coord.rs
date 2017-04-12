@@ -2,13 +2,12 @@
 //! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
 
 use util;
-use util::uint;
 
 // Very simple but indispensible struct
 #[derive(PartialEq, Eq, Debug, Hash, Clone, Copy)]
 pub struct Coord {
-    x: uint,
-    y: uint,
+    pub x: usize,
+    pub y: usize,
 }
 
 impl Coord {

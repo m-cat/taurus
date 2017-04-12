@@ -9,6 +9,8 @@
 //! - headings and subheadings
 //! - content text
 
+#![allow(dead_code)]
+
 use std::path::Path;
 use std::io;
 

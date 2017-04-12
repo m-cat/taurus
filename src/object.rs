@@ -8,9 +8,7 @@ use taurus::coord::Coord;
 /// between objects and actors, see actor.rs.
 pub struct Object {
     /// The class of object, containing the object kind
-    // class: ObjectClass,
-    /// Coordinate location in level
-    pub xy: Coord,
+    class: ObjectClass,
 }
 
 pub enum ObjectClass {

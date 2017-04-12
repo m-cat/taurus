@@ -36,16 +36,16 @@ impl GameConsole {
         self.root.window_closed()
     }
 
-    pub fn put_char(&mut self, y: uint, x: uint, c: char) {
-        // TODO: is x/y order right here?
+    pub fn put_char(&mut self, x: uint, y: uint, c: char) {
         self.root.set_default_foreground(colors::WHITE);
         self.root
-            .put_char(y as i32, x as i32, c, BackgroundFlag::None);
+            .put_char(x as i32, y as i32, c, BackgroundFlag::None);
         self.root.flush();
     }
 
-    // TODO: what does this parameter do?
-    pub fn wait_for_keypress(&mut self, truth: bool) {
-        self.root.wait_for_keypress(truth);
+    /// If flush is true, all pending keypresses are flushed from the keyboard buffer.
+    /// If false, it returns the first element from it.
+    pub fn wait_for_keypress(&mut self, flush: bool) {
+        self.root.wait_for_keypress(flush);
     }
 }
