@@ -1,6 +1,8 @@
 //! Taurus - lang.rs
 //! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
 
+#![allow(unknown_lints)]
+
 use util::{dice, rand_range};
 
 /// Capitalize the first letter of the string
@@ -11,6 +13,7 @@ pub fn cap(s: &str) -> String {
 }
 
 /// Return a randomly-generated name
+#[allow(collapsible_if)]
 pub fn name_gen(max_len: usize) -> String {
     // Define the list of consonant, double consonant, etc. sequences
     let consonants = "bdfgklmnprsstvx";

@@ -12,6 +12,9 @@ pub const FPS: uint = 60;
 
 pub const NUM_DUNGEONS: usize = 27;
 
+pub const DUNGEON_WIDTH_DEFAULT: usize = 200;
+pub const DUNGEON_HEIGHT_DEFAULT: usize = 200;
+
 pub const MAX_NAME_LEN: usize = 20;
 
 // GAME DATA LOCATIONS

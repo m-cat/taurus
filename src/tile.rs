@@ -10,6 +10,15 @@ pub struct Tile {
     depth: int,
 }
 
+impl Tile {
+    pub fn new() -> Tile {
+        Tile {
+            class: TileClass::Floor(FloorKind::Stone),
+            depth: 0, // default is ground level
+        }
+    }
+}
+
 pub enum TileClass {
     Floor(FloorKind),
     Wall(WallKind),
@@ -22,5 +31,3 @@ pub enum FloorKind {
 
 pub enum WallKind {}
 pub enum HoleKind {}
-
-impl Tile {}

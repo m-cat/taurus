@@ -40,14 +40,14 @@ pub struct Actor {
 // Actor methods
 
 impl Actor {
-    pub fn new(game: &mut Game) -> Actor {
+    pub fn new(game: &Game) -> Actor {
         let hp: uint = 0; // TODO
 
         let mut a = Actor {
             id: game.get_actor_id(),
             c: '@', // TODO
             xy: Coord { x: 0, y: 0 },
-            turn: game.turn, // we update this after the actor is created
+            turn: game.turn.get(), // we update this after the actor is created
 
             hp_cur: hp as int,
             hp_max: hp,
@@ -74,14 +74,14 @@ impl Actor {
     /// Act out the actor's turn.
     /// Could change itself or the dungeon as a side effect.
     /// Actor should update its own `turn` value
-    pub fn act(&mut self, game: &mut Game, dungeon: &mut Dungeon) -> ActResult {
-        if game.console.window_closed() {
+    pub fn act(&mut self, game: &Game, dungeon: &mut Dungeon) -> ActResult {
+        let mut console = game.console.borrow_mut();
+        if console.window_closed() {
             return ActResult::WindowClosed;
         } // TODO: how does window_closed work?
-        // TODO #2: return WindowClosed result
 
-        game.console.put_char(1, 1, '@');
-        game.console.wait_for_keypress(true);
+        console.put_char(1, 1, '@');
+        console.wait_for_keypress(true);
 
         self.update_turn();
 

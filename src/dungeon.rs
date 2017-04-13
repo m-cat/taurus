@@ -37,7 +37,7 @@ impl Dungeon {
         Dungeon {
             depth: depth,
 
-            tile_grid: Vec::new(), // TODO
+            tile_grid: Dungeon::init_grid(),
 
             actor_map: HashMap::new(),
             actor_queue: BinaryHeap::new(),
@@ -57,6 +57,25 @@ impl Dungeon {
     pub fn height(&self) -> usize {
         self.tile_grid[0].len()
     }
+
+    /// Initialize the tile grid, should only be called in Dungeon::new
+    fn init_grid() -> Vec<Vec<Tile>> {
+        let w = constants::DUNGEON_WIDTH_DEFAULT;
+        let h = constants::DUNGEON_HEIGHT_DEFAULT;
+        let mut tile_grid = Vec::with_capacity(w);
+
+        for j in 0..w {
+            let mut column: Vec<Tile> = Vec::with_capacity(h);
+
+            for i in 0..h {
+                column.push(Tile::new());
+            }
+            tile_grid.push(column);
+        }
+
+        tile_grid
+    }
+
 
     /// Add actor to both the coordinate map and the priority queue.
     /// Asserts that the actor's coordinates are available.
@@ -88,23 +107,22 @@ impl Dungeon {
     /// The priority queue will know it's gone when it gets to it.
     /// Pass in the actor's coordinates to find it.
     pub fn remove_actor(&mut self, x: usize, y: usize) -> Actor {
-        match self.actor_map.remove(&Coord { x: x, y: y }) {
-            Some(a) => a,
-            None => panic!("remove_actor failed, this shouldn't happen..."), // TODO
-        }
+        self.actor_map.remove(&Coord { x: x, y: y })
+            .expect("Dungeon::remove_actor failed, invalid coordinate")
     }
 
     /// Insert object into the object hash map
+    /// Asserts that the tile is free of objects
     pub fn add_object(&mut self, x: usize, y: usize, o: Object) {
-        self.object_map.insert(Coord { x: x, y: y }, o);
+        let xy = Coord { x: x, y: y };
+        assert!(!self.object_map.contains_key(&xy));
+        self.object_map.insert(xy, o);
     }
 
     /// Remove object from the map
     pub fn remove_object(&mut self, x: usize, y: usize) -> Object {
-        match self.object_map.remove(&Coord { x: x, y: y }) {
-            Some(o) => o,
-            Nome => panic!("remove_object failed, this shouldn't happen..."), // TODO
-        }
+        self.object_map.remove(&Coord { x: x, y: y })
+            .expect("Dungeon::remove_object failed, invalid coordinate")
     }
 
     /// Insert item into the stack hash map
@@ -122,10 +140,8 @@ impl Dungeon {
     /// Remove item with given index from the stack
     /// This panics if the passed in index is invalid
     pub fn remove_item(&mut self, x: usize, y: usize, index: usize) -> Item {
-        let mut stack = match self.stack_map.get_mut(&Coord { x: x, y: y }) {
-            Some(s) => s,
-            None => panic!("remove_item failed, invalid coord"), // TODO?
-        };
+        let mut stack = self.stack_map.get_mut(&Coord { x: x, y: y })
+            .expect("Dungeon::remove_item failed, invalid coordinate");
 
         stack.remove(index)
     }
@@ -139,7 +155,7 @@ impl Dungeon {
     }
 
     /// Run the main game loop by iterating over the actor priority queue
-    pub fn run_loop(&mut self, game: &mut Game) -> LoopResult {
+    pub fn run_loop(&mut self, game: &Game) -> LoopResult {
         loop {
             // Get the coordinate of the next actor to move
             let mut coordt = match self.actor_queue.pop() {
@@ -161,7 +177,7 @@ impl Dungeon {
             };
 
             // Update the global game turn
-            game.turn = a.turn;
+            game.turn.set(a.turn);
 
             match a.act(game, self) {
                 ActResult::WindowClosed => return LoopResult::WindowClosed,
@@ -176,6 +192,7 @@ impl Dungeon {
     }
 }
 
+/// Make dungeon indexable like an array
 impl Index<usize> for Dungeon {
     type Output = Vec<Tile>;
 
@@ -183,7 +200,6 @@ impl Index<usize> for Dungeon {
         &self.tile_grid[index]
     }
 }
-
 impl IndexMut<usize> for Dungeon {
     fn index_mut(&mut self, index: usize) -> &mut Vec<Tile> {
         &mut self.tile_grid[index]

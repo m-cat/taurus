@@ -19,7 +19,6 @@ mod generate;
 
 use taurus::lang;
 use taurus::coord;
-use dungeon::*;
 use game::Game;
 
 fn main() {
