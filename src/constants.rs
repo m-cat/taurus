@@ -15,6 +15,8 @@ pub const NUM_DUNGEONS: usize = 27;
 pub const DUNGEON_WIDTH_DEFAULT: usize = 200;
 pub const DUNGEON_HEIGHT_DEFAULT: usize = 200;
 
+pub const MESSAGE_DEQUE_SIZE: usize = 1000;
+
 pub const MAX_NAME_LEN: usize = 20;
 
 // GAME DATA LOCATIONS

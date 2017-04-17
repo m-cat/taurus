@@ -37,7 +37,7 @@ impl Dungeon {
         Dungeon {
             depth: depth,
 
-            tile_grid: Dungeon::init_grid(),
+            tile_grid: Vec::with_capacity(0), // placeholder - allocated and filled when generating
 
             actor_map: HashMap::new(),
             actor_queue: BinaryHeap::new(),
@@ -58,30 +58,30 @@ impl Dungeon {
         self.tile_grid[0].len()
     }
 
-    /// Initialize the tile grid, should only be called in Dungeon::new
-    fn init_grid() -> Vec<Vec<Tile>> {
-        let w = constants::DUNGEON_WIDTH_DEFAULT;
-        let h = constants::DUNGEON_HEIGHT_DEFAULT;
-        let mut tile_grid = Vec::with_capacity(w);
+    // /// Initialize the tile grid, should only be called in generation functions
+    // fn init_grid() -> Vec<Vec<Tile>> {
+    //     let w = constants::DUNGEON_WIDTH_DEFAULT;
+    //     let h = constants::DUNGEON_HEIGHT_DEFAULT;
+    //     let mut tile_grid = Vec::with_capacity(w);
 
-        for j in 0..w {
-            let mut column: Vec<Tile> = Vec::with_capacity(h);
+    //     for j in 0..w {
+    //         let mut column: Vec<Tile> = Vec::with_capacity(h);
 
-            for i in 0..h {
-                column.push(Tile::new());
-            }
-            tile_grid.push(column);
-        }
+    //         for i in 0..h {
+    //             column.push(Tile::new());
+    //         }
+    //         tile_grid.push(column);
+    //     }
 
-        tile_grid
-    }
+    //     tile_grid
+    // }
 
 
     /// Add actor to both the coordinate map and the priority queue.
     /// Asserts that the actor's coordinates are available.
     pub fn add_actor(&mut self, x: usize, y: usize, mut a: Actor) {
         let xy = Coord { x: x, y: y };
-        assert!(!self.actor_map.contains_key(&xy)); // actors can't share tiles
+        debug_assert!(!self.actor_map.contains_key(&xy)); // actors can't share tiles
 
         a.xy = xy;
         let coordt = CoordTurn {
@@ -115,7 +115,7 @@ impl Dungeon {
     /// Asserts that the tile is free of objects
     pub fn add_object(&mut self, x: usize, y: usize, o: Object) {
         let xy = Coord { x: x, y: y };
-        assert!(!self.object_map.contains_key(&xy));
+        debug_assert!(!self.object_map.contains_key(&xy));
         self.object_map.insert(xy, o);
     }
 
@@ -177,7 +177,7 @@ impl Dungeon {
             };
 
             // Update the global game turn
-            game.turn.set(a.turn);
+            game.set_turn(a.turn);
 
             match a.act(game, self) {
                 ActResult::WindowClosed => return LoopResult::WindowClosed,
@@ -188,7 +188,7 @@ impl Dungeon {
             coordt.turn = a.turn;
             self.actor_queue.push(coordt);
         }
-        LoopResult::PlayerKilled
+        LoopResult::PlayerDead
     }
 }
 
@@ -209,7 +209,8 @@ impl IndexMut<usize> for Dungeon {
 pub enum LoopResult {
     /// Game window was closed by player
     WindowClosed,
-    PlayerKilled,
+    /// Player died and we need to return
+    PlayerDead,
     /// No actors remaining in queue
     NoActors, // should never happen!
     /// Nothing special happened

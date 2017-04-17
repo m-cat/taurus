@@ -4,6 +4,7 @@
 use std::cell::Cell;
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::collections::VecDeque;
 use num_traits::identities::Zero;
 use fraction::Fraction;
 
@@ -13,6 +14,7 @@ use database::Database;
 use dungeon::Dungeon;
 use dungeon::LoopResult;
 use generate;
+use constants;
 
 /// Struct containing game-wide data such as the draw console,
 /// the database, and the dungeon levels
@@ -22,31 +24,57 @@ pub struct Game {
     /// A reference to the main game database containing monster info, tile info, etc
     pub database: Database,
 
+    /// Message deque storing a fixed number of messages
+    // TODO: probably want to use a Message struct with turn information,
+    // so we can only display messages that happened since the player's last turn
+    message_deque: VecDeque<String>,
+
     /// Current depth that the player is on, indexed starting at 1
-    pub depth: usize,
+    depth: usize,
     /// Current global game turn
-    pub turn: Cell<Fraction>,
+    turn: Cell<Fraction>, // Cell type used for interior mutability
 
     /// Number of actors created, used for assigning unique id's
-    pub num_actors: Cell<uint>,
+    num_actors: Cell<uint>, // Cell type for interior mutability
 }
 
 impl Game {
     pub fn new() -> Game {
+        let console = GameConsole::init(); // initialize the console
+        let database = Database::init(); // initialize the database
+
         Game {
-            console: Rc::new(RefCell::new(GameConsole::init())), // initialize the console
-            database: Database::init(), // initialize the database
+            console: Rc::new(RefCell::new(console)),
+            database: database,
+            message_deque: VecDeque::with_capacity(constants::MESSAGE_DEQUE_SIZE),
             depth: 1,
             turn: Cell::new(Fraction::zero()),
             num_actors: Cell::new(0),
         }
     }
 
-    pub fn get_actor_id(&self) -> uint {
+    pub fn depth(&self) -> usize {
+        self.depth
+    }
+    pub fn set_depth(&mut self, value: usize) {
+        self.depth = value;
+    }
+
+    pub fn turn(&self) -> Fraction {
+        self.turn.get()
+    }
+    pub fn set_turn(&self, value: Fraction) {
+        self.turn.set(value);
+    }
+
+    pub fn actor_id(&self) -> uint {
         let n = self.num_actors.get();
         self.num_actors.set(n+1);
         n
     }
+
+    /// Add a string to the message deque
+    pub fn add_message(&self, message: &str) {} // TODO. Should pop_front when queue gets too big
 
     pub fn run(&mut self) {
         let mut dungeon_list: Vec<Dungeon> = Vec::new();
@@ -61,7 +89,7 @@ impl Game {
             LoopResult::WindowClosed => {
                 println!("Window closed, exiting!"); // TODO
             }
-            LoopResult::PlayerKilled => {} // TODO
+            LoopResult::PlayerDead => {} // TODO
             LoopResult::NoActors => {} // TODO
             LoopResult::None => {} // TODO
         }

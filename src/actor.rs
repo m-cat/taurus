@@ -44,10 +44,10 @@ impl Actor {
         let hp: uint = 0; // TODO
 
         let mut a = Actor {
-            id: game.get_actor_id(),
+            id: game.actor_id(),
             c: '@', // TODO
             xy: Coord { x: 0, y: 0 },
-            turn: game.turn.get(), // we update this after the actor is created
+            turn: game.turn(), // we update this after the actor is created
 
             hp_cur: hp as int,
             hp_max: hp,
