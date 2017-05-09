@@ -1,9 +1,6 @@
-//! Taurus - constants.rs
-//! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
-
 #![allow(dead_code)]
 
-use taurus::util::uint;
+use util::uint;
 
 pub const TITLE: &'static str = "Taurus";
 pub const SCR_WIDTH: uint = 80;

@@ -1,7 +1,4 @@
-//! Taurus - object.rs
-//! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
-
-use taurus::coord::Coord;
+use coord::Coord;
 
 /// A data structure for things like doors and traps which
 /// can be interacted with. For more about the differences

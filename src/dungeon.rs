@@ -1,6 +1,3 @@
-//! Taurus - dungeon.rs
-//! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
-
 #![allow(dead_code)]
 
 use std::collections::HashMap;
@@ -8,7 +5,8 @@ use std::collections::BinaryHeap;
 use std::ops::Index;
 use std::ops::IndexMut;
 
-use taurus::coord::Coord;
+use fraction::Fraction;
+use coord::Coord;
 use constants;
 use tile::Tile;
 use actor::*;
@@ -48,12 +46,12 @@ impl Dungeon {
         }
     }
 
-    /// Width of tile grid
+    /// Returns the width of tile grid
     pub fn width(&self) -> usize {
         self.tile_grid.len()
     }
 
-    /// Height of tile grid
+    /// Returns the height of the tile grid
     pub fn height(&self) -> usize {
         self.tile_grid[0].len()
     }
@@ -77,7 +75,7 @@ impl Dungeon {
     // }
 
 
-    /// Add actor to both the coordinate map and the priority queue.
+    /// Adds actor to both the coordinate map and the priority queue.
     /// Asserts that the actor's coordinates are available.
     pub fn add_actor(&mut self, x: usize, y: usize, mut a: Actor) {
         let xy = Coord { x: x, y: y };
@@ -93,25 +91,39 @@ impl Dungeon {
         self.actor_queue.push(coordt); // add actor to queue
     }
 
-    /// Get an immutable reference to an actor
+    /// Gets an immutable reference to an actor
     pub fn get_actor(&self, x: usize, y: usize) -> Option<&Actor> {
         self.actor_map.get(&Coord { x: x, y: y })
     }
 
-    /// Get a mutable reference to an actor
+    /// Gets a mutable reference to an actor
     pub fn get_mut_actor(&mut self, x: usize, y: usize) -> Option<&mut Actor> {
         self.actor_map.get_mut(&Coord { x: x, y: y })
     }
 
-    /// Effectively remove an actor by taking it out of the actor map.
+    /// Modifies an actor's coordinates.
+    /// Note that this is rather inefficient due to the need to rebuild the priority queue.
+    /// Asserts that the new coordinates are available.
+    pub fn update_actor_coord(&mut self, x: usize, y: usize, new_x: usize, new_y: usize) {
+        // TODO
+    }
+
+    /// Modifies an actor's turn.
+    /// Note that this is rather inefficient due to the need to rebuild the priority queue.
+    pub fn update_actor_turn(&mut self, x: usize, y: usize, new_turn: Fraction) {
+        // TODO
+    }
+
+    /// Effectively removes an actor by taking it out of the actor map.
     /// The priority queue will know it's gone when it gets to it.
-    /// Pass in the actor's coordinates to find it.
+    /// Passes in the actor's coordinates to find it.
     pub fn remove_actor(&mut self, x: usize, y: usize) -> Actor {
-        self.actor_map.remove(&Coord { x: x, y: y })
+        self.actor_map
+            .remove(&Coord { x: x, y: y })
             .expect("Dungeon::remove_actor failed, invalid coordinate")
     }
 
-    /// Insert object into the object hash map
+    /// Inserts an object into the object hash map
     /// Asserts that the tile is free of objects
     pub fn add_object(&mut self, x: usize, y: usize, o: Object) {
         let xy = Coord { x: x, y: y };
@@ -119,13 +131,14 @@ impl Dungeon {
         self.object_map.insert(xy, o);
     }
 
-    /// Remove object from the map
+    /// Removes an object from the map
     pub fn remove_object(&mut self, x: usize, y: usize) -> Object {
-        self.object_map.remove(&Coord { x: x, y: y })
+        self.object_map
+            .remove(&Coord { x: x, y: y })
             .expect("Dungeon::remove_object failed, invalid coordinate")
     }
 
-    /// Insert item into the stack hash map
+    /// Inserts an item into the stack hash map
     pub fn add_item(&mut self, x: usize, y: usize, i: Item) {
         let xy = Coord { x: x, y: y };
         let mut stack = match self.stack_map.remove(&xy) {
@@ -137,16 +150,17 @@ impl Dungeon {
         self.stack_map.insert(xy, stack);
     }
 
-    /// Remove item with given index from the stack
+    /// Removes an item with given index from the stack
     /// This panics if the passed in index is invalid
     pub fn remove_item(&mut self, x: usize, y: usize, index: usize) -> Item {
-        let mut stack = self.stack_map.get_mut(&Coord { x: x, y: y })
+        let mut stack = self.stack_map
+            .get_mut(&Coord { x: x, y: y })
             .expect("Dungeon::remove_item failed, invalid coordinate");
 
         stack.remove(index)
     }
 
-    /// Return the amount of items in a stack
+    /// Returns the amount of items in a stack
     pub fn stack_size(&self, x: usize, y: usize) -> usize {
         match self.stack_map.get(&Coord { x: x, y: y }) {
             Some(s) => s.len(),
@@ -154,7 +168,7 @@ impl Dungeon {
         }
     }
 
-    /// Run the main game loop by iterating over the actor priority queue
+    /// Runs the main game loop by iterating over the actor priority queue
     pub fn run_loop(&mut self, game: &Game) -> LoopResult {
         loop {
             // Get the coordinate of the next actor to move
@@ -192,7 +206,7 @@ impl Dungeon {
     }
 }
 
-/// Make dungeon indexable like an array
+/// Makes the dungeon indexable like an array
 impl Index<usize> for Dungeon {
     type Output = Vec<Tile>;
 

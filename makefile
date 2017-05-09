@@ -16,6 +16,9 @@ check:
 lint:
 	cargo clippy
 
+doc:
+	cargo doc --open
+
 modules:
 	cargo modules # display module structure
 

@@ -1,6 +1,3 @@
-//! Taurus - util.rs
-//! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
-
 #![allow(non_camel_case_types)]
 #![allow(unknown_lints)]
 

@@ -1,6 +1,3 @@
-//! Taurus - org.rs
-//! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
-//!
 //! Module for processing .org files
 //!
 //! This is not meant to completely capture the functionality of org-mode,

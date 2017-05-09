@@ -1,12 +1,9 @@
-//! Taurus - actor.rs
-//! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
-
 #![allow(dead_code)]
 
 use std::cmp::Ordering;
 use fraction::Fraction;
 
-use taurus::util::{uint, int};
+use util::{uint, int};
 use coord::Coord;
 use dungeon::Dungeon;
 use game::Game;

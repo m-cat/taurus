@@ -1,6 +1,3 @@
-//! Taurus - lang.rs
-//! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
-
 #![allow(unknown_lints)]
 
 use util::{dice, rand_range};

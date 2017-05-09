@@ -1,6 +1,3 @@
-//! Taurus - console.rs
-//! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
-//!
 //! A wrapper around the tcod library.
 //!
 //! This module is designed so that it can be replaced with a different console
@@ -12,7 +9,7 @@ use tcod::console::*;
 use tcod::colors;
 
 use constants::*;
-use taurus::util::uint;
+use util::uint;
 
 pub struct GameConsole {
     root: Root,

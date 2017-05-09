@@ -1,6 +1,3 @@
-//! Taurus - item.rs
-//! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
-
 #![allow(dead_code)]
 
 pub struct Item {}
@@ -11,9 +8,7 @@ pub struct ItemStack {
 
 impl ItemStack {
     pub fn new() -> ItemStack {
-        ItemStack {
-            items: Vec::new(),
-        }
+        ItemStack { items: Vec::new() }
     }
 
     pub fn len(&self) -> usize {

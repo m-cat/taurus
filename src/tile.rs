@@ -1,7 +1,4 @@
-//! Taurus - tile.rs
-//! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
-
-use taurus::util::{int, uint};
+use util::{int, uint};
 
 pub struct Tile {
     /// The class of tile, containing the tile kind

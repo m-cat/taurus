@@ -1,10 +1,20 @@
-//! Taurus - lib.rs
-//! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
-
 extern crate rand;
 extern crate num;
+extern crate num_traits;
+extern crate fraction;
+extern crate tcod;
 
 pub mod util;
 pub mod lang;
 pub mod coord;
 pub mod org;
+pub mod constants;
+pub mod console;
+pub mod database;
+pub mod tile;
+pub mod actor;
+pub mod object;
+pub mod item;
+pub mod dungeon;
+pub mod game;
+pub mod generate;

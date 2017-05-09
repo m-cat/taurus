@@ -1,6 +1,3 @@
-//! Taurus - game.rs
-//! Copyright (C) 2017  Marcin Swieczkowski <scatman@bu.edu>
-
 use std::cell::Cell;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -8,7 +5,7 @@ use std::collections::VecDeque;
 use num_traits::identities::Zero;
 use fraction::Fraction;
 
-use taurus::util::uint;
+use util::uint;
 use console::GameConsole;
 use database::Database;
 use dungeon::Dungeon;
@@ -19,14 +16,12 @@ use constants;
 /// Struct containing game-wide data such as the draw console,
 /// the database, and the dungeon levels
 pub struct Game {
-    /// A reference to the console, wrapped around Rc<Refcell<>>.
+    /// A reference to the console, wrapped around Rc<Refcell>.
     pub console: Rc<RefCell<GameConsole>>,
     /// A reference to the main game database containing monster info, tile info, etc
     pub database: Database,
 
     /// Message deque storing a fixed number of messages
-    // TODO: probably want to use a Message struct with turn information,
-    // so we can only display messages that happened since the player's last turn
     message_deque: VecDeque<String>,
 
     /// Current depth that the player is on, indexed starting at 1
@@ -69,19 +64,21 @@ impl Game {
 
     pub fn actor_id(&self) -> uint {
         let n = self.num_actors.get();
-        self.num_actors.set(n+1);
+        self.num_actors.set(n + 1);
         n
     }
 
-    /// Add a string to the message deque
+    /// Adds a string to the message deque
     pub fn add_message(&self, message: &str) {} // TODO. Should pop_front when queue gets too big
 
+    /// Runs the main
     pub fn run(&mut self) {
         let mut dungeon_list: Vec<Dungeon> = Vec::new();
         generate::generate_game(self, &mut dungeon_list);
 
         let depth = self.depth;
-        let mut dungeon = dungeon_list.get_mut(depth)
+        let mut dungeon = dungeon_list
+            .get_mut(depth)
             .expect("Game::run failed, invalid index");
 
         // Main game loop
