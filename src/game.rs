@@ -9,7 +9,6 @@ use util::uint;
 use console::GameConsole;
 use database::Database;
 use dungeon::Dungeon;
-use dungeon::LoopResult;
 use generate;
 use constants;
 
@@ -70,25 +69,4 @@ impl Game {
 
     /// Adds a string to the message deque
     pub fn add_message(&self, message: &str) {} // TODO. Should pop_front when queue gets too big
-
-    /// Runs the main
-    pub fn run(&mut self) {
-        let mut dungeon_list: Vec<Dungeon> = Vec::new();
-        generate::generate_game(self, &mut dungeon_list);
-
-        let depth = self.depth;
-        let mut dungeon = dungeon_list
-            .get_mut(depth)
-            .expect("Game::run failed, invalid index");
-
-        // Main game loop
-        match dungeon.run_loop(self) {
-            LoopResult::WindowClosed => {
-                println!("Window closed, exiting!"); // TODO
-            }
-            LoopResult::PlayerDead => {} // TODO
-            LoopResult::NoActors => {} // TODO
-            LoopResult::None => {} // TODO
-        }
-    }
 }

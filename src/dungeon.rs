@@ -5,6 +5,7 @@ use std::collections::BinaryHeap;
 use std::ops::Index;
 use std::ops::IndexMut;
 
+use GameLoopResult;
 use fraction::Fraction;
 use coord::Coord;
 use constants;
@@ -169,12 +170,12 @@ impl Dungeon {
     }
 
     /// Runs the main game loop by iterating over the actor priority queue
-    pub fn run_loop(&mut self, game: &Game) -> LoopResult {
+    pub fn run_loop(&mut self, game: &Game) -> GameLoopResult {
         loop {
             // Get the coordinate of the next actor to move
             let mut coordt = match self.actor_queue.pop() {
                 Some(ct) => ct,
-                None => return LoopResult::NoActors, // bad!
+                None => return GameLoopResult::NoActors, // bad!
             };
 
             // If there is no actor at the coordinates or the id doesn't match,
@@ -194,7 +195,7 @@ impl Dungeon {
             game.set_turn(a.turn);
 
             match a.act(game, self) {
-                ActResult::WindowClosed => return LoopResult::WindowClosed,
+                ActResult::WindowClosed => return GameLoopResult::WindowClosed,
                 ActResult::None => {}
             };
 
@@ -202,7 +203,7 @@ impl Dungeon {
             coordt.turn = a.turn;
             self.actor_queue.push(coordt);
         }
-        LoopResult::PlayerDead
+        GameLoopResult::PlayerDead
     }
 }
 
@@ -218,15 +219,4 @@ impl IndexMut<usize> for Dungeon {
     fn index_mut(&mut self, index: usize) -> &mut Vec<Tile> {
         &mut self.tile_grid[index]
     }
-}
-
-pub enum LoopResult {
-    /// Game window was closed by player
-    WindowClosed,
-    /// Player died and we need to return
-    PlayerDead,
-    /// No actors remaining in queue
-    NoActors, // should never happen!
-    /// Nothing special happened
-    None,
 }

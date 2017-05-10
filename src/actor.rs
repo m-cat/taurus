@@ -7,15 +7,17 @@ use util::{uint, int};
 use coord::Coord;
 use dungeon::Dungeon;
 use game::Game;
+use player;
 
 /// An actor is any entity which could conceivably `act`, that is, have a turn.
 /// Only one actor can occupy a tile at a time.
 /// For things like doors and traps, we have a separate struct named Object.
 /// An object can share a tile with an actor.
 pub struct Actor {
+    /// Unique id for this instance
     pub id: uint,
     // kind: ActorEnum,
-    /// Character to draw with
+    /// Character to draw to the console with
     c: char,
     /// Coordinate location in level
     pub xy: Coord,
@@ -31,7 +33,7 @@ pub struct Actor {
     poison_amt: uint,
 
     // AI ATTRIBUTES
-    aggression: Aggression,
+    behavior: Behavior,
 }
 
 // Actor methods
@@ -52,14 +54,19 @@ impl Actor {
 
             poison_amt: 0,
 
-            aggression: Aggression::Hostile, // the default is a hostile monster!
+            behavior: Behavior::Hostile, // the default is a hostile monster!
         };
 
         a.turn += a.speed();
         a
     }
 
-    /// Get this actor's base speed
+    /// Returns the name associated with this actor
+    pub fn name(&self) -> &str {
+        "test"
+    }
+
+    /// Returns this actor's base speed
     pub fn speed(&self) -> Fraction {
         self.speed
     }
@@ -68,17 +75,20 @@ impl Actor {
         self.turn += self.speed();
     }
 
-    /// Act out the actor's turn.
+    /// Acts out the actor's turn.
     /// Could change itself or the dungeon as a side effect.
-    /// Actor should update its own `turn` value
+    /// Actor should update its own `turn` value.
     pub fn act(&mut self, game: &Game, dungeon: &mut Dungeon) -> ActResult {
-        let mut console = game.console.borrow_mut();
-        if console.window_closed() {
-            return ActResult::WindowClosed;
-        } // TODO: how does window_closed work?
+        let result = match self.behavior {
+            Behavior::Player =>
+                player::player_act(self, game, dungeon),
+            _ => ActResult::None,
+        };
 
-        console.put_char(1, 1, '@');
-        console.wait_for_keypress(true);
+        match result {
+            ActResult::None => {},
+            _ => return result,
+        }
 
         self.update_turn();
 
@@ -95,7 +105,9 @@ impl Actor {
 //     GiantRat,
 // } TODO: keep this?
 
-enum Aggression {
+enum Behavior {
+    /// Behavior corresponding to the player itself
+    Player,
     Friendly,
     Wary,
     Defensive,
