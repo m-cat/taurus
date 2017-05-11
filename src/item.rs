@@ -15,6 +15,10 @@ impl ItemStack {
         self.items.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub fn add(&mut self, i: Item) {
         self.items.push(i);
     }

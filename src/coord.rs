@@ -8,7 +8,11 @@ pub struct Coord {
 }
 
 impl Coord {
-    /// Return true if two Coords are adjacent and NOT equal
+    pub fn new(x: usize, y: usize) -> Coord {
+        Coord {x: x, y: y}
+    }
+
+    /// Returns true if two Coords are adjacent and NOT equal.
     pub fn adjacent(&self, other: &Self) -> bool {
         util::in_one(self.x, other.x) && util::in_one(self.y, other.y) && self != other
     }
@@ -20,18 +24,18 @@ mod tests {
 
     #[test]
     fn test_equals() {
-        assert_eq!(Coord { x: 2, y: 2 }, Coord { x: 2, y: 2 });
-        assert_ne!(Coord { x: 2, y: 2 }, Coord { x: 2, y: 3 });
-        assert_ne!(Coord { x: 2, y: 2 }, Coord { x: 3, y: 2 });
+        assert_eq!(Coord::new(2,2), Coord::new(2,2));
+        assert_ne!(Coord::new(2,2), Coord::new(2,3));
+        assert_ne!(Coord::new(2,2), Coord::new(3,2));
     }
 
     #[test]
     fn test_adjacent() {
-        let xy1 = Coord { x: 1, y: 1 };
-        let xy2 = Coord { x: 0, y: 0 };
-        let xy3 = Coord { x: 2, y: 2 };
-        let xy4 = Coord { x: 2, y: 2 };
-        let xy5 = Coord { x: 1, y: 0 };
+        let xy1 = Coord::new(1,1);
+        let xy2 = Coord::new(0,0);
+        let xy3 = Coord::new(2,2);
+        let xy4 = Coord::new(2,2);
+        let xy5 = Coord::new(1,0);
 
         assert!(xy1.adjacent(&xy2));
         assert!(xy1.adjacent(&xy3));

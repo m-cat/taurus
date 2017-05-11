@@ -2,14 +2,17 @@
 
 use util::{dice, rand_range};
 
-/// Capitalize the first letter of the string
+/// Capitalizes the first letter of the string.
+///
+/// # Panics
+/// Panics if the input string is empty.
 pub fn cap(s: &str) -> String {
     debug_assert!(!s.is_empty(), format!("Assert failed: cap({})", s));
     let c = &s[0..1];
     format!("{}{}", c.to_uppercase(), &s[1..])
 }
 
-/// Return a randomly-generated name
+/// Returns a randomly-generated name.
 #[allow(collapsible_if)]
 pub fn name_gen(max_len: usize) -> String {
     // Define the list of consonant, double consonant, etc. sequences
@@ -85,12 +88,14 @@ pub fn name_gen(max_len: usize) -> String {
     cap(&word)
 }
 
+/// Helper function for [`name_gen`].
 fn pick_seq(s: &str, n: usize) -> &str {
     let i = rand_range(0, s.len() / n - 1);
     &s[n * i..n * (i + 1)]
 }
 
-/// Lang unit tests
+// UNIT TESTS
+
 #[cfg(test)]
 mod tests {
     use std::str::*;

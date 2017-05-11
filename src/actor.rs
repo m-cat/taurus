@@ -14,14 +14,14 @@ use player;
 /// For things like doors and traps, we have a separate struct named Object.
 /// An object can share a tile with an actor.
 pub struct Actor {
-    /// Unique id for this instance
+    /// Unique id for this instance.
     pub id: uint,
     // kind: ActorEnum,
-    /// Character to draw to the console with
+    /// Character to draw to the console with.
     c: char,
-    /// Coordinate location in level
+    /// Coordinate location in level.
     pub xy: Coord,
-    /// Current turn
+    /// Current turn.
     pub turn: Fraction,
 
     // STATS
@@ -33,7 +33,7 @@ pub struct Actor {
     poison_amt: uint,
 
     // AI ATTRIBUTES
-    behavior: Behavior,
+    pub behavior: Behavior,
 }
 
 // Actor methods
@@ -45,7 +45,7 @@ impl Actor {
         let mut a = Actor {
             id: game.actor_id(),
             c: '@', // TODO
-            xy: Coord { x: 0, y: 0 },
+            xy: Coord::new(0,0),
             turn: game.turn(), // we update this after the actor is created
 
             hp_cur: hp as int,
@@ -61,17 +61,36 @@ impl Actor {
         a
     }
 
-    /// Returns the name associated with this actor
+    /// Returns the name associated with this actor.
     pub fn name(&self) -> &str {
+        // TODO
         "test"
     }
 
-    /// Returns this actor's base speed
+    /// Generates and returns the description of this actor.
+    pub fn description(&self) -> String {
+        // TODO
+        "test".to_string()
+    }
+
+    /// Returns this actor's base speed.
     pub fn speed(&self) -> Fraction {
         self.speed
     }
 
-    fn update_turn(&mut self) {
+    /// Sets this actor's coordinates.
+    pub fn set_coord(&mut self, x: usize, y: usize) {
+        self.xy.x = x;
+        self.xy.y = y;
+    }
+
+    /// Sets this actor's turn to a new value.
+    pub fn set_turn(&mut self, turn: Fraction) {
+        self.turn = turn;
+    }
+
+    /// Updates this actor's turn.
+    pub fn update_turn(&mut self) {
         self.turn += self.speed();
     }
 
@@ -79,24 +98,20 @@ impl Actor {
     /// Could change itself or the dungeon as a side effect.
     /// Actor should update its own `turn` value.
     pub fn act(&mut self, game: &Game, dungeon: &mut Dungeon) -> ActResult {
-        let result = match self.behavior {
-            Behavior::Player =>
-                player::player_act(self, game, dungeon),
-            _ => ActResult::None,
-        };
+        // let result = match self.behavior {
+        //     Behavior::Player => player::player_act(self, game, dungeon),
+        //     _ => ActResult::None,
+        // };
 
-        match result {
-            ActResult::None => {},
-            _ => return result,
-        }
-
-        self.update_turn();
+        // match result {
+        //     ActResult::None => {}
+        //     _ => return result,
+        // }
 
         ActResult::None
     }
 
-    /// Draw the actor at given screen (not game) position.
-    /// Called from ui_draw
+    /// Draws the actor at given screen (not game) position.
     pub fn draw(&self, scr_x: uint, scr_y: uint) {}
 }
 
@@ -105,8 +120,8 @@ impl Actor {
 //     GiantRat,
 // } TODO: keep this?
 
-enum Behavior {
-    /// Behavior corresponding to the player itself
+pub enum Behavior {
+    /// Behavior corresponding to the player itself.
     Player,
     Friendly,
     Wary,
@@ -127,7 +142,7 @@ pub enum ActResult {
 pub struct CoordTurn {
     pub xy: Coord,
     pub turn: Fraction,
-    /// id of the actor
+    /// The id of the actor.
     pub id: uint,
 }
 
@@ -135,14 +150,14 @@ pub struct CoordTurn {
 
 impl Eq for CoordTurn {}
 impl PartialEq for CoordTurn {
-    /// a1 == a2 iff their `turn` values are equal
+    /// Returns a1 == a2 iff their `turn` values are equal.
     fn eq(&self, other: &CoordTurn) -> bool {
         self.turn == other.turn
     }
 }
 
 impl Ord for CoordTurn {
-    /// Compare CoordTurns (and actors by proxy) by turn.
+    /// Compares CoordTurns (and actors by proxy) by turn.
     /// Note that the ordering is flipped so the priority queue becomes a min-heap.
     fn cmp(&self, other: &CoordTurn) -> Ordering {
         // Since we're comparing floating values here, we have to use partial_cmp.

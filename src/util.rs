@@ -21,35 +21,43 @@ pub type uint = u32;
 
 // PATH FUNCTIONS
 
-/// Make a path by joining s1 to dir
-pub fn make_path_dir(dir: &str, s1: &str) -> PathBuf {
+/// Makes a path by joining a filename to a directory.
+///
+/// # Examples
+/// ```
+/// use taurus::util;
+///
+/// let path = util::make_path_join("a/b", "test.txt");
+/// assert_eq!(path.to_str(), Some("a/b/test.txt"));
+/// ```
+pub fn make_path_join(dir: &str, s1: &str) -> PathBuf {
     let dir_path = Path::new(dir);
     dir_path.join(Path::new(s1))
 }
 
-/// Return the path created by concatenating two &str
+/// Returns the path created by concatenating two strings.
 pub fn make_path_cat(s1: &str, s2: &str) -> PathBuf {
     let name = format!("{}{}", s1, s2);
     Path::new(name.as_str()).to_path_buf()
 }
 
-/// Make a path by concatenating two filenames, then joining to dir
-pub fn make_path_dir_cat(dir: &str, s1: &str, s2: &str) -> PathBuf {
+/// Makes a path by concatenating two filenames, then joining to a directory.
+pub fn make_path_cat_join(dir: &str, s1: &str, s2: &str) -> PathBuf {
     let dir_path = Path::new(dir);
     dir_path.join(make_path_cat(s1, s2))
 }
 
 // MATH FUNCTIONS
 
-/// Return the absolute difference between a and b
-/// Note that something like (b-a).abs() doesn't work for unsigned types
+/// Returns the absolute difference between a and b.
 pub fn diff<T>(a: T, b: T) -> T
     where T: Integer
 {
+    // Note that something like (b-a).abs() doesn't work for unsigned types.
     if b >= a { b - a } else { a - b }
 }
 
-/// Return true if n is between a and b
+/// Returns true if n is between a and b.
 #[allow(needless_pass_by_value)]
 pub fn between<T>(n: T, a: T, b: T) -> bool
     where T: Integer
@@ -61,7 +69,7 @@ pub fn between<T>(n: T, a: T, b: T) -> bool
     }
 }
 
-/// Return true if a and b are within n units of each other
+/// Returns true if a and b are within n units of each other.
 #[allow(needless_pass_by_value)]
 pub fn in_range<T>(a: T, b: T, n: T) -> bool
     where T: Integer
@@ -69,7 +77,7 @@ pub fn in_range<T>(a: T, b: T, n: T) -> bool
     diff(a, b) <= n
 }
 
-/// Return true if a and b are within one unit of each other
+/// Returns true if a and b are within one unit of each other.
 pub fn in_one<T>(a: T, b: T) -> bool
     where T: Integer
 {
@@ -78,7 +86,7 @@ pub fn in_one<T>(a: T, b: T) -> bool
 
 // RANDOM FUNCTIONS
 
-/// Return a random usize in the range [x..y] inclusive
+/// Returns a random usize in the range [x..y] inclusive.
 pub fn rand_range<T>(x: T, y: T) -> T
     where T: Integer + SampleRange
 {
@@ -89,7 +97,7 @@ pub fn rand_range<T>(x: T, y: T) -> T
     }
 }
 
-/// Return true with x in y chance
+/// Returns true with x in y chance.
 #[allow(needless_pass_by_value)]
 pub fn dice<T>(x: T, y: T) -> bool
     where T: Integer + SampleRange + Display
@@ -100,7 +108,7 @@ pub fn dice<T>(x: T, y: T) -> bool
 
 // FILE IO FUNCTIONS
 
-/// Read a file and return its contents in a string
+/// Reads a file and returns its contents in a string.
 pub fn read_file_str(path: &Path) -> io::Result<String> {
     // Open the path in read-only mode, returns `io::Result<File>`
     let mut file = File::open(&path)?;
@@ -112,8 +120,8 @@ pub fn read_file_str(path: &Path) -> io::Result<String> {
     Ok(contents)
 }
 
-/// Read a file and return its contents as lines in Vec<String>
-/// Each string returned will not have a newline byte.
+/// Reads a file and returns its contents as lines in Vec<String>.
+/// Each string returned will not have an ending newline.
 pub fn read_file_vec(path: &Path) -> io::Result<Vec<String>> {
     // Open the path in read-only mode, returns `io::Result<File>`
     let file = File::open(&path)?;
@@ -132,7 +140,7 @@ pub fn read_file_vec(path: &Path) -> io::Result<Vec<String>> {
     Ok(vec)
 }
 
-/// Write a string to a file with a given path
+/// Writes a string to a file with a given path.
 pub fn write_file_str(path: &Path, contents: &str) -> io::Result<()> {
     // Open a file in write-only mode, returns `io::Result<File>`
     let mut file = File::create(&path)?;
@@ -143,7 +151,7 @@ pub fn write_file_str(path: &Path, contents: &str) -> io::Result<()> {
     Ok(())
 }
 
-/// Write a Vec<String> to a file with a given path
+/// Writes a Vec<String> to a file with a given path.
 pub fn write_file_vec(path: &Path, contents: &[String]) -> io::Result<()> {
     // Open a file in write-only mode, returns `io::Result<File>`
     let mut file = File::create(&path)?;
@@ -158,8 +166,7 @@ pub fn write_file_vec(path: &Path, contents: &[String]) -> io::Result<()> {
     Ok(())
 }
 
-/// Compare two files for equality
-/// Written in order to test the org module
+/// Compares two files for equality.
 pub fn files_equal(path1: &Path, path2: &Path) -> io::Result<bool> {
     let s1 = match read_file_str(path1) {
         Ok(s) => s,

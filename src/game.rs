@@ -1,44 +1,34 @@
 use std::cell::Cell;
-use std::cell::RefCell;
-use std::rc::Rc;
 use std::collections::VecDeque;
 use num_traits::identities::Zero;
 use fraction::Fraction;
 
 use util::uint;
-use console::GameConsole;
 use database::Database;
-use dungeon::Dungeon;
-use generate;
 use constants;
 
-/// Struct containing game-wide data such as the draw console,
-/// the database, and the dungeon levels
+/// Struct containing game-wide data such as the database and the message list.
 pub struct Game {
-    /// A reference to the console, wrapped around Rc<Refcell>.
-    pub console: Rc<RefCell<GameConsole>>,
-    /// A reference to the main game database containing monster info, tile info, etc
+    /// A reference to the main game database containing monster info, tile info, etc.
     pub database: Database,
 
-    /// Message deque storing a fixed number of messages
+    /// Message deque storing a fixed number of messages.
     message_deque: VecDeque<String>,
 
-    /// Current depth that the player is on, indexed starting at 1
+    /// Current depth that the player is on, indexed starting at 1.
     depth: usize,
-    /// Current global game turn
+    /// Current global game turn.
     turn: Cell<Fraction>, // Cell type used for interior mutability
 
-    /// Number of actors created, used for assigning unique id's
+    /// Number of actors created, used for assigning unique id's.
     num_actors: Cell<uint>, // Cell type for interior mutability
 }
 
 impl Game {
     pub fn new() -> Game {
-        let console = GameConsole::init(); // initialize the console
         let database = Database::init(); // initialize the database
 
         Game {
-            console: Rc::new(RefCell::new(console)),
             database: database,
             message_deque: VecDeque::with_capacity(constants::MESSAGE_DEQUE_SIZE),
             depth: 1,
@@ -67,6 +57,6 @@ impl Game {
         n
     }
 
-    /// Adds a string to the message deque
+    /// Adds a string to the message deque.
     pub fn add_message(&self, message: &str) {} // TODO. Should pop_front when queue gets too big
 }

@@ -17,7 +17,7 @@ lint:
 	cargo clippy
 
 doc:
-	cargo doc --open
+	cargo doc
 
 modules:
 	cargo modules # display module structure

@@ -22,9 +22,11 @@ pub mod generate;
 
 use dungeon::Dungeon;
 use game::Game;
+use console::GameConsole;
 
 /// Runs the main game loop
 pub fn run_game() {
+    let mut console = GameConsole::init(); // initialize the console
     let mut game = Game::new();
 
     let mut dungeon_list: Vec<Dungeon> = Vec::new();
@@ -36,7 +38,7 @@ pub fn run_game() {
         .expect("Game::run failed, invalid index");
 
     // Main game loop
-    match dungeon.run_loop(&game) {
+    match dungeon.run_loop(&game, &mut console) {
         GameLoopResult::WindowClosed => {
             println!("Window closed, exiting!"); // TODO
         }

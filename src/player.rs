@@ -2,10 +2,9 @@ use game::Game;
 use dungeon::Dungeon;
 use actor::ActResult;
 use actor::Actor;
+use console::GameConsole;
 
-pub fn player_act(player: &mut Actor, game: &Game, dungeon: &mut Dungeon) -> ActResult {
-    // Check if the game window was closed
-    let mut console = game.console.borrow_mut();
+pub fn player_act(player: &mut Actor, game: &Game, dungeon: &mut Dungeon, console: &mut GameConsole) -> ActResult {
     if console.window_closed() {
         return ActResult::WindowClosed;
     } // TODO: how does window_closed work?
