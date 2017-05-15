@@ -9,7 +9,7 @@ pub struct Coord {
 
 impl Coord {
     pub fn new(x: usize, y: usize) -> Coord {
-        Coord {x: x, y: y}
+        Coord { x: x, y: y }
     }
 
     /// Returns true if two Coords are adjacent and NOT equal.
@@ -24,18 +24,18 @@ mod tests {
 
     #[test]
     fn test_equals() {
-        assert_eq!(Coord::new(2,2), Coord::new(2,2));
-        assert_ne!(Coord::new(2,2), Coord::new(2,3));
-        assert_ne!(Coord::new(2,2), Coord::new(3,2));
+        assert_eq!(Coord::new(2, 2), Coord::new(2, 2));
+        assert_ne!(Coord::new(2, 2), Coord::new(2, 3));
+        assert_ne!(Coord::new(2, 2), Coord::new(3, 2));
     }
 
     #[test]
     fn test_adjacent() {
-        let xy1 = Coord::new(1,1);
-        let xy2 = Coord::new(0,0);
-        let xy3 = Coord::new(2,2);
-        let xy4 = Coord::new(2,2);
-        let xy5 = Coord::new(1,0);
+        let xy1 = Coord::new(1, 1);
+        let xy2 = Coord::new(0, 0);
+        let xy3 = Coord::new(2, 2);
+        let xy4 = Coord::new(2, 2);
+        let xy5 = Coord::new(1, 0);
 
         assert!(xy1.adjacent(&xy2));
         assert!(xy1.adjacent(&xy3));

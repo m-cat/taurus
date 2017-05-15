@@ -6,6 +6,7 @@ use fraction::Fraction;
 use util::uint;
 use database::Database;
 use constants;
+use coord::Coord;
 
 /// Struct containing game-wide data such as the database and the message list.
 pub struct Game {
@@ -16,32 +17,53 @@ pub struct Game {
     message_deque: VecDeque<String>,
 
     /// Current depth that the player is on, indexed starting at 1.
-    depth: usize,
+    player_depth: Option<usize>,
+    /// Current coordinates of the player
+    player_xy: Option<Coord>,
+
     /// Current global game turn.
     turn: Cell<Fraction>, // Cell type used for interior mutability
-
     /// Number of actors created, used for assigning unique id's.
     num_actors: Cell<uint>, // Cell type for interior mutability
 }
 
 impl Game {
     pub fn new() -> Game {
-        let database = Database::init(); // initialize the database
+        let mut database = Database::new(); // initialize the database
+        database::init_game(&mut database);
 
         Game {
             database: database,
             message_deque: VecDeque::with_capacity(constants::MESSAGE_DEQUE_SIZE),
-            depth: 1,
+            player_depth: None,
+            player_xy: None,
             turn: Cell::new(Fraction::zero()),
             num_actors: Cell::new(0),
         }
     }
 
-    pub fn depth(&self) -> usize {
-        self.depth
+    /// Gets the current depth that the player is on.
+    ///
+    /// # Panics
+    /// If the player doesn't exist.
+    pub fn player_depth(&self) -> usize {
+        self.player_depth
+            .expect("Game::player_depth failed: player does not exist.")
     }
-    pub fn set_depth(&mut self, value: usize) {
-        self.depth = value;
+    pub fn set_player_depth(&mut self, value: usize) {
+        self.player_depth = Some(value);
+    }
+
+    /// Gets the current coordinates of the player.
+    ///
+    /// # Panics
+    /// If the player doesn't exist.
+    pub fn player_xy(&self) -> Coord {
+        self.player_xy
+            .expect("Game::player_xy failed: player does not exist.")
+    }
+    pub fn set_player_xy(&mut self, value: Coord) {
+        self.player_xy = Some(value);
     }
 
     pub fn turn(&self) -> Fraction {
@@ -51,6 +73,7 @@ impl Game {
         self.turn.set(value);
     }
 
+    /// Generates a new unique actor id.
     pub fn actor_id(&self) -> uint {
         let n = self.num_actors.get();
         self.num_actors.set(n + 1);

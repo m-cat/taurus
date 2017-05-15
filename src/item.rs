@@ -2,6 +2,7 @@
 
 pub struct Item {}
 
+#[derive(Default)]
 pub struct ItemStack {
     items: Vec<Item>,
 }

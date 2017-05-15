@@ -123,7 +123,7 @@ impl Dungeon {
     /// If the actor could not be found at the given coordinates.
     pub fn set_actor_coord(&mut self, x: usize, y: usize, new_x: usize, new_y: usize) {
         assert!(!self.actor_map.contains_key(&Coord::new(new_x, new_y)));
-        // TODO
+
         let (mut actor_list, option) = self.unroll_queue_get_actor(x, y);
         let mut actor = option.expect("Dungeon::set_actor_coord failed: could not find actor.");
 
@@ -135,8 +135,17 @@ impl Dungeon {
 
     /// Sets an actor's turn.
     /// Note that this is rather inefficient due to the need to rebuild the priority queue.
+    ///
+    /// # Panics
+    /// If the actor could not be found at the given coordinates.
     pub fn set_actor_turn(&mut self, x: usize, y: usize, new_turn: Fraction) {
-        // TODO
+        let (mut actor_list, option) = self.unroll_queue_get_actor(x, y);
+        let mut actor = option.expect("Dungeon::set_actor_coord failed: could not find actor.");
+
+        actor.set_turn(new_turn);
+        actor_list.push(actor);
+
+        self.rebuild_queue(actor_list);
     }
 
     /// Unrolls the actor queue looking for a specific actor.
@@ -145,8 +154,9 @@ impl Dungeon {
         let mut actor_list: Vec<Actor> = Vec::new();
         let mut option = None;
 
-        for coordt in self.actor_queue.drain(){
-            coordt_list.push(coordt);}
+        for coordt in self.actor_queue.drain() {
+            coordt_list.push(coordt);
+        }
 
         for coordt in coordt_list {
             let actor_temp = self.remove_actor(coordt.xy.x, coordt.xy.y);
@@ -260,7 +270,7 @@ impl Dungeon {
 
             match result {
                 ActResult::WindowClosed => return GameLoopResult::WindowClosed,
-                ActResult::None => {},
+                ActResult::None => {}
             };
 
             // Push the actor's associated CoordTurn back on the queue.

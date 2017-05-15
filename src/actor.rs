@@ -7,7 +7,6 @@ use util::{uint, int};
 use coord::Coord;
 use dungeon::Dungeon;
 use game::Game;
-use player;
 
 /// An actor is any entity which could conceivably `act`, that is, have a turn.
 /// Only one actor can occupy a tile at a time.
@@ -25,7 +24,7 @@ pub struct Actor {
     pub turn: Fraction,
 
     // STATS
-    hp_cur: int, // int because this value can be negative!
+    hp_cur: int, // int, because this value can be negative!
     hp_max: uint,
     speed: Fraction,
 
@@ -36,8 +35,6 @@ pub struct Actor {
     pub behavior: Behavior,
 }
 
-// Actor methods
-
 impl Actor {
     pub fn new(game: &Game) -> Actor {
         let hp: uint = 0; // TODO
@@ -45,8 +42,8 @@ impl Actor {
         let mut a = Actor {
             id: game.actor_id(),
             c: '@', // TODO
-            xy: Coord::new(0,0),
-            turn: game.turn(), // we update this after the actor is created
+            xy: Coord::new(0, 0),
+            turn: game.turn(), // we update this later in this function
 
             hp_cur: hp as int,
             hp_max: hp,
