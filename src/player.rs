@@ -6,7 +6,7 @@ use console::GameConsole;
 
 /// Creates and returns the player actor.
 pub fn player_create(game: &Game) -> Actor {
-    Actor::new(game)
+    Actor::new(game, "player")
 }
 
 /// Acts out the player's turn.

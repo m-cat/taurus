@@ -11,6 +11,7 @@ pub mod org;
 pub mod constants;
 pub mod console;
 pub mod database;
+pub mod data;
 pub mod tile;
 pub mod actor;
 pub mod player;

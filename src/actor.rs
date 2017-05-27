@@ -29,19 +29,20 @@ pub struct Actor {
     speed: Fraction,
 
     // COMBAT STATE
-    poison_amt: uint,
 
     // AI ATTRIBUTES
     pub behavior: Behavior,
 }
 
 impl Actor {
-    pub fn new(game: &Game) -> Actor {
-        let hp: uint = 0; // TODO
+    pub fn new(game: &Game, name: &str) -> Actor {
+        let database = game.database.get("Actor").get(name);
+
+        let hp = database.get("hp").get_uint();
 
         let mut a = Actor {
             id: game.actor_id(),
-            c: '@', // TODO
+            c: database.get("c").get_char(),
             xy: Coord::new(0, 0),
             turn: game.turn(), // we update this later in this function
 
@@ -49,12 +50,11 @@ impl Actor {
             hp_max: hp,
             speed: Fraction::from(1),
 
-            poison_amt: 0,
-
             behavior: Behavior::Hostile, // the default is a hostile monster!
         };
 
-        a.turn += a.speed();
+        a.turn += a.speed(); // Set the actor's turn.
+
         a
     }
 

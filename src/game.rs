@@ -5,6 +5,7 @@ use fraction::Fraction;
 
 use util::uint;
 use database::Database;
+use data;
 use constants;
 use coord::Coord;
 
@@ -30,7 +31,7 @@ pub struct Game {
 impl Game {
     pub fn new() -> Game {
         let mut database = Database::new(); // initialize the database
-        database::init_game(&mut database);
+        data::init_game(&mut database);
 
         Game {
             database: database,

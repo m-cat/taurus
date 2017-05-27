@@ -7,15 +7,21 @@ use dungeon::Dungeon;
 use game::Game;
 use player;
 
-// Todo: generate the dungeon piecemeal
 /// Generates the entire dungeon.
 pub fn generate_game(game: &mut Game, dungeon_list: &mut Vec<Dungeon>) {
+    // Create the list of dungeons
     for n in 0..constants::NUM_DUNGEONS {
         dungeon_list.push(Dungeon::new(n + 1));
     }
 
+    // Generate each depth
     for n in 0..constants::NUM_DUNGEONS {
         generate_depth(game, dungeon_list, n);
+    }
+
+    // Generate pits
+    for n in 0..constants::NUM_DUNGEONS - 1 {
+        generate_pits(game, dungeon_list, n);
     }
 
     generate_player(game, &mut dungeon_list[0]);
@@ -29,6 +35,9 @@ fn generate_depth(game: &Game, dungeon_list: &mut Vec<Dungeon>, index: usize) {
     // let a = Actor::new(game);
     // add_actor_random_coord(dungeon, a);
 }
+
+/// Generates pits for a depth of the dungeon.
+fn generate_pits(game: &Game, dungeon_list: &mut Vec<Dungeon>, index: usize) {}
 
 /// Creates the player and places him in a random location of the dungeon.
 fn generate_player(game: &Game, dungeon: &mut Dungeon) {

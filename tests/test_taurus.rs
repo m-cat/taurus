@@ -8,7 +8,7 @@ mod common;
 #[test]
 fn test_set_actor_coord() {
     let (game, mut dungeon) = common::setup_game_test();
-    let actor = Actor::new(&game);
+    let actor = Actor::new(&game, "test");
 
     dungeon.add_actor(0, 0, actor);
     dungeon.set_actor_coord(0, 0, 1, 1);
@@ -28,8 +28,8 @@ fn test_set_actor_coord() {
 #[should_panic]
 fn test_set_actor_coord_panic() {
     let (game, mut dungeon) = common::setup_game_test();
-    let actor1 = Actor::new(&game);
-    let actor2 = Actor::new(&game);
+    let actor1 = Actor::new(&game, "test");
+    let actor2 = Actor::new(&game, "test");
 
     dungeon.add_actor(0, 0, actor1);
     dungeon.add_actor(1, 1, actor2);
