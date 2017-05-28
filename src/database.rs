@@ -64,6 +64,14 @@ impl Database {
         }
     }
 
+    // TODO
+    pub fn add_char(&mut self, value: char) {
+        match self.fields {
+            None => self.fields = Some(vec![Value::Char(value)]),
+            Some(ref mut fields) => fields.push(Value::Char(value)),
+        }
+    }
+
     /// Adds a new &str entry to the Database.
     ///
     /// # Examples
@@ -124,9 +132,25 @@ impl Database {
         }
     }
 
-    // TODO
+    /// Gets the value associated with the Database subtree as a char.
+    /// Returns the first value stored in the subtree.
+    /// For more than one, use an iterator.
+    ///
+    /// # Panics
+    /// If the associated value doesn't exist or is not a char.
+    ///
+    /// # Examples
+    /// See get_uint.
     pub fn get_char(&self) -> char {
-        'c'
+        match self.fields.as_ref() {
+            Some(ref mut vec) => {
+                match vec[0] {
+                    Value::Char(value) => value,
+                    _ => panic!("Database::get_char failed: value is not a char."),
+                }
+            }
+            None => panic!("Database::get_char failed: no value found."),
+        }
     }
 
     /// Returns an iterator over the values associated with this Database subtree.
@@ -139,31 +163,38 @@ impl Database {
     }
 }
 
-// // Implementing IntoIterator allows us to use Rust's for-loop syntax for iterating
-// // over the fields of a database.
-// impl IntoIterator for Database {
-//     type Item = Value;
-//     type IntoIter = ::std::vec::IntoIter<Value>;
-
-//     fn into_iter(self) -> Self::IntoIter {
-//         self.fields.expect("Database::into_iter failed: no fields initialized.").into_iter()
-//     }
-// }
-
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Value {
     Int(int),
     Uint(uint),
+    Char(char),
     Str(&'static str),
 }
-
-// impl PartialEq for Value {
-//     fn eq(&self, other: &Self) {
-//         match
 
 #[cfg(test)]
 mod tests {
     use database::*;
+
+    #[test]
+    fn test_get_uint() {
+        let mut db = Database::new();
+        db.sub("Test").add_uint(4);
+        assert_eq!(db.get("Test").get_uint(), 4);
+    }
+
+    #[test]
+    fn test_get_char() {
+        let mut db = Database::new();
+        db.sub("Test").add_char('c');
+        assert_eq!(db.get("Test").get_char(), 'c');
+    }
+
+    #[test]
+    fn test_get_str() {
+        let mut db = Database::new();
+        db.sub("Test").add_str("testing");
+        assert_eq!(db.get("Test").get_str(), "testing");
+    }
 
     #[test]
     fn test_iter() {
@@ -171,7 +202,7 @@ mod tests {
         db.sub("Test").sub("Fields").add_uint(0);
         db.sub("Test").sub("Fields").add_uint(1);
 
-        for (i, n) in db.sub("Test").sub("Fields").iter().enumerate() {
+        for (i, n) in db.get("Test").get("Fields").iter().enumerate() {
             if let &Value::Uint(u) = n {
                 assert_eq!(u, i as uint);
             }
