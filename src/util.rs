@@ -84,7 +84,7 @@ pub fn in_one<T>(a: T, b: T) -> bool
     in_range(a, b, T::one())
 }
 
-// RANDOM FUNCTIONS
+// RAND FUNCTIONS
 
 /// Returns a random usize in the range [x..y] inclusive.
 pub fn rand_range<T>(x: T, y: T) -> T

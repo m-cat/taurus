@@ -1,5 +1,3 @@
-use coord::Coord;
-
 /// A data structure for things like doors and traps which
 /// can be interacted with. For more about the differences
 /// between objects and actors, see actor.rs.

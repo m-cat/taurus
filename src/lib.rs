@@ -20,6 +20,7 @@ pub mod item;
 pub mod dungeon;
 pub mod game;
 pub mod generate;
+pub mod ui;
 
 use dungeon::Dungeon;
 use game::Game;
@@ -58,7 +59,7 @@ fn init_new_game() -> (GameConsole, Game, Vec<Dungeon>) {
     let mut dungeon_list: Vec<Dungeon> = Vec::new();
 
     // Generate game
-    generate::generate_game(&mut game, &mut dungeon_list); // TODO: add piecemeal generation
+    generate::gen_game(&mut game, &mut dungeon_list); // TODO: add piecemeal generation
 
     (console, game, dungeon_list)
 }

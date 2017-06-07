@@ -21,14 +21,11 @@ use console::GameConsole;
 /// This struct is also responsible for running the actor priority queue.
 pub struct Dungeon {
     depth: usize,
-
-    tile_grid: Vec<Vec<Tile>>, // indexed x,y
+    tile_grid: Option<Vec<Vec<Tile>>>, // indexed x,y
 
     actor_map: HashMap<Coord, Actor>,
     actor_queue: BinaryHeap<CoordTurn>,
-
     object_map: HashMap<Coord, Object>,
-
     stack_map: HashMap<Coord, ItemStack>,
 }
 
@@ -36,26 +33,30 @@ impl Dungeon {
     pub fn new(depth: usize) -> Dungeon {
         Dungeon {
             depth: depth,
-
-            tile_grid: Vec::with_capacity(0), // placeholder - allocated and filled when generating
+            tile_grid: None,
 
             actor_map: HashMap::new(),
             actor_queue: BinaryHeap::new(),
-
             object_map: HashMap::new(),
-
             stack_map: HashMap::new(),
         }
     }
 
     /// Returns the width of the tile grid.
+    ///
+    /// # Panics
+    /// If the tile grid hasn't been initialized.
     pub fn width(&self) -> usize {
-        self.tile_grid.len()
+        self.tile_grid.as_ref().unwrap().len()
     }
 
     /// Returns the height of the tile grid.
+    ///
+    /// # Panics
+    /// If the tile grid hasn't been initialized.
     pub fn height(&self) -> usize {
-        self.tile_grid[0].len()
+        let column_list = self.tile_grid.as_ref().unwrap();
+        column_list[0].len()
     }
 
     /// Returns the number of actors in the dungeon.
@@ -68,24 +69,19 @@ impl Dungeon {
         self.actor_queue.len()
     }
 
-    // /// Initialize the tile grid, should only be called in generation functions
-    // fn init_grid() -> Vec<Vec<Tile>> {
-    //     let w = constants::DUNGEON_WIDTH_DEFAULT;
-    //     let h = constants::DUNGEON_HEIGHT_DEFAULT;
-    //     let mut tile_grid = Vec::with_capacity(w);
+    /// Initializes the tile grid, should only be called in generation functions
+    fn create_grid(&mut self, width: usize, height: usize) {
+        self.tile_grid = Some(Vec::with_capacity(width));
 
-    //     for j in 0..w {
-    //         let mut column: Vec<Tile> = Vec::with_capacity(h);
+        for j in 0..width {
+            let mut column: Vec<Tile> = Vec::with_capacity(height);
 
-    //         for i in 0..h {
-    //             column.push(Tile::new());
-    //         }
-    //         tile_grid.push(column);
-    //     }
-
-    //     tile_grid
-    // }
-
+            for i in 0..height {
+                column.push(Tile::new());
+            }
+            self.tile_grid.as_mut().unwrap().push(column);
+        }
+    }
 
     /// Adds actor to both the coordinate map and the priority queue.
     ///
@@ -285,12 +281,18 @@ impl Dungeon {
 impl Index<usize> for Dungeon {
     type Output = Vec<Tile>;
 
+    /// # Panics
+    /// Panics if the tile grid hasn't been initialized.
     fn index(&self, index: usize) -> &Vec<Tile> {
-        &self.tile_grid[index]
+        &self.tile_grid.as_ref().unwrap()[index]
+        // let temp: Vec<Vec<Tile>> = self.tile_grid.unwrap();
+        // &temp[index]
     }
 }
 impl IndexMut<usize> for Dungeon {
+    /// # Panics
+    /// Panics if the tile grid hasn't been initialized.
     fn index_mut(&mut self, index: usize) -> &mut Vec<Tile> {
-        &mut self.tile_grid[index]
+        &mut self.tile_grid.as_mut().unwrap()[index]
     }
 }

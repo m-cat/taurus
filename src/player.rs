@@ -3,6 +3,7 @@ use dungeon::Dungeon;
 use actor::ActResult;
 use actor::Actor;
 use console::GameConsole;
+use ui;
 
 /// Creates and returns the player actor.
 pub fn player_create(game: &Game) -> Actor {
@@ -22,12 +23,11 @@ pub fn player_act(player: &mut Actor,
         return ActResult::WindowClosed;
     } // TODO: how does window_closed work?
 
-    // TODO
     // Draw the game to the screen
-    console.put_char(1, 1, '@');
-    console.wait_for_keypress(true);
+    ui::game_draw(game, dungeon, console);
 
     // Wait for user input
+    console.wait_for_keypress(true);
 
     // Respond to user input
 

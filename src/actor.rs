@@ -17,7 +17,7 @@ pub struct Actor {
     pub id: uint,
     // kind: ActorEnum,
     /// Character to draw to the console with.
-    c: char,
+    pub c: char,
     /// Coordinate location in level.
     pub xy: Coord,
     /// Current turn.
@@ -107,9 +107,6 @@ impl Actor {
 
         ActResult::None
     }
-
-    /// Draws the actor at given screen (not game) position.
-    pub fn draw(&self, scr_x: uint, scr_y: uint) {}
 }
 
 // enum ActorEnum {
