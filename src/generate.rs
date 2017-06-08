@@ -1,6 +1,7 @@
 //! Module containing dungeon generation algorithms.
 
 use util::*;
+use util::Direction::*;
 use constants;
 use coord::Coord;
 use actor::Actor;
@@ -63,6 +64,7 @@ fn add_actor_random_coord(dungeon: &mut Dungeon, a: Actor) {
 /// Generates a dungeon level using the "room method".
 fn gen_dungeon_room_method(dungeon: &mut Dungeon, index: usize) {
     let mut room_list: Vec<Room> = Vec::new();
+    let direction_list = vec![N, E, S, W];
     let goal_num_rooms = gen_num_rooms(index);
 
     // Generate the initial room
@@ -73,18 +75,36 @@ fn gen_dungeon_room_method(dungeon: &mut Dungeon, index: usize) {
         let mut found = false;
 
         while !found {
-            let room = &room_list[rand_range(0, room_list.len()-1)];
+            let room = get_random(&room_list).clone();
+            let direction = get_random(&direction_list);
 
-
+            match gen_room_adjacent(&room, *direction) {
+                Some(new_room) => {
+                    room_list.push(new_room);
+                    found = true;
+                },
+                None => {}, // keep looking
+            };
         }
     }
 
     // Initialize the dungeon tile grid
+    init_dungeon_from_rooms(dungeon, &room_list);
 
     // Convert the list of rooms into a tile grid representation
 }
 
-/// Generates the number of `Room`s based on the dungeon level specified by `index`.
+/// Generates a room adjacent to `room`, or returns `None`.
+fn gen_room_adjacent(room: &Room, direction: Direction) -> Option<Room> {
+    None // todo
+}
+
+/// Initializes `dungeon`'s dungeon grid based on the `Room`s in `room_list`.
+fn init_dungeon_from_rooms(dungeon: &mut Dungeon, room_list: &Vec<Room>) {
+    // todo
+}
+
+/// Generates the number of `Room`s for the dungeon level specified by `index`.
 fn gen_num_rooms(index: usize) -> usize {
     10 + 10*index // TODO
 }
@@ -100,6 +120,7 @@ fn gen_room_height(index: usize) -> usize {
 }
 
 /// A struct for storing data for a single `Room`, used in dungeon generation.
+#[derive(Clone)]
 struct Room {
     left: usize,
     top: usize,

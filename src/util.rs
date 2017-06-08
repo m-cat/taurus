@@ -106,6 +106,13 @@ pub fn dice<T>(x: T, y: T) -> bool
     rand_range(T::one(), y) <= x
 }
 
+// VECTOR FUNCTIONS
+
+/// Returns a random element from `vec`, all elements having equal weighting.
+pub fn get_random<'a, T>(vec: &'a Vec<T>) -> &'a T {
+    &vec[rand_range(0, vec.len()-1)]
+}
+
 // FILE IO FUNCTIONS
 
 /// Reads a file and returns its contents in a string.
@@ -178,6 +185,21 @@ pub fn files_equal(path1: &Path, path2: &Path) -> io::Result<bool> {
     };
 
     Ok(s1 == s2)
+}
+
+// ENUMS
+
+/// Enum delineating the 8 possible cardinal directions.
+#[derive(Clone, Copy)]
+pub enum Direction {
+    N,
+    E,
+    S,
+    W,
+    NE,
+    SE,
+    SW,
+    NW,
 }
 
 // UNIT TESTS
