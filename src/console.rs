@@ -51,7 +51,8 @@ impl GameConsole {
 
     /// Sets the main window's title to `title`.
     pub fn set_window_title<T>(&mut self, title: T)
-        where T: AsRef<str> {
+        where T: AsRef<str>
+    {
         self.root.set_window_title(title);
     }
 }

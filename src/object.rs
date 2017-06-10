@@ -1,8 +1,12 @@
+use coord::Coord;
+
 /// A data structure for things like doors and traps which
 /// can be interacted with. For more about the differences
 /// between objects and actors, see actor.rs.
 pub struct Object {
-    /// The class of object, containing the object kind
+    /// The coordinate of the object.
+    xy: Coord,
+    /// The class of object, containing the object kind.
     class: ObjectClass,
 }
 

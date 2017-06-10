@@ -1,7 +1,7 @@
 use util;
 
 // Very simple but indispensible struct
-#[derive(PartialEq, Eq, Debug, Hash, Clone, Copy)]
+#[derive(PartialEq, Eq, Debug, Hash, Clone, Copy, Default)]
 pub struct Coord {
     pub x: usize,
     pub y: usize,

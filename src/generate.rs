@@ -4,6 +4,7 @@ use util::*;
 use util::Direction::*;
 use constants;
 use coord::Coord;
+use object::Object;
 use actor::Actor;
 use dungeon::Dungeon;
 use game::Game;
@@ -48,22 +49,22 @@ fn gen_pits(game: &Game, dungeon_list: &mut Vec<Dungeon>, index: usize) {
     assert!(index < dungeon_list.len() - 1);
 }
 
-/// Creates the player and places him in a random location of the dungeon.
-fn gen_player(game: &Game, dungeon: &mut Dungeon) {
-    let player = player::player_create(game);
-    add_actor_random_coord(dungeon, player);
+/// Creates an actor of type `name` and places it in a random open location in `dungeon`.
+fn gen_actor_random_coord(game: &Game, dungeon: &mut Dungeon, name: &str) {
+    let xy = dungeon.random_avail_coord_actor();
+    let a = Actor::new(game, name);
+    dungeon.add_actor(xy, a);
 }
 
-/// Adds the given actor to a random available tile in the dungeon.
-fn add_actor_random_coord(dungeon: &mut Dungeon, a: Actor) {
-    let x = rand_range(0, dungeon.width() - 1);
-    let y = rand_range(0, dungeon.height() - 1);
-    dungeon.add_actor(x, y, a);
+/// Creates the player and places him in a random location of the dungeon.
+fn gen_player(game: &Game, dungeon: &mut Dungeon) {
+    gen_actor_random_coord(game, dungeon, "Player");
 }
 
 /// Generates a dungeon level using the "room method".
 fn gen_dungeon_room_method(dungeon: &mut Dungeon, index: usize) {
     let mut room_list: Vec<Room> = Vec::new();
+    let mut object_list: Vec<Object> = Vec::new();
     let direction_list = vec![N, E, S, W];
     let goal_num_rooms = gen_num_rooms(index);
 
@@ -71,19 +72,19 @@ fn gen_dungeon_room_method(dungeon: &mut Dungeon, index: usize) {
     room_list.push(Room::new(0, 0, gen_room_width(index), gen_room_height(index)));
 
     // Generate rooms by looking for free space next to existing rooms
-    for _ in 0..goal_num_rooms-1 {
+    for _ in 0..goal_num_rooms - 1 {
         let mut found = false;
 
         while !found {
-            let room = get_random(&room_list).clone();
-            let direction = get_random(&direction_list);
+            let mut room = room_list.choose().unwrap().clone();
+            let direction = direction_list.choose().unwrap();
 
-            match gen_room_adjacent(&room, *direction) {
+            match gen_room_adjacent(&room, *direction, &room_list, &mut object_list) {
                 Some(new_room) => {
                     room_list.push(new_room);
                     found = true;
-                },
-                None => {}, // keep looking
+                }
+                None => {} // keep looking
             };
         }
     }
@@ -95,7 +96,11 @@ fn gen_dungeon_room_method(dungeon: &mut Dungeon, index: usize) {
 }
 
 /// Generates a room adjacent to `room`, or returns `None`.
-fn gen_room_adjacent(room: &Room, direction: Direction) -> Option<Room> {
+fn gen_room_adjacent(room: &Room,
+                     direction: Direction,
+                     room_list: &Vec<Room>,
+                     object_list: &mut Vec<Object>)
+                     -> Option<Room> {
     None // todo
 }
 
@@ -106,7 +111,7 @@ fn init_dungeon_from_rooms(dungeon: &mut Dungeon, room_list: &Vec<Room>) {
 
 /// Generates the number of `Room`s for the dungeon level specified by `index`.
 fn gen_num_rooms(index: usize) -> usize {
-    10 + 10*index // TODO
+    10 + 10 * index // TODO
 }
 
 /// Generates a random width for a `Room` based on the dungeon level specified by `index`.

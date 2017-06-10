@@ -106,11 +106,33 @@ pub fn dice<T>(x: T, y: T) -> bool
     rand_range(T::one(), y) <= x
 }
 
+pub trait Choose<T> {
+    /// Returns an element picked randomly from `&self`, all elements having equal weighting.
+    fn choose(&self) -> Option<&T>;
+    fn choose_i(&self) -> Option<usize>;
+    fn choose_enumerate(&self) -> Option<(usize, &T)>;
+}
+
 // VECTOR FUNCTIONS
 
-/// Returns a random element from `vec`, all elements having equal weighting.
-pub fn get_random<'a, T>(vec: &'a Vec<T>) -> &'a T {
-    &vec[rand_range(0, vec.len()-1)]
+impl<T> Choose<T> for Vec<T> {
+    fn choose(&self) -> Option<&T> {
+        rand::thread_rng().choose(self)
+    }
+
+    fn choose_i(&self) -> Option<usize> {
+        if self.len() > 0 {
+            Some(rand_range(0, self.len()-1))
+        } else { None }
+    }
+
+    fn choose_enumerate(&self) -> Option<(usize, &T)> {
+        let i = self.choose_i();
+        match i {
+            Some(i) => Some((i, &self[i])),
+            None => None,
+        }
+    }
 }
 
 // FILE IO FUNCTIONS

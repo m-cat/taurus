@@ -19,7 +19,7 @@ pub struct Actor {
     /// Character to draw to the console with.
     pub c: char,
     /// Coordinate location in level.
-    pub xy: Coord,
+    xy: Option<Coord>,
     /// Current turn.
     pub turn: Fraction,
 
@@ -36,21 +36,21 @@ pub struct Actor {
 
 impl Actor {
     pub fn new(game: &Game, name: &str) -> Actor {
-        let database = game.database.get("Actor").get(name);
+        let actor_database = game.database.get("Actor").get(name);
 
-        let hp = database.get("hp").get_uint();
+        let hp = actor_database.get("hp").get_uint();
 
         let mut a = Actor {
             id: game.actor_id(),
-            c: database.get("c").get_char(),
-            xy: Coord::new(0, 0),
+            c: actor_database.get("c").get_char(),
+            xy: None, // we set this once actor is added to the dungeon
             turn: game.turn(), // we update this later in this function
 
             hp_cur: hp as int,
             hp_max: hp,
-            speed: Fraction::from(1),
+            speed: actor_database.get("speed").get_fraction(),
 
-            behavior: Behavior::Hostile, // the default is a hostile monster!
+            behavior: Behavior::string_to_behavior(actor_database.get("behavior").get_str()),
         };
 
         a.turn += a.speed(); // Set the actor's turn.
@@ -75,10 +75,17 @@ impl Actor {
         self.speed
     }
 
+    /// Returns this actor's coordinates.
+    ///
+    /// # Panics
+    /// Panics if the actor hasn't been added to a dungeon yet.
+    pub fn coord(&self) -> Coord {
+        self.xy.unwrap()
+    }
+
     /// Sets this actor's coordinates.
-    pub fn set_coord(&mut self, x: usize, y: usize) {
-        self.xy.x = x;
-        self.xy.y = y;
+    pub fn set_coord(&mut self, xy: Coord) {
+        self.xy = Some(xy);
     }
 
     /// Sets this actor's turn to a new value.
@@ -109,11 +116,7 @@ impl Actor {
     }
 }
 
-// enum ActorEnum {
-//     Player,
-//     GiantRat,
-// } TODO: keep this?
-
+/// Enum listing possible AI states of an actor.
 pub enum Behavior {
     /// Behavior corresponding to the player itself.
     Player,
@@ -124,6 +127,25 @@ pub enum Behavior {
     Hunting,
 }
 
+impl Behavior {
+    /// Converts `string` to a Behavior enum.
+    ///
+    /// # Panics
+    /// Panics if `string` does not correspond to a Behavior value.
+    pub fn string_to_behavior(string: &str) -> Behavior {
+        match string {
+            "Player" => Behavior::Player,
+            "Friendly" => Behavior::Friendly,
+            "Wary" => Behavior::Wary,
+            "Defensive" => Behavior::Defensive,
+            "Hostile" => Behavior::Hostile,
+            "Hunting" => Behavior::Hunting,
+            _ => panic!("Behavior::string_to_behavior failed: invalid input \"{}\""),
+        }
+    }
+}
+
+/// Enum of possible results of a player acton.
 pub enum ActResult {
     WindowClosed,
     None,

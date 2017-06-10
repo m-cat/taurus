@@ -1,3 +1,4 @@
+use coord::Coord;
 use game::Game;
 use dungeon::Dungeon;
 use actor::ActResult;
@@ -6,7 +7,7 @@ use console::GameConsole;
 use ui;
 
 /// Creates and returns the player actor.
-pub fn player_create(game: &Game) -> Actor {
+pub fn player_create(game: &Game, xy: Coord) -> Actor {
     Actor::new(game, "player")
 }
 

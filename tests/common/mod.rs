@@ -13,5 +13,9 @@ pub fn setup_game_test() -> (Game, Dungeon) {
 
 fn setup_database_test(database: &mut Database) {
     database.sub("Actor").sub("test").sub("hp").add_uint(0);
-    database.sub("Actor").sub("test").sub("c").add_char('?');
+    database
+        .sub("Actor")
+        .sub("test")
+        .sub("c")
+        .add_char('?');
 }

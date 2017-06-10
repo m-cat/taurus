@@ -1,5 +1,9 @@
+#![allow(unused_imports)] // will complain about num_traits::Zero otherwise
+
 use std::collections::HashMap;
 use std::slice::Iter;
+use fraction::Fraction;
+use num_traits::Zero;
 use util::{int, uint};
 
 /// Database of game information.
@@ -49,7 +53,9 @@ impl Database {
     /// # Panics
     /// If no fields have been set.
     pub fn num(&self) -> usize {
-        let vec = self.fields.as_ref().expect("Database::num failed: vector not instantiated.");
+        let vec = self.fields
+            .as_ref()
+            .expect("Database::num failed: vector not instantiated.");
         vec.len()
     }
 
@@ -75,11 +81,22 @@ impl Database {
     /// Adds a new &str entry to the Database.
     ///
     /// # Examples
-    /// See get_str.
+    /// See get_uint.
     pub fn add_str(&mut self, value: &'static str) {
         match self.fields {
             None => self.fields = Some(vec![Value::Str(value)]),
             Some(ref mut fields) => fields.push(Value::Str(value)),
+        }
+    }
+
+    /// Adds a new Fraction entry to the Database.
+    ///
+    /// # Examples
+    /// See get_uint.
+    pub fn add_fraction(&mut self, value: Fraction) {
+        match self.fields {
+            None => self.fields = Some(vec![Value::Fraction(value)]),
+            Some(ref mut fields) => fields.push(Value::Fraction(value)),
         }
     }
 
@@ -153,22 +170,48 @@ impl Database {
         }
     }
 
+    /// Gets the value associated with the Database subtree as a Fraction.
+    /// Returns the first value stored in the subtree.
+    /// For more than one, use an iterator.
+    ///
+    /// # Panics
+    /// If the associated value doesn't exist or is not a Fraction.
+    ///
+    /// # Examples
+    /// See get_uint.
+    pub fn get_fraction(&self) -> Fraction {
+        match self.fields.as_ref() {
+            Some(ref mut vec) => {
+                match vec[0] {
+                    Value::Fraction(value) => value,
+                    _ => panic!("Database::get_fraction failed: value is not a Fraction."),
+                }
+            }
+            None => panic!("Database::get_fraction failed: no value found."),
+        }
+    }
+
     /// Returns an iterator over the values associated with this Database subtree.
     ///
     /// # Panics
     /// If no values exist for this Database.
     pub fn iter(&self) -> Iter<Value> {
-        self.fields.as_ref().expect("Database::iter failed: no values found.")
+        self.fields
+            .as_ref()
+            .expect("Database::iter failed: no values found.")
             .iter()
     }
 }
 
+/// Enum of possible types that can be stored in the database.
+/// Supported types include int, uint, char, String, Fraction.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Value {
     Int(int),
     Uint(uint),
     Char(char),
     Str(&'static str),
+    Fraction(Fraction),
 }
 
 #[cfg(test)]
@@ -194,6 +237,13 @@ mod tests {
         let mut db = Database::new();
         db.sub("Test").add_str("testing");
         assert_eq!(db.get("Test").get_str(), "testing");
+    }
+
+    #[test]
+    fn test_get_fraction() {
+        let mut db = Database::new();
+        db.sub("Test").add_fraction(Fraction::zero());
+        assert_eq!(db.get("Test").get_fraction(), Fraction::zero());
     }
 
     #[test]
