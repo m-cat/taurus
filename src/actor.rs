@@ -39,7 +39,6 @@ impl Actor {
         let actor_database = game.database.get("Actor").get(name);
 
         let hp = actor_database.get("hp").get_uint();
-
         let mut a = Actor {
             id: game.actor_id(),
             c: actor_database.get("c").get_char(),
@@ -128,7 +127,7 @@ pub enum Behavior {
 }
 
 impl Behavior {
-    /// Converts `string` to a Behavior enum.
+    /// Converts `string` to a `Behavior` enum.
     ///
     /// # Panics
     /// Panics if `string` does not correspond to a Behavior value.
@@ -140,7 +139,10 @@ impl Behavior {
             "Defensive" => Behavior::Defensive,
             "Hostile" => Behavior::Hostile,
             "Hunting" => Behavior::Hunting,
-            _ => panic!("Behavior::string_to_behavior failed: invalid input \"{}\""),
+            _ => {
+                panic!("Behavior::string_to_behavior failed: invalid input \"{}\"",
+                       string)
+            }
         }
     }
 }

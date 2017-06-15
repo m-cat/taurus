@@ -78,7 +78,7 @@ impl Dungeon {
             let mut column: Vec<Tile> = Vec::with_capacity(height);
 
             for _ in 0..height {
-                column.push(Tile::new());
+                column.push(Default::default());
             }
             self.tile_grid.as_mut().unwrap().push(column);
         }
@@ -240,7 +240,7 @@ impl Dungeon {
         let grid = self.tile_grid.as_ref().unwrap();
         let (x, column) = grid.choose_enumerate().unwrap();
         let y = column.choose_i().unwrap();
-        Coord {x: x, y: y }
+        Coord { x: x, y: y }
     }
 
     /// Returns an available coordinate, not currently occupied by any actors.

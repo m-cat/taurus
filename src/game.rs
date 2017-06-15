@@ -84,3 +84,9 @@ impl Game {
     /// Adds a string to the message deque.
     pub fn add_message(&self, message: &str) {} // TODO. Should pop_front when queue gets too big
 }
+
+impl Default for Game {
+    fn default() -> Self {
+        Self::new()
+    }
+}

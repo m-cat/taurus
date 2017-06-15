@@ -1,5 +1,6 @@
 #![allow(non_camel_case_types)]
 #![allow(unknown_lints)]
+#![macro_use]
 
 use std::fmt::Display;
 
@@ -9,6 +10,7 @@ use std::path::PathBuf;
 use std::io;
 use std::io::prelude::*;
 use std::io::BufReader;
+use std::cmp::{min, max};
 
 use rand;
 use rand::Rng;
@@ -49,15 +51,31 @@ pub fn make_path_cat_join(dir: &str, s1: &str, s2: &str) -> PathBuf {
 
 // MATH FUNCTIONS
 
+/// Returns a tuple (min, max) of `a` and `b`.
+pub fn min_max<T>(a: T, b: T) -> (T, T)
+    where T: Integer + Copy
+{
+    (min(a, b), max(a, b))
+}
+
+/// Returns true if two inclusive ranges overlap.
+pub fn overlaps<T>(a1: T, b1: T, a2: T, b2: T) -> bool
+    where T: Integer + Copy
+{
+    let (x1, y1) = min_max(a1, b1);
+    let (x2, y2) = min_max(a2, b2);
+    between(x2, x1, y1) || between(x1, x2, y2)
+}
+
 /// Returns the absolute difference between a and b.
 pub fn diff<T>(a: T, b: T) -> T
     where T: Integer
 {
-    // Note that something like (b-a).abs() doesn't work for unsigned types.
+    // Note that something like (b-a).abs() wouldn't work for unsigned types.
     if b >= a { b - a } else { a - b }
 }
 
-/// Returns true if n is between a and b.
+/// Returns true if n is between a and b, inclusive.
 #[allow(needless_pass_by_value)]
 pub fn between<T>(n: T, a: T, b: T) -> bool
     where T: Integer
@@ -121,9 +139,11 @@ impl<T> Choose<T> for Vec<T> {
     }
 
     fn choose_i(&self) -> Option<usize> {
-        if self.len() > 0 {
-            Some(rand_range(0, self.len()-1))
-        } else { None }
+        if self.is_empty() {
+            Some(rand_range(0, self.len() - 1))
+        } else {
+            None
+        }
     }
 
     fn choose_enumerate(&self) -> Option<(usize, &T)> {
@@ -224,6 +244,24 @@ pub enum Direction {
     NW,
 }
 
+// MACROS
+
+/// Tries evaluating `$e` `$n` times, returning `Some(s)` the first time `$e` evaluates to `Some`
+macro_rules! try_some {
+    ( $e:expr, $n:expr ) => {
+        {
+            let mut ret = None;
+            for _ in 0..$n {
+            if let Some(s) = $e {
+                ret = Some(s);
+                break;
+            }
+        }
+            ret
+        }
+    }
+}
+
 // UNIT TESTS
 
 #[cfg(test)]
@@ -231,9 +269,25 @@ mod tests {
     use util::*;
 
     #[test]
+    fn test_overlaps() {
+        assert!(overlaps(1, 1, 1, 1));
+        assert!(overlaps(1, 2, 0, 1));
+        assert!(overlaps(0, 1, 2, 1));
+        assert!(overlaps(1, 5, 2, 3));
+        assert!(overlaps(2, 3, 1, 5));
+        assert!(overlaps(1, 5, 2, 6));
+        assert!(overlaps(6, 2, 5, 1));
+        assert!(overlaps(-1, -1, -2, 0));
+
+        assert!(!overlaps(0, 1, 2, 4));
+        assert!(!overlaps(4, 2, 0, 1));
+    }
+
+    #[test]
     fn test_diff() {
         assert_eq!(diff(1, 2), 1);
         assert_eq!(diff(4, 0), 4);
+        assert_eq!(diff(-1, 1), 2);
     }
 
     #[test]

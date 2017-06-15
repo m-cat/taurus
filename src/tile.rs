@@ -8,11 +8,17 @@ pub struct Tile {
 }
 
 impl Tile {
-    pub fn new() -> Tile {
+    pub fn new(class: TileClass) -> Tile {
         Tile {
-            class: TileClass::Floor(FloorKind::Stone),
+            class: class,
             depth: 0, // default is ground level
         }
+    }
+}
+
+impl Default for Tile {
+    fn default() -> Tile {
+        Tile::new(TileClass::Floor(FloorKind::Stone))
     }
 }
 

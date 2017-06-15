@@ -8,7 +8,6 @@ use object::Object;
 use actor::Actor;
 use dungeon::Dungeon;
 use game::Game;
-use player;
 
 /// Generates the entire dungeon.
 pub fn gen_game(game: &mut Game, dungeon_list: &mut Vec<Dungeon>) {
@@ -64,48 +63,103 @@ fn gen_player(game: &Game, dungeon: &mut Dungeon) {
 /// Generates a dungeon level using the "room method".
 fn gen_dungeon_room_method(dungeon: &mut Dungeon, index: usize) {
     let mut room_list: Vec<Room> = Vec::new();
-    let mut object_list: Vec<Object> = Vec::new();
+    let mut object_list: Vec<(Coord, Object)> = Vec::new();
     let direction_list = vec![N, E, S, W];
     let goal_num_rooms = gen_num_rooms(index);
 
     // Generate the initial room
-    room_list.push(Room::new(0, 0, gen_room_width(index), gen_room_height(index)));
+    room_list.push(Room::from_dimensions(0, 0, gen_room_width(index), gen_room_height(index)));
 
     // Generate rooms by looking for free space next to existing rooms
     for _ in 0..goal_num_rooms - 1 {
-        let mut found = false;
-
-        while !found {
-            let mut room = room_list.choose().unwrap().clone();
+        loop {
+            let room = room_list.choose().unwrap().clone();
             let direction = direction_list.choose().unwrap();
 
-            match gen_room_adjacent(&room, *direction, &room_list, &mut object_list) {
-                Some(new_room) => {
-                    room_list.push(new_room);
-                    found = true;
-                }
-                None => {} // keep looking
+            // Try a few times to generate a room here
+            if let Some(new_room) = try_some!(gen_room_adjacent(&room,
+                                                                *direction,
+                                                                &room_list,
+                                                                &mut object_list,
+                                                                index),
+                                              3) {
+                room_list.push(new_room);
+                break;
             };
         }
     }
 
     // Initialize the dungeon tile grid
     init_dungeon_from_rooms(dungeon, &room_list);
+    // Add doors
+    for (coord, object) in object_list {
+        dungeon.add_object(coord, object);
+    }
 
     // Convert the list of rooms into a tile grid representation
 }
 
 /// Generates a room adjacent to `room`, or returns `None`.
+///
+/// # Panics
+/// Panics if `direction` is not orthogonal.
 fn gen_room_adjacent(room: &Room,
                      direction: Direction,
-                     room_list: &Vec<Room>,
-                     object_list: &mut Vec<Object>)
+                     room_list: &[Room],
+                     object_list: &mut Vec<(Coord, Object)>,
+                     index: usize)
                      -> Option<Room> {
-    None // todo
+    let top: int;
+    let left: int;
+    let new_room: Room;
+    let width = gen_room_width(index) as int;
+    let height = gen_room_height(index) as int;
+
+    match direction {
+        N => {
+            top = room.top - height;
+            left = rand_range(room.left - width + 3, room.right - 2);
+        }
+        E => {
+            top = rand_range(room.top - height + 3, room.bottom - 2);
+            left = room.right + 1;
+        }
+        S => {
+            top = room.bottom + 1;
+            left = rand_range(room.left - width + 3, room.right - 2);
+        }
+        W => {
+            top = rand_range(room.top - height + 3, room.bottom - 2);
+            left = room.left - width;
+        }
+        _ => panic!("Generate::gen_room_adjacent failed: non-orthogonal direction."),
+    };
+    new_room = Room::from_dimensions(top, left, width as usize, height as usize);
+
+    if check_room_free(&new_room, room_list) {
+        let coord_door = gen_room_adjacent_door(room, &new_room, direction);
+        object_list.push(coord_door);
+        Some(new_room)
+    } else {
+        None
+    }
+}
+
+/// Generates a door between two adjacent `Room`s in given `Direction`.
+///
+/// # Panics
+/// Panics if `direction` is not orthogonal.
+fn gen_room_adjacent_door(room: &Room, other: &Room, direction: Direction) -> (Coord, Object) {
+    unimplemented!() // todo
+}
+
+/// Check if `room` does not collide with any `Room`s in `room_list`.
+fn check_room_free(room: &Room, room_list: &[Room]) -> bool {
+    !room_list.iter().any(|other| room.overlaps(other))
 }
 
 /// Initializes `dungeon`'s dungeon grid based on the `Room`s in `room_list`.
-fn init_dungeon_from_rooms(dungeon: &mut Dungeon, room_list: &Vec<Room>) {
+fn init_dungeon_from_rooms(dungeon: &mut Dungeon, room_list: &[Room]) {
     // todo
 }
 
@@ -125,25 +179,67 @@ fn gen_room_height(index: usize) -> usize {
 }
 
 /// A struct for storing data for a single `Room`, used in dungeon generation.
+/// Note that the four bounding boxes correspond to the `Room`'s walls.
 #[derive(Clone)]
 struct Room {
-    left: usize,
-    top: usize,
-    right: usize,
-    bottom: usize,
-
-    door_list: Vec<Coord>,
+    left: int,
+    top: int,
+    right: int,
+    bottom: int,
 }
 
 impl Room {
-    pub fn new(x: usize, y: usize, width: usize, height: usize) -> Room {
+    #[allow(dead_code)]
+    pub fn new(left: int, top: int, right: int, bottom: int) -> Room {
         Room {
-            left: x,
-            top: y,
-            right: x + width - 1,
-            bottom: y + height - 1,
+            left: left,
+            top: top,
+            right: right,
+            bottom: bottom,
+        }
+    }
 
-            door_list: Vec::new(),
+    /// Returns a new `Room` created from given `width` and `height`.
+    pub fn from_dimensions(left: int, top: int, width: usize, height: usize) -> Room {
+        Room {
+            left: left,
+            top: top,
+            right: left + width as int - 1,
+            bottom: top + height as int - 1,
+        }
+    }
+
+    /// Returns true if `self` and `other` overlap.
+    pub fn overlaps(&self, other: &Self) -> bool {
+        overlaps(self.left, self.right, other.left, other.right) &&
+        overlaps(self.top, self.bottom, other.top, other.bottom)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use generate::Room;
+
+    #[test]
+    fn test_room_overlaps() {
+        let rooms = vec![Room::new(0, 0, 1, 1),
+                         Room::new(1, 0, 3, 3),
+                         Room::new(-1, -1, 4, 4),
+                         Room::new(-2, -2, -1, -1)];
+
+        assert!(rooms[0].overlaps(&rooms[1]));
+        assert!(rooms[0].overlaps(&rooms[2]));
+        assert!(rooms[2].overlaps(&rooms[3]));
+        assert!(!rooms[0].overlaps(&rooms[3]));
+        assert!(!rooms[1].overlaps(&rooms[3]));
+
+        for (i, room1) in rooms.iter().enumerate() {
+            for (j, room2) in rooms.iter().enumerate() {
+                if i == j {
+                    assert!(room1.overlaps(room2));
+                }
+                assert_eq!(room1.overlaps(room2), room2.overlaps(room1));
+            }
         }
     }
 }
