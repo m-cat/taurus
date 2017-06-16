@@ -36,7 +36,7 @@ pub struct Actor {
 
 impl Actor {
     pub fn new(game: &Game, name: &str) -> Actor {
-        let actor_database = game.database.get("Actor").get(name);
+        let actor_database = game.database.get("actor").get(name);
 
         let hp = actor_database.get("hp").get_uint();
         let mut a = Actor {

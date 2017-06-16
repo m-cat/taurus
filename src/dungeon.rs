@@ -6,7 +6,7 @@ use std::ops::Index;
 use std::ops::IndexMut;
 
 use GameLoopResult;
-use util::Choose;
+use util::{int, Choose};
 use fraction::Fraction;
 use coord::Coord;
 use tile::Tile;
@@ -240,7 +240,7 @@ impl Dungeon {
         let grid = self.tile_grid.as_ref().unwrap();
         let (x, column) = grid.choose_enumerate().unwrap();
         let y = column.choose_i().unwrap();
-        Coord { x: x, y: y }
+        Coord::new(x as int, y as int)
     }
 
     /// Returns an available coordinate, not currently occupied by any actors.

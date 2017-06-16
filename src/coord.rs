@@ -1,14 +1,15 @@
 use util;
+use util::int;
 
 // Very simple but indispensible struct
 #[derive(PartialEq, Eq, Debug, Hash, Clone, Copy, Default)]
 pub struct Coord {
-    pub x: usize,
-    pub y: usize,
+    pub x: int,
+    pub y: int,
 }
 
 impl Coord {
-    pub fn new(x: usize, y: usize) -> Coord {
+    pub fn new(x: int, y: int) -> Coord {
         Coord { x: x, y: y }
     }
 

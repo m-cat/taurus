@@ -21,34 +21,6 @@ use num::Integer;
 pub type int = i32;
 pub type uint = u32;
 
-// PATH FUNCTIONS
-
-/// Makes a path by joining a filename to a directory.
-///
-/// # Examples
-/// ```
-/// use taurus::util;
-///
-/// let path = util::make_path_join("a/b", "test.txt");
-/// assert_eq!(path.to_str(), Some("a/b/test.txt"));
-/// ```
-pub fn make_path_join(dir: &str, s1: &str) -> PathBuf {
-    let dir_path = Path::new(dir);
-    dir_path.join(Path::new(s1))
-}
-
-/// Returns the path created by concatenating two strings.
-pub fn make_path_cat(s1: &str, s2: &str) -> PathBuf {
-    let name = format!("{}{}", s1, s2);
-    Path::new(name.as_str()).to_path_buf()
-}
-
-/// Makes a path by concatenating two filenames, then joining to a directory.
-pub fn make_path_cat_join(dir: &str, s1: &str, s2: &str) -> PathBuf {
-    let dir_path = Path::new(dir);
-    dir_path.join(make_path_cat(s1, s2))
-}
-
 // MATH FUNCTIONS
 
 /// Returns a tuple (min, max) of `a` and `b`.
@@ -155,6 +127,34 @@ impl<T> Choose<T> for Vec<T> {
     }
 }
 
+// PATH FUNCTIONS
+
+/// Makes a path by joining a filename to a directory.
+///
+/// # Examples
+/// ```
+/// use taurus::util;
+///
+/// let path = util::make_path_join("a/b", "test.txt");
+/// assert_eq!(path.to_str(), Some("a/b/test.txt"));
+/// ```
+pub fn make_path_join(dir: &str, s1: &str) -> PathBuf {
+    let dir_path = Path::new(dir);
+    dir_path.join(Path::new(s1))
+}
+
+/// Returns the path created by concatenating two strings.
+pub fn make_path_cat(s1: &str, s2: &str) -> PathBuf {
+    let name = format!("{}{}", s1, s2);
+    Path::new(name.as_str()).to_path_buf()
+}
+
+/// Makes a path by concatenating two filenames, then joining to a directory.
+pub fn make_path_cat_join(dir: &str, s1: &str, s2: &str) -> PathBuf {
+    let dir_path = Path::new(dir);
+    dir_path.join(make_path_cat(s1, s2))
+}
+
 // FILE IO FUNCTIONS
 
 /// Reads a file and returns its contents in a string.
@@ -174,7 +174,6 @@ pub fn read_file_str(path: &Path) -> io::Result<String> {
 pub fn read_file_vec(path: &Path) -> io::Result<Vec<String>> {
     // Open the path in read-only mode, returns `io::Result<File>`
     let file = File::open(&path)?;
-
     let reader = BufReader::new(file);
     let mut vec: Vec<String> = Vec::new();
 
@@ -246,17 +245,47 @@ pub enum Direction {
 
 // MACROS
 
+/// Returns the max of all given elements.
+macro_rules! max {
+    ( $x:expr, $( $e:expr ),+ ) => {
+        {
+            let mut max = $x;
+            $(
+                if $e > max {
+                    max = $e;
+                }
+            )+
+            max
+        }
+    }
+}
+
+/// Returns the min of all given elements.
+macro_rules! min {
+    ( $x:expr, $( $e:expr ),+ ) => {
+        {
+            let mut min = $x;
+            $(
+                if $e < min {
+                    min = $e;
+                }
+            )+
+            min
+        }
+    }
+}
+
 /// Tries evaluating `$e` `$n` times, returning `Some(s)` the first time `$e` evaluates to `Some`
 macro_rules! try_some {
     ( $e:expr, $n:expr ) => {
         {
             let mut ret = None;
             for _ in 0..$n {
-            if let Some(s) = $e {
-                ret = Some(s);
-                break;
+                if let Some(s) = $e {
+                    ret = Some(s);
+                    break;
+                }
             }
-        }
             ret
         }
     }
@@ -321,4 +350,19 @@ mod tests {
             assert!(!dice(0, rand_range(1, 100)));
         }
     }
+
+    #[test]
+    fn test_max() {
+        assert_eq!(max!(0, 1, 2), 2);
+        assert_eq!(max!(2, 1, 0), 2);
+        assert_eq!(max!(-1, -2), -1);
+    }
+
+    #[test]
+        fn test_min() {
+        assert_eq!(min!(0, 1, 2), 0);
+        assert_eq!(min!(2, 1, 0), 0);
+        assert_eq!(min!(-1, -2), -2);
+    }
+
 }

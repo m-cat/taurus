@@ -14,7 +14,7 @@ pub struct Object {
 }
 
 impl Object {
-    fn new(game: &Game, name: &str, active: bool) -> Object {
+    pub fn new(game: &Game, name: &str, active: bool) -> Object {
         let object_database = game.database.get("Object").get(name);
 
         Object {
@@ -43,7 +43,7 @@ impl Class {
             "Door" => Class::Door,
             "Trap" => Class::Trap,
             _ => {
-                panic!("Class::string_to_class failed: invalid unpit \"{}\"",
+                panic!("Class::string_to_class failed: invalid input \"{}\"",
                        string)
             }
         }
