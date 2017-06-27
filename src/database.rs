@@ -1,9 +1,13 @@
 #![allow(unused_imports)] // will complain about num_traits::Zero otherwise
 
+use std::fs::File;
+use std::io::BufRead;
+use std::io::BufReader;
 use std::collections::HashMap;
 use std::slice::Iter;
 use fraction::Fraction;
 use num_traits::Zero;
+
 use util::{int, uint};
 
 /// Database of game information.
@@ -200,6 +204,15 @@ impl Database {
             .as_ref()
             .expect("Database::iter failed: no values found.")
             .iter()
+    }
+
+    // TODO
+    pub fn load_database(&mut self, file: File) {
+        let reader = BufReader::new(file);
+
+        for line in reader.lines() {
+
+        }
     }
 }
 

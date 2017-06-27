@@ -17,12 +17,7 @@ fn init_actors(database: &mut Database) -> io::Result<()> {
     let path = Path::new("data/database/actors.over");
     let file = File::open(&path)?;
 
-    Over::load_database(file, &mut database);
-    let reader = BufReader::new(file);
-
-    for line in reader.lines() {
-
-    }
+    db.load_database(file);
 
     Ok(())
 }

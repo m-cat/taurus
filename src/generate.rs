@@ -208,7 +208,7 @@ fn gen_room_height(index: usize) -> usize {
 /// A struct for storing data for a single `Room`, used in dungeon generation.
 /// Note that the four bounding boxes correspond to the `Room`'s interior
 /// and do not include its walls.
-#[derive(Clone, Eq)]
+#[derive(Clone, Eq, PartialEq, Debug)]
 struct Room {
     left: int,
     top: int,
@@ -224,6 +224,7 @@ impl Room {
     /// Panics if `right < left` or `bottom < top`.
     pub fn new(left: int, top: int, right: int, bottom: int) -> Room {
         assert!(right >= left && bottom >= top);
+
         Room {
             left: left,
             top: top,
@@ -238,11 +239,12 @@ impl Room {
     /// Panics if `width` or `height` are 0.
     pub fn from_dimensions(left: int, top: int, width: usize, height: usize) -> Room {
         assert!(width > 0 && height > 0);
+
         Room {
             left: left,
             top: top,
-            right: left + width as int,
-            bottom: top + height as int,
+            right: left + width as int - 1,
+            bottom: top + height as int - 1,
         }
     }
 

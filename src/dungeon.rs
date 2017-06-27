@@ -239,7 +239,7 @@ impl Dungeon {
     pub fn random_coord(&self) -> Coord {
         let grid = self.tile_grid.as_ref().unwrap();
         let (x, column) = grid.choose_enumerate().unwrap();
-        let y = column.choose_i().unwrap();
+        let y = column.choose_index().unwrap();
         Coord::new(x as int, y as int)
     }
 

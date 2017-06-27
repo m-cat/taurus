@@ -18,7 +18,12 @@ use rand::distributions::range::SampleRange;
 
 use num::Integer;
 
+// DEFINE TYPES
+
+/// Defines the standard type for signed ints
 pub type int = i32;
+
+/// Defines the standard type for unsigned ints
 pub type uint = u32;
 
 // MATH FUNCTIONS
@@ -30,16 +35,16 @@ pub fn min_max<T>(a: T, b: T) -> (T, T)
     (min(a, b), max(a, b))
 }
 
-/// Returns true if two inclusive ranges overlap.
-pub fn overlaps<T>(a1: T, b1: T, a2: T, b2: T) -> bool
+/// Returns true if two inclusive ranges `[a1, a2]` and `[b1, b2]` overlap.
+pub fn overlaps<T>(a1: T, a2: T, b1: T, b2: T) -> bool
     where T: Integer + Copy
 {
-    let (x1, y1) = min_max(a1, b1);
-    let (x2, y2) = min_max(a2, b2);
-    between(x2, x1, y1) || between(x1, x2, y2)
+    let (x1, x2) = min_max(a1, a2);
+    let (y1, y2) = min_max(b1, b2);
+    x1 <= y2 && y1 <= x2
 }
 
-/// Returns the absolute difference between a and b.
+/// Returns the absolute difference between `a` and `b`.
 pub fn diff<T>(a: T, b: T) -> T
     where T: Integer
 {
@@ -47,7 +52,7 @@ pub fn diff<T>(a: T, b: T) -> T
     if b >= a { b - a } else { a - b }
 }
 
-/// Returns true if n is between a and b, inclusive.
+/// Returns true if `n` is between `a` and `b`, inclusive.
 #[allow(needless_pass_by_value)]
 pub fn between<T>(n: T, a: T, b: T) -> bool
     where T: Integer
@@ -59,7 +64,7 @@ pub fn between<T>(n: T, a: T, b: T) -> bool
     }
 }
 
-/// Returns true if a and b are within n units of each other.
+/// Returns true if `a` and `b` are within `n` units of each other.
 #[allow(needless_pass_by_value)]
 pub fn in_range<T>(a: T, b: T, n: T) -> bool
     where T: Integer
@@ -67,7 +72,7 @@ pub fn in_range<T>(a: T, b: T, n: T) -> bool
     diff(a, b) <= n
 }
 
-/// Returns true if a and b are within one unit of each other.
+/// Returns true if `a` and `b` are within one unit of each other.
 pub fn in_one<T>(a: T, b: T) -> bool
     where T: Integer
 {
@@ -76,7 +81,7 @@ pub fn in_one<T>(a: T, b: T) -> bool
 
 // RAND FUNCTIONS
 
-/// Returns a random usize in the range [x..y] inclusive.
+/// Returns a random usize in the range `[x, y]` inclusive.
 pub fn rand_range<T>(x: T, y: T) -> T
     where T: Integer + SampleRange
 {
@@ -87,7 +92,7 @@ pub fn rand_range<T>(x: T, y: T) -> T
     }
 }
 
-/// Returns true with x in y chance.
+/// Returns true with `x` in `y` chance.
 #[allow(needless_pass_by_value)]
 pub fn dice<T>(x: T, y: T) -> bool
     where T: Integer + SampleRange + Display
@@ -96,10 +101,15 @@ pub fn dice<T>(x: T, y: T) -> bool
     rand_range(T::one(), y) <= x
 }
 
+/// A trait allowing access to random elements and/or indices in implementing containers.
 pub trait Choose<T> {
-    /// Returns an element picked randomly from `&self`, all elements having equal weighting.
+    /// Returns an element picked randomly from `&self`, so `None` if no elements exist.
     fn choose(&self) -> Option<&T>;
-    fn choose_i(&self) -> Option<usize>;
+
+    /// Returns a valid index picked randomly from `&self`, or `None` if no index exists.
+    fn choose_index(&self) -> Option<usize>;
+
+    /// Returns a valid (value, index) tuple picked randomly, or `None` if none exist.
     fn choose_enumerate(&self) -> Option<(usize, &T)>;
 }
 
@@ -110,8 +120,8 @@ impl<T> Choose<T> for Vec<T> {
         rand::thread_rng().choose(self)
     }
 
-    fn choose_i(&self) -> Option<usize> {
-        if self.is_empty() {
+    fn choose_index(&self) -> Option<usize> {
+        if !self.is_empty() {
             Some(rand_range(0, self.len() - 1))
         } else {
             None
@@ -119,7 +129,7 @@ impl<T> Choose<T> for Vec<T> {
     }
 
     fn choose_enumerate(&self) -> Option<(usize, &T)> {
-        let i = self.choose_i();
+        let i = self.choose_index();
         match i {
             Some(i) => Some((i, &self[i])),
             None => None,
