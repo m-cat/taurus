@@ -2,11 +2,15 @@
 
 ## About
 
-A WIP roguelike game being developed in Rust. It's my first Rust project and I'm still learning how to write idiomatic Rust code - if you see anything that can be improved, please submit an issue.
+A WIP roguelike game being developed in Rust. If you see anything that can be improved, please submit an issue.
 
 ### Current State
 
 Taurus is not yet playable.
+
+### Todo
+
+* Get a playable demo working.
 
 ## Disclaimer
 
