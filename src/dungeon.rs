@@ -183,9 +183,9 @@ impl Dungeon {
     /// The priority queue will know it's gone when it gets to it.
     /// Passes in the actor's coordinates to find it.
     pub fn remove_actor(&mut self, xy: Coord) -> Actor {
-        self.actor_map
-            .remove(&xy)
-            .expect("Dungeon::remove_actor failed: invalid coordinate.")
+        self.actor_map.remove(&xy).expect(
+            "Dungeon::remove_actor failed: invalid coordinate.",
+        )
     }
 
     /// Inserts an object into the object hash map.
@@ -199,9 +199,9 @@ impl Dungeon {
 
     /// Removes an object from the map
     pub fn remove_object(&mut self, xy: Coord) -> Object {
-        self.object_map
-            .remove(&xy)
-            .expect("Dungeon::remove_object failed, invalid coordinate")
+        self.object_map.remove(&xy).expect(
+            "Dungeon::remove_object failed, invalid coordinate",
+        )
     }
 
     /// Inserts an item into the stack hash map.
@@ -220,9 +220,9 @@ impl Dungeon {
     /// # Panics
     /// Panics if the passed in index is invalid.
     pub fn remove_item(&mut self, xy: Coord, index: usize) -> Item {
-        let mut stack = self.stack_map
-            .get_mut(&xy)
-            .expect("Dungeon::remove_item failed, invalid coordinate");
+        let mut stack = self.stack_map.get_mut(&xy).expect(
+            "Dungeon::remove_item failed, invalid coordinate",
+        );
 
         stack.remove(index)
     }

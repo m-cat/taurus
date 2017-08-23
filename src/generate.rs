@@ -31,9 +31,9 @@ pub fn gen_game(game: &mut Game, dungeon_list: &mut Vec<Dungeon>) {
 
 /// Generates a single depth of the dungeon.
 fn gen_depth(game: &Game, dungeon_list: &mut Vec<Dungeon>, index: usize) {
-    let mut dungeon = dungeon_list
-        .get_mut(index)
-        .expect("Generate::gen_depth failed, invalid index");
+    let mut dungeon = dungeon_list.get_mut(index).expect(
+        "Generate::gen_depth failed, invalid index",
+    );
 
     gen_dungeon_room_method(game, &mut dungeon, index);
     // let a = Actor::new(game);
@@ -68,7 +68,12 @@ fn gen_dungeon_room_method(game: &Game, dungeon: &mut Dungeon, index: usize) {
     let goal_num_rooms = gen_num_rooms(index);
 
     // Generate the initial room
-    room_list.push(Room::from_dimensions(0, 0, gen_room_width(index), gen_room_height(index)));
+    room_list.push(Room::from_dimensions(
+        0,
+        0,
+        gen_room_width(index),
+        gen_room_height(index),
+    ));
 
     // Generate rooms by looking for free space next to existing rooms
     for _ in 0..goal_num_rooms - 1 {
@@ -77,13 +82,18 @@ fn gen_dungeon_room_method(game: &Game, dungeon: &mut Dungeon, index: usize) {
             let direction = direction_list.choose().unwrap();
 
             // Try a few times to generate a room here
-            if let Some(new_room) = try_some!(gen_room_adjacent(&game,
-                                                                &room,
-                                                                *direction,
-                                                                &room_list,
-                                                                &mut object_list,
-                                                                index),
-                                              3) {
+            if let Some(new_room) = try_some!(
+                gen_room_adjacent(
+                    &game,
+                    &room,
+                    *direction,
+                    &room_list,
+                    &mut object_list,
+                    index,
+                ),
+                3
+            )
+            {
                 room_list.push(new_room);
                 break;
             };
@@ -105,13 +115,14 @@ fn gen_dungeon_room_method(game: &Game, dungeon: &mut Dungeon, index: usize) {
 ///
 /// # Panics
 /// Panics if `direction` is not orthogonal.
-fn gen_room_adjacent(game: &Game,
-                     room: &Room,
-                     direction: Direction,
-                     room_list: &[Room],
-                     object_list: &mut Vec<(Coord, Object)>,
-                     index: usize)
-                     -> Option<Room> {
+fn gen_room_adjacent(
+    game: &Game,
+    room: &Room,
+    direction: Direction,
+    room_list: &[Room],
+    object_list: &mut Vec<(Coord, Object)>,
+    index: usize,
+) -> Option<Room> {
     let top: int;
     let left: int;
     let width = gen_room_width(index) as int;
@@ -151,7 +162,12 @@ fn gen_room_adjacent(game: &Game,
 ///
 /// # Panics
 /// Panics if `direction` is not orthogonal.
-fn gen_room_adjacent_door(game: &Game, room: &Room, other: &Room, direction: Direction) -> (Coord, Object) {
+fn gen_room_adjacent_door(
+    game: &Game,
+    room: &Room,
+    other: &Room,
+    direction: Direction,
+) -> (Coord, Object) {
     let x: int;
     let y: int;
 
@@ -159,19 +175,19 @@ fn gen_room_adjacent_door(game: &Game, room: &Room, other: &Room, direction: Dir
         N => {
             x = rand_range(max!(room.left, other.left), min!(room.right, other.right));
             y = room.top - 1;
-        },
+        }
         E => {
             x = room.right + 1;
             y = rand_range(max!(room.top, other.top), min!(room.bottom, other.bottom));
-        },
+        }
         S => {
             x = rand_range(max!(room.left, other.left), min!(room.right, other.right));
             y = room.bottom + 1;
-        },
+        }
         W => {
             x = room.left - 1;
             y = rand_range(max!(room.top, other.top), min!(room.bottom, other.bottom));
-        },
+        }
         _ => panic!("Generate::gen_room_adjacent_door failed: non-orthogonal direction."),
     }
 
@@ -252,8 +268,8 @@ impl Room {
     /// Note that we allow walls to overlap, but not so the interiors of the `Room`s
     /// are connected.
     pub fn overlaps(&self, other: &Self) -> bool {
-        overlaps(self.left-1, self.right, other.left-1, other.right) &&
-        overlaps(self.top-1, self.bottom, other.top-1, other.bottom)
+        overlaps(self.left - 1, self.right, other.left - 1, other.right) &&
+            overlaps(self.top - 1, self.bottom, other.top - 1, other.bottom)
     }
 }
 
@@ -268,10 +284,12 @@ mod tests {
 
     #[test]
     fn test_room_overlaps() {
-        let rooms = vec![Room::new(0, 0, 1, 1),
-                         Room::new(1, 0, 3, 3),
-                         Room::new(-1, -1, 4, 4),
-                         Room::new(-3, -3, -2, -2)];
+        let rooms = vec![
+            Room::new(0, 0, 1, 1),
+            Room::new(1, 0, 3, 3),
+            Room::new(-1, -1, 4, 4),
+            Room::new(-3, -3, -2, -2),
+        ];
 
         assert!(rooms[0].overlaps(&rooms[1]));
         assert!(rooms[0].overlaps(&rooms[2]));

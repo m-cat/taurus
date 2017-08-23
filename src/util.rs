@@ -30,14 +30,16 @@ pub type uint = u32;
 
 /// Returns a tuple (min, max) of `a` and `b`.
 pub fn min_max<T>(a: T, b: T) -> (T, T)
-    where T: Integer + Copy
+where
+    T: Integer + Copy,
 {
     (min(a, b), max(a, b))
 }
 
 /// Returns true if two inclusive ranges `[a1, a2]` and `[b1, b2]` overlap.
 pub fn overlaps<T>(a1: T, a2: T, b1: T, b2: T) -> bool
-    where T: Integer + Copy
+where
+    T: Integer + Copy,
 {
     let (x1, x2) = min_max(a1, a2);
     let (y1, y2) = min_max(b1, b2);
@@ -46,7 +48,8 @@ pub fn overlaps<T>(a1: T, a2: T, b1: T, b2: T) -> bool
 
 /// Returns the absolute difference between `a` and `b`.
 pub fn diff<T>(a: T, b: T) -> T
-    where T: Integer
+where
+    T: Integer,
 {
     // Note that something like (b-a).abs() wouldn't work for unsigned types.
     if b >= a { b - a } else { a - b }
@@ -55,7 +58,8 @@ pub fn diff<T>(a: T, b: T) -> T
 /// Returns true if `n` is between `a` and `b`, inclusive.
 #[allow(needless_pass_by_value)]
 pub fn between<T>(n: T, a: T, b: T) -> bool
-    where T: Integer
+where
+    T: Integer,
 {
     if b >= a {
         n >= a && n <= b
@@ -67,14 +71,16 @@ pub fn between<T>(n: T, a: T, b: T) -> bool
 /// Returns true if `a` and `b` are within `n` units of each other.
 #[allow(needless_pass_by_value)]
 pub fn in_range<T>(a: T, b: T, n: T) -> bool
-    where T: Integer
+where
+    T: Integer,
 {
     diff(a, b) <= n
 }
 
 /// Returns true if `a` and `b` are within one unit of each other.
 pub fn in_one<T>(a: T, b: T) -> bool
-    where T: Integer
+where
+    T: Integer,
 {
     in_range(a, b, T::one())
 }
@@ -83,7 +89,8 @@ pub fn in_one<T>(a: T, b: T) -> bool
 
 /// Returns a random usize in the range `[x, y]` inclusive.
 pub fn rand_range<T>(x: T, y: T) -> T
-    where T: Integer + SampleRange
+where
+    T: Integer + SampleRange,
 {
     if y > x {
         rand::thread_rng().gen_range(x, y + T::one())
@@ -95,7 +102,8 @@ pub fn rand_range<T>(x: T, y: T) -> T
 /// Returns true with `x` in `y` chance.
 #[allow(needless_pass_by_value)]
 pub fn dice<T>(x: T, y: T) -> bool
-    where T: Integer + SampleRange + Display
+where
+    T: Integer + SampleRange + Display,
 {
     debug_assert!(x <= y, format!("Assert failed: dice({}, {})", x, y));
     rand_range(T::one(), y) <= x
@@ -369,7 +377,7 @@ mod tests {
     }
 
     #[test]
-        fn test_min() {
+    fn test_min() {
         assert_eq!(min!(0, 1, 2), 0);
         assert_eq!(min!(2, 1, 0), 0);
         assert_eq!(min!(-1, -2), -2);

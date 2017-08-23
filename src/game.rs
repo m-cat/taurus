@@ -48,8 +48,9 @@ impl Game {
     /// # Panics
     /// If the player doesn't exist.
     pub fn player_depth(&self) -> usize {
-        self.player_depth
-            .expect("Game::player_depth failed: player does not exist.")
+        self.player_depth.expect(
+            "Game::player_depth failed: player does not exist.",
+        )
     }
     pub fn set_player_depth(&mut self, value: usize) {
         self.player_depth = Some(value);
@@ -60,8 +61,9 @@ impl Game {
     /// # Panics
     /// If the player doesn't exist.
     pub fn player_xy(&self) -> Coord {
-        self.player_xy
-            .expect("Game::player_xy failed: player does not exist.")
+        self.player_xy.expect(
+            "Game::player_xy failed: player does not exist.",
+        )
     }
     pub fn set_player_xy(&mut self, value: Coord) {
         self.player_xy = Some(value);

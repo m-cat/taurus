@@ -140,8 +140,10 @@ impl Behavior {
             "Hostile" => Behavior::Hostile,
             "Hunting" => Behavior::Hunting,
             _ => {
-                panic!("Behavior::string_to_behavior failed: invalid input \"{}\"",
-                       string)
+                panic!(
+                    "Behavior::string_to_behavior failed: invalid input \"{}\"",
+                    string
+                )
             }
         }
     }

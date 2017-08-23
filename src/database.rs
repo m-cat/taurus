@@ -57,9 +57,9 @@ impl Database {
     /// # Panics
     /// If no fields have been set.
     pub fn num(&self) -> usize {
-        let vec = self.fields
-            .as_ref()
-            .expect("Database::num failed: vector not instantiated.");
+        let vec = self.fields.as_ref().expect(
+            "Database::num failed: vector not instantiated.",
+        );
         vec.len()
     }
 
@@ -210,9 +210,7 @@ impl Database {
     pub fn load_database(&mut self, file: File) {
         let reader = BufReader::new(file);
 
-        for line in reader.lines() {
-
-        }
+        for line in reader.lines() {}
     }
 }
 

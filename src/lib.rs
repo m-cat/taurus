@@ -34,9 +34,9 @@ pub fn run_game() {
     loop {
         // Get the current dungeon from the list
         let depth = game.player_depth();
-        let mut dungeon = dungeon_list
-            .get_mut(depth)
-            .expect("Game::run failed, invalid index");
+        let mut dungeon = dungeon_list.get_mut(depth).expect(
+            "Game::run failed, invalid index",
+        );
 
         // Main game loop
         match dungeon.run_loop(&game, &mut console) {

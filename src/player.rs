@@ -11,11 +11,12 @@ pub fn player_create(game: &Game) -> Actor {
 }
 
 /// Acts out the player's turn.
-pub fn player_act(player: &mut Actor,
-                  game: &Game,
-                  dungeon: &mut Dungeon,
-                  console: &mut GameConsole)
-                  -> ActResult {
+pub fn player_act(
+    player: &mut Actor,
+    game: &Game,
+    dungeon: &mut Dungeon,
+    console: &mut GameConsole,
+) -> ActResult {
     // while user input is not a game action
 
     // Check if the window was closed by the user.

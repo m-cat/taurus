@@ -43,8 +43,10 @@ impl Class {
             "Door" => Class::Door,
             "Trap" => Class::Trap,
             _ => {
-                panic!("Class::string_to_class failed: invalid input \"{}\"",
-                       string)
+                panic!(
+                    "Class::string_to_class failed: invalid input \"{}\"",
+                    string
+                )
             }
         }
     }
@@ -66,8 +68,10 @@ impl Material {
             "Wood" => Material::Wood,
             "Iron" => Material::Iron,
             _ => {
-                panic!("Material::string_to_material failed: invalid input \"{}\"",
-                       string)
+                panic!(
+                    "Material::string_to_material failed: invalid input \"{}\"",
+                    string
+                )
             }
         }
     }
