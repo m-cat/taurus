@@ -1,4 +1,4 @@
-use util::{int, uint};
+use util::int;
 
 pub struct Tile {
     /// The class of tile, containing the tile kind

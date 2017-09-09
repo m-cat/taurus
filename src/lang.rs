@@ -1,6 +1,6 @@
 #![allow(unknown_lints)]
 
-use util::{dice, rand_range};
+use util::rand::{dice, rand_range};
 
 /// Capitalizes the first letter of the string.
 ///
@@ -98,8 +98,8 @@ fn pick_seq(s: &str, n: usize) -> &str {
 
 #[cfg(test)]
 mod tests {
-    use std::str::*;
     use lang::*;
+    use std::str::*;
 
     #[test]
     fn test_cap() {

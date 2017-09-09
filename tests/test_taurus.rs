@@ -1,7 +1,7 @@
 extern crate taurus;
 
-use taurus::coord::Coord;
 use taurus::actor::Actor;
+use taurus::coord::Coord;
 
 mod common;
 

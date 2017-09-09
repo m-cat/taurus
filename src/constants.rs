@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use util::uint;
 
 pub const TITLE: &'static str = "Taurus";

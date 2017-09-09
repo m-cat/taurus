@@ -1,13 +1,15 @@
 //! Module containing dungeon generation algorithms.
 
-use util::*;
-use util::Direction::*;
+use actor::Actor;
 use constants;
 use coord::Coord;
-use object::Object;
-use actor::Actor;
 use dungeon::Dungeon;
 use game::Game;
+use object::Object;
+use util::{Direction, int};
+use util::Direction::*;
+use util::math::overlaps;
+use util::rand::{Choose, dice, rand_range};
 
 /// Generates the entire dungeon.
 pub fn gen_game(game: &mut Game, dungeon_list: &mut Vec<Dungeon>) {

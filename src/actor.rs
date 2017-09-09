@@ -1,12 +1,9 @@
-#![allow(dead_code)]
-
-use std::cmp::Ordering;
-use fraction::Fraction;
-
-use util::{uint, int};
 use coord::Coord;
 use dungeon::Dungeon;
+use fraction::Fraction;
 use game::Game;
+use std::cmp::Ordering;
+use util::{int, uint};
 
 /// An actor is any entity which could conceivably `act`, that is, have a turn.
 /// Only one actor can occupy a tile at a time.

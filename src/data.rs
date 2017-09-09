@@ -1,8 +1,7 @@
-use std::fs::File;
-use std::path::Path;
-use std::io;
-
 use database::Database;
+use std::fs::File;
+use std::io;
+use std::path::Path;
 
 /// Initializes all data for the game.
 pub fn init_game(database: &mut Database) -> io::Result<()> {

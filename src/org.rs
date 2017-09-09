@@ -1,17 +1,13 @@
 //! Module for processing .org files
 //!
-//! This is not meant to completely capture the functionality of org-mode,
-//! only the features covered in my basic usage of it:
-//! - document fields such as TITLE and AUTHOR
-//! - headings and subheadings
-//! - content text
+//! This does not yet completely capture the functionality of org-mode.
+//! The following aspects of org-mode are currently supported:
+//! * Document fields such as TITLE and AUTHOR
+//! * Headings and subheadings
+//! * Content text
 
-#![allow(dead_code)]
-
-use std::path::Path;
 use std::io;
-
-use util;
+use util::file::{read_file_vec, write_file_vec};
 
 /// Org data structure
 pub struct Org {
@@ -34,8 +30,8 @@ impl Org {
 }
 
 /// Given a file path, return Org struct
-pub fn process_org(path: &Path) -> io::Result<Org> {
-    let file_contents: Vec<String> = match util::read_file_vec(path) {
+pub fn process_org(fname: &str) -> io::Result<Org> {
+    let file_contents: Vec<String> = match read_file_vec(fname) {
         Ok(v) => v,
         Err(e) => return Err(e),
     };
@@ -111,12 +107,12 @@ fn get_heading(line: &str) -> (String, usize) {
 }
 
 /// Write an Org struct to a file
-pub fn write_org(path: &Path, org: &Org) -> io::Result<()> {
+pub fn write_org(fname: &str, org: &Org) -> io::Result<()> {
     let mut contents: Vec<String> = Vec::new();
 
     write_subtree(org, &mut contents);
 
-    util::write_file_vec(path, &contents)
+    write_file_vec(fname, &contents)
 }
 
 /// Push an Org struct to a Vec of Strings
@@ -140,10 +136,10 @@ mod tests {
 
     #[test]
     fn test_get_heading() {
-        assert!(get_heading(&String::from("")) == (String::from(""), 0));
-        assert!(get_heading(&String::from("Test")) == (String::from("Test"), 0));
-        assert!(get_heading(&String::from("* Test")) == (String::from("Test"), 1));
-        assert!(get_heading(&String::from("***Test")) == (String::from("Test"), 3));
-        assert!(get_heading(&String::from("*****")) == (String::new(), 5));
+        assert_eq!(get_heading(""), (String::from(""), 0));
+        assert_eq!(get_heading("Test"), (String::from("Test"), 0));
+        assert_eq!(get_heading("* Test"), (String::from("Test"), 1));
+        assert_eq!(get_heading("***Test"), (String::from("Test"), 3));
+        assert_eq!(get_heading("*****"), (String::new(), 5));
     }
 }

@@ -1,7 +1,7 @@
 extern crate taurus;
 
-use taurus::lang;
 use taurus::constants;
+use taurus::lang;
 
 fn main() {
     taurus::run_game();

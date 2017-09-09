@@ -1,8 +1,8 @@
-use game::Game;
-use dungeon::Dungeon;
 use actor::ActResult;
 use actor::Actor;
 use console::GameConsole;
+use dungeon::Dungeon;
+use game::Game;
 use ui;
 
 /// Creates and returns the player actor.

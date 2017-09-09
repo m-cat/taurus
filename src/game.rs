@@ -1,13 +1,12 @@
-use std::cell::Cell;
-use std::collections::VecDeque;
-use num_traits::identities::Zero;
-use fraction::Fraction;
-
-use util::uint;
-use database::Database;
-use data;
 use constants;
 use coord::Coord;
+use data;
+use database::Database;
+use fraction::Fraction;
+use num_traits::identities::Zero;
+use std::cell::Cell;
+use std::collections::VecDeque;
+use util::uint;
 
 /// Struct containing game-wide data such as the database and the message list.
 pub struct Game {

@@ -3,13 +3,12 @@
 //! This module is designed so that it can be replaced with a different console
 //! implementation if necessary - it is an abstraction over tcod.
 
+use constants::*;
 use tcod;
 use tcod::Console;
-use tcod::console::*;
 use tcod::colors;
+use tcod::console::*;
 use tcod::input::Key;
-
-use constants::*;
 use util::uint;
 
 pub struct GameConsole {

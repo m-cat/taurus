@@ -1,22 +1,20 @@
-#![allow(dead_code)]
-
-use std::collections::HashMap;
-use std::collections::BinaryHeap;
-use std::ops::Index;
-use std::ops::IndexMut;
-
 use GameLoopResult;
-use util::{int, Choose};
-use fraction::Fraction;
-use coord::Coord;
-use tile::Tile;
 use actor::*;
-use player;
-use object::Object;
+use console::GameConsole;
+use coord::Coord;
+use fraction::Fraction;
+use game::Game;
 use item::Item;
 use item::ItemStack;
-use game::Game;
-use console::GameConsole;
+use object::Object;
+use player;
+use std::collections::BinaryHeap;
+use std::collections::HashMap;
+use std::ops::Index;
+use std::ops::IndexMut;
+use tile::Tile;
+use util::int;
+use util::rand::Choose;
 
 /// Struct containing a single depth of the dungeon, including the depth layout.
 /// This struct is also responsible for running the actor priority queue.

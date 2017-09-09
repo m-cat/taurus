@@ -1,13 +1,12 @@
 #![allow(unused_imports)] // will complain about num_traits::Zero otherwise
 
+use fraction::Fraction;
+use num_traits::Zero;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
-use std::collections::HashMap;
 use std::slice::Iter;
-use fraction::Fraction;
-use num_traits::Zero;
-
 use util::{int, uint};
 
 /// Database of game information.

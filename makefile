@@ -23,4 +23,4 @@ modules:
 	cargo modules # display module structure
 
 clean:
-	rm -f -r src/*.bk src/bin/*.bk tests/*.bk tests/common/*.bk
+	rm **/*.bk

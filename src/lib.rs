@@ -1,30 +1,45 @@
-extern crate rand;
+extern crate fraction;
 extern crate num;
 extern crate num_traits;
-extern crate fraction;
+extern crate rand;
 extern crate tcod;
 
+#[macro_use]
 pub mod util;
-pub mod lang;
-pub mod coord;
-pub mod org;
-pub mod constants;
-pub mod console;
-pub mod database;
-pub mod data;
-pub mod tile;
+
 pub mod actor;
-pub mod player;
-pub mod object;
-pub mod item;
+pub mod console;
+pub mod constants;
+pub mod coord;
+pub mod data;
+pub mod database;
 pub mod dungeon;
 pub mod game;
 pub mod generate;
+pub mod item;
+pub mod lang;
+pub mod object;
+pub mod org;
+pub mod player;
+pub mod tile;
 pub mod ui;
 
+use console::GameConsole;
 use dungeon::Dungeon;
 use game::Game;
-use console::GameConsole;
+
+pub enum GameLoopResult {
+    /// The player has changed depth
+    DepthChanged(usize),
+    /// Game window was closed by player
+    WindowClosed,
+    /// Player died and we need to return
+    PlayerDead,
+    /// No actors remaining in queue
+    NoActors, // should never happen!
+    /// Nothing special happened
+    None,
+}
 
 /// Runs the main game loop
 pub fn run_game() {
@@ -62,17 +77,4 @@ fn init_new_game() -> (GameConsole, Game, Vec<Dungeon>) {
     generate::gen_game(&mut game, &mut dungeon_list); // TODO: add piecemeal generation
 
     (console, game, dungeon_list)
-}
-
-pub enum GameLoopResult {
-    /// The player has changed depth
-    DepthChanged(usize),
-    /// Game window was closed by player
-    WindowClosed,
-    /// Player died and we need to return
-    PlayerDead,
-    /// No actors remaining in queue
-    NoActors, // should never happen!
-    /// Nothing special happened
-    None,
 }

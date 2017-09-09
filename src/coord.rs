@@ -1,7 +1,7 @@
-use util;
 use util::int;
+use util::math::in_one;
 
-// Very simple but indispensible struct
+/// Simple coordinate struct.
 #[derive(PartialEq, Eq, Debug, Hash, Clone, Copy, Default)]
 pub struct Coord {
     pub x: int,
@@ -15,7 +15,7 @@ impl Coord {
 
     /// Returns true if two Coords are adjacent and NOT equal.
     pub fn adjacent(&self, other: &Self) -> bool {
-        util::in_one(self.x, other.x) && util::in_one(self.y, other.y) && self != other
+        in_one(self.x, other.x) && in_one(self.y, other.y) && self != other
     }
 }
 
