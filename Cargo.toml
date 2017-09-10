@@ -2,6 +2,10 @@
 name = "taurus"
 version = "0.1.0"
 authors = ["m-cat <scatman@bu.edu>"]
+description = "A WIP roguelike game being developed in Rust."
+license = "MIT"
+repository = "https://github.com/m-cat/taurus"
+readme = "README.md"
 
 [dependencies]
 num-traits = "0.1.37"
