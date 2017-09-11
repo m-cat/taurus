@@ -3,13 +3,11 @@
 use std::fs::File;
 use std::io;
 use std::io::{BufRead, BufReader, Read, Write};
-use std::path::Path;
 
 /// Reads a file and returns its contents in a string.
 pub fn read_file_str(fname: &str) -> io::Result<String> {
-    let path = Path::new(fname);
     // Open a file in read-only mode
-    let mut file = File::open(&path)?;
+    let mut file = File::open(fname)?;
 
     let mut contents = String::new();
     let _ = file.read_to_string(&mut contents)?;
@@ -20,9 +18,8 @@ pub fn read_file_str(fname: &str) -> io::Result<String> {
 /// Reads a file and returns its contents as lines in Vec<String>.
 /// Each string returned will not have an ending newline.
 pub fn read_file_vec(fname: &str) -> io::Result<Vec<String>> {
-    let path = Path::new(fname);
     // Open a file in read-only mode
-    let file = File::open(&path)?;
+    let file = File::open(fname)?;
     let reader = BufReader::new(file);
     let mut vec: Vec<String> = Vec::new();
 
@@ -39,9 +36,8 @@ pub fn read_file_vec(fname: &str) -> io::Result<Vec<String>> {
 
 /// Writes a string to a file.
 pub fn write_file_str(fname: &str, contents: &str) -> io::Result<()> {
-    let path = Path::new(fname);
     // Open a file in write-only mode
-    let mut file = File::create(&path)?;
+    let mut file = File::create(fname)?;
 
     file.write_all(contents.as_bytes())?;
 
@@ -50,9 +46,8 @@ pub fn write_file_str(fname: &str, contents: &str) -> io::Result<()> {
 
 /// Writes a Vec<String> to a file with a given path.
 pub fn write_file_vec(fname: &str, contents: &[String]) -> io::Result<()> {
-    let path = Path::new(fname);
     // Open a file in write-only mode, returns `io::Result<File>`
-    let mut file = File::create(&path)?;
+    let mut file = File::create(fname)?;
     let newline = b"\n";
 
     // Write each string to `file`, returns `io::Result<()>`

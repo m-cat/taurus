@@ -1,48 +1,50 @@
+//! Game logic for Taurus.
+
+// TODO: Get to the point where we can uncomment this.
+// #![deny(missing_docs)]
+
+// TODO: Get to the point where we can remove this without it causing an avalanche of warnings.
+#![allow(dead_code, unused_variables)]
+
 extern crate fraction;
 extern crate num;
 extern crate num_traits;
 extern crate rand;
 extern crate tcod;
 
-#[macro_use]
-pub mod util;
+// Game logic
+// TODO: refactor this out into a different crate?
 
+#[macro_use]
+mod util;
 pub mod actor;
 pub mod console;
-pub mod constants;
 pub mod coord;
-pub mod data;
 pub mod database;
 pub mod dungeon;
 pub mod game;
 pub mod generate;
 pub mod item;
-pub mod lang;
 pub mod object;
-pub mod org;
 pub mod player;
 pub mod tile;
 pub mod ui;
+pub mod lang;
+
+mod data;
+mod constants;
 
 use console::GameConsole;
 use dungeon::Dungeon;
 use game::Game;
-
-pub enum GameLoopResult {
-    /// The player has changed depth
-    DepthChanged(usize),
-    /// Game window was closed by player
-    WindowClosed,
-    /// Player died and we need to return
-    PlayerDead,
-    /// No actors remaining in queue
-    NoActors, // should never happen!
-    /// Nothing special happened
-    None,
-}
+use game::GameLoopResult;
 
 /// Runs the main game loop
 pub fn run_game() {
+    for _ in 1..100 {
+        println!("{}", lang::name_gen(constants::MAX_NAME_LEN));
+    }
+
     // Initialize a brand new game
     let (mut console, game, mut dungeon_list) = init_new_game();
 

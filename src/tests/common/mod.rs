@@ -1,6 +1,6 @@
-use taurus::database::Database;
-use taurus::dungeon::Dungeon;
-use taurus::game::Game;
+use database::Database;
+use dungeon::Dungeon;
+use game::Game;
 
 pub fn setup_game_test() -> (Game, Dungeon) {
     let mut game = Game::new();

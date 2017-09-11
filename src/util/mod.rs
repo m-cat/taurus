@@ -1,5 +1,8 @@
 //! Utility functions.
 
+// Allow dead code for utility functions.
+#![allow(dead_code)]
+
 /// File IO utility functions.
 pub mod file;
 /// Math utility functions.

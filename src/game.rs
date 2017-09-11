@@ -8,6 +8,19 @@ use std::cell::Cell;
 use std::collections::VecDeque;
 use util::uint;
 
+pub enum GameLoopResult {
+    /// The player has changed depth
+    DepthChanged(usize),
+    /// Game window was closed by player
+    WindowClosed,
+    /// Player died and we need to return
+    PlayerDead,
+    /// No actors remaining in queue
+    NoActors, // should never happen!
+    /// Nothing special happened
+    None,
+}
+
 /// Struct containing game-wide data such as the database and the message list.
 pub struct Game {
     /// A reference to the main game database containing monster info, tile info, etc.
