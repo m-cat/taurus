@@ -17,6 +17,7 @@ extern crate tcod;
 
 #[macro_use]
 mod util;
+
 pub mod actor;
 pub mod console;
 pub mod coord;
@@ -25,28 +26,31 @@ pub mod dungeon;
 pub mod game;
 pub mod generate;
 pub mod item;
+pub mod lang;
 pub mod object;
 pub mod player;
 pub mod tile;
 pub mod ui;
-pub mod lang;
 
-mod data;
 mod constants;
+mod data;
+#[cfg(test)]
+mod tests;
 
 use console::GameConsole;
 use dungeon::Dungeon;
 use game::Game;
 use game::GameLoopResult;
+use std::io;
 
 /// Runs the main game loop
-pub fn run_game() {
+pub fn run_game() -> io::Result<()> {
     for _ in 1..100 {
         println!("{}", lang::name_gen(constants::MAX_NAME_LEN));
     }
 
     // Initialize a brand new game
-    let (mut console, game, mut dungeon_list) = init_new_game();
+    let (mut console, game, mut dungeon_list) = init_new_game()?;
 
     loop {
         // Get the current dungeon from the list
@@ -70,13 +74,13 @@ pub fn run_game() {
     }
 }
 
-fn init_new_game() -> (GameConsole, Game, Vec<Dungeon>) {
+fn init_new_game() -> io::Result<(GameConsole, Game, Vec<Dungeon>)> {
     let console = GameConsole::init(); // initialize the console
-    let mut game = Game::new();
+    let mut game = Game::new()?;
     let mut dungeon_list: Vec<Dungeon> = Vec::new();
 
     // Generate game
     generate::gen_game(&mut game, &mut dungeon_list); // TODO: add piecemeal generation
 
-    (console, game, dungeon_list)
+    Ok((console, game, dungeon_list))
 }

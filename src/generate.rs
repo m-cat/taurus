@@ -86,7 +86,7 @@ fn gen_dungeon_room_method(game: &Game, dungeon: &mut Dungeon, index: usize) {
             // Try a few times to generate a room here
             if let Some(new_room) = try_some!(
                 gen_room_adjacent(
-                    &game,
+                    game,
                     &room,
                     *direction,
                     &room_list,

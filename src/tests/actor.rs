@@ -1,13 +1,11 @@
-extern crate taurus;
-
-use taurus::actor::Actor;
-use taurus::coord::Coord;
-
-mod common;
+use actor::Actor;
+use coord::Coord;
+use tests::common;
 
 #[test]
+#[ignore]
 fn test_set_actor_coord() {
-    let (game, mut dungeon) = common::setup_game_test();
+    let (game, mut dungeon) = common::setup_game_test().unwrap();
     let actor = Actor::new(&game, "test");
 
     let xy1 = Coord::new(0, 0);
@@ -32,7 +30,7 @@ fn test_set_actor_coord() {
 #[test]
 #[should_panic]
 fn test_set_actor_coord_panic() {
-    let (game, mut dungeon) = common::setup_game_test();
+    let (game, mut dungeon) = common::setup_game_test().unwrap();
     let actor1 = Actor::new(&game, "test");
     let actor2 = Actor::new(&game, "test");
 

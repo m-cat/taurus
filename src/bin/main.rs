@@ -1,5 +1,7 @@
 extern crate taurus;
 
 fn main() {
-    taurus::run_game();
+    if let Err(e) = taurus::run_game() {
+        panic!("{}", e);
+    }
 }

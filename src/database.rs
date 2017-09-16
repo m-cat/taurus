@@ -263,7 +263,7 @@ mod tests {
         db.sub("Test").sub("Fields").add_uint(1);
 
         for (i, n) in db.get("Test").get("Fields").iter().enumerate() {
-            if let &Value::Uint(u) = n {
+            if let Value::Uint(u) = *n {
                 assert_eq!(u, i as uint);
             }
         }

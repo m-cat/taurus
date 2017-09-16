@@ -1,10 +1,10 @@
-use database::Database;
 use dungeon::Dungeon;
 use game::Game;
+use std::io;
 
-pub fn setup_game_test() -> (Game, Dungeon) {
-    let mut game = Game::new();
+pub fn setup_game_test() -> io::Result<(Game, Dungeon)> {
+    let game = Game::new()?;
     let dungeon = Dungeon::new(0);
 
-    (game, dungeon)
+    Ok((game, dungeon))
 }

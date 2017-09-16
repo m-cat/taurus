@@ -6,6 +6,7 @@ use fraction::Fraction;
 use num_traits::identities::Zero;
 use std::cell::Cell;
 use std::collections::VecDeque;
+use std::io;
 use util::uint;
 
 pub enum GameLoopResult {
@@ -41,18 +42,18 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new() -> Game {
+    pub fn new() -> io::Result<Game> {
         let mut database = Database::new(); // initialize the database
-        data::init_game(&mut database);
+        data::init_game(&mut database)?;
 
-        Game {
+        Ok(Game {
             database: database,
             message_deque: VecDeque::with_capacity(constants::MESSAGE_DEQUE_SIZE),
             player_depth: None,
             player_xy: None,
             turn: Cell::new(Fraction::zero()),
             num_actors: Cell::new(0),
-        }
+        })
     }
 
     /// Gets the current depth that the player is on.
@@ -97,10 +98,4 @@ impl Game {
 
     /// Adds a string to the message deque.
     pub fn add_message(&self, message: &str) {} // TODO. Should pop_front when queue gets too big
-}
-
-impl Default for Game {
-    fn default() -> Self {
-        Self::new()
-    }
 }
