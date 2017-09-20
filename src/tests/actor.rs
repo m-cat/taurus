@@ -9,26 +9,26 @@ use tests::common;
 fn test_set_actor_coord() {
     let (game, mut dungeon) = common::setup_game_test().unwrap();
 
-    let xy1 = Coord::new(0, 0);
-    let xy2 = Coord::new(1, 1);
-    let xy3 = Coord::new(2, 2);
-    let xy4 = Coord::new(3, 3);
-    let xy5 = Coord::new(4, 4);
+    let coord1 = Coord::new(0, 0);
+    let coord2 = Coord::new(1, 1);
+    let coord3 = Coord::new(2, 2);
+    let coord4 = Coord::new(3, 3);
+    let coord5 = Coord::new(4, 4);
 
-    Actor::insert_new(&game, &mut dungeon, xy1, "test");
-    Actor::insert_new(&game, &mut dungeon, xy5, "test");
+    Actor::insert_new(&game, &mut dungeon, coord1, "test");
+    Actor::insert_new(&game, &mut dungeon, coord5, "test");
     assert_eq!(dungeon.num_actors(), 2);
 
-    dungeon.set_actor_coord(xy1, xy2);
-    dungeon.set_actor_coord(xy2, xy3);
-    dungeon.set_actor_coord(xy3, xy4);
-    dungeon.set_actor_coord(xy4, xy1);
+    dungeon.set_actor_coord(coord1, coord2);
+    dungeon.set_actor_coord(coord2, coord3);
+    dungeon.set_actor_coord(coord3, coord4);
+    dungeon.set_actor_coord(coord4, coord1);
     assert_eq!(dungeon.num_actors(), 2);
 
-    let actor = &dungeon.get_actor(xy4).unwrap();
+    let actor = &dungeon.get_actor(coord4).unwrap();
 
     // Test that the actor is located at (3,3)
-    assert_eq!(actor.coord(), xy4);
+    assert_eq!(actor.coord(), coord4);
 }
 
 // Test that `set_actor_coord` panics when it should.
@@ -37,12 +37,12 @@ fn test_set_actor_coord() {
 fn test_set_actor_coord_panic() {
     let (game, mut dungeon) = common::setup_game_test().unwrap();
 
-    let xy1 = Coord::new(0, 0);
-    let xy2 = Coord::new(1, 1);
+    let coord1 = Coord::new(0, 0);
+    let coord2 = Coord::new(1, 1);
 
-    Actor::insert_new(&game, &mut dungeon, xy1, "test");
-    Actor::insert_new(&game, &mut dungeon, xy2, "test");
+    Actor::insert_new(&game, &mut dungeon, coord1, "test");
+    Actor::insert_new(&game, &mut dungeon, coord2, "test");
 
     // Try setting to an occupied coordinate, inducing a panic.
-    dungeon.set_actor_coord(xy1, xy2);
+    dungeon.set_actor_coord(coord1, coord2);
 }

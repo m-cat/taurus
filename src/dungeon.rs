@@ -78,50 +78,50 @@ impl Dungeon {
     }
 
     /// Adds actor to both the coordinate map and the priority queue.
-    pub fn add_actor(&mut self, xy: Coord, mut a: Actor) {
-        debug_assert!(!self.actor_map.contains_key(&xy)); // actors can't share tiles
+    pub fn add_actor(&mut self, coord: Coord, mut a: Actor) {
+        debug_assert!(!self.actor_map.contains_key(&coord)); // actors can't share tiles
 
         let turn = a.turn();
         let id = a.id();
 
-        a.set_coord(xy);
-        self.actor_map.insert(xy, a); // add actor to map
+        a.set_coord(coord);
+        self.actor_map.insert(coord, a); // add actor to map
 
         let coordt = CoordTurn {
-            xy: xy,
+            coord: coord,
             turn: turn,
             id: id,
         };
         self.actor_queue.push(coordt); // add actor to queue
     }
 
-    /// Returns true if there is an actor at `xy`.
-    pub fn has_actor(&self, xy: Coord) -> bool {
-        self.actor_map.contains_key(&xy)
+    /// Returns true if there is an actor at `coord`.
+    pub fn has_actor(&self, coord: Coord) -> bool {
+        self.actor_map.contains_key(&coord)
     }
 
     /// Gets an immutable reference to an actor.
-    pub fn get_actor(&self, xy: Coord) -> Option<&Actor> {
-        self.actor_map.get(&xy)
+    pub fn get_actor(&self, coord: Coord) -> Option<&Actor> {
+        self.actor_map.get(&coord)
     }
 
     /// Gets a mutable reference to an actor.
-    pub fn get_mut_actor(&mut self, xy: Coord) -> Option<&mut Actor> {
-        self.actor_map.get_mut(&xy)
+    pub fn get_mut_actor(&mut self, coord: Coord) -> Option<&mut Actor> {
+        self.actor_map.get_mut(&coord)
     }
 
-    /// Moves the actor at coordinates `xy` to coordinates `new_xy`.
+    /// Moves the actor at coordinates `coord` to coordinates `new_coord`.
     /// Note that this is rather inefficient due to the need to rebuild the priority queue.
     ///
     /// # Panics
     /// If the actor could not be found at the given coordinates.
-    pub fn set_actor_coord(&mut self, xy: Coord, new_xy: Coord) {
-        debug_assert!(!self.actor_map.contains_key(&new_xy));
+    pub fn set_actor_coord(&mut self, coord: Coord, new_coord: Coord) {
+        debug_assert!(!self.actor_map.contains_key(&new_coord));
 
-        let (mut actor_list, option) = self.unroll_queue_get_actor(xy);
+        let (mut actor_list, option) = self.unroll_queue_get_actor(coord);
         let mut actor = option.unwrap();
 
-        actor.set_coord(new_xy);
+        actor.set_coord(new_coord);
         actor_list.push(actor);
 
         self.rebuild_queue(actor_list);
@@ -132,8 +132,8 @@ impl Dungeon {
     ///
     /// # Panics
     /// If the actor could not be found at the given coordinates.
-    pub fn set_actor_turn(&mut self, xy: Coord, new_turn: Fraction) {
-        let (mut actor_list, option) = self.unroll_queue_get_actor(xy);
+    pub fn set_actor_turn(&mut self, coord: Coord, new_turn: Fraction) {
+        let (mut actor_list, option) = self.unroll_queue_get_actor(coord);
         let mut actor = option.unwrap();
 
         actor.set_turn(new_turn);
@@ -143,7 +143,7 @@ impl Dungeon {
     }
 
     /// Unrolls the actor queue looking for a specific actor.
-    fn unroll_queue_get_actor(&mut self, xy: Coord) -> (Vec<Actor>, Option<Actor>) {
+    fn unroll_queue_get_actor(&mut self, coord: Coord) -> (Vec<Actor>, Option<Actor>) {
         let mut coordt_list: Vec<CoordTurn> = Vec::new();
         let mut actor_list: Vec<Actor> = Vec::new();
         let mut option = None;
@@ -153,9 +153,9 @@ impl Dungeon {
         }
 
         for coordt in coordt_list {
-            let actor_temp = self.remove_actor(coordt.xy);
+            let actor_temp = self.remove_actor(coordt.coord);
 
-            if actor_temp.coord() == xy {
+            if actor_temp.coord() == coord {
                 option = Some(actor_temp);
             } else {
                 actor_list.push(actor_temp);
@@ -175,46 +175,46 @@ impl Dungeon {
     /// Effectively removes an actor by taking it out of the actor map.
     /// The priority queue will know it's gone when it gets to it.
     /// Passes in the actor's coordinates to find it.
-    pub fn remove_actor(&mut self, xy: Coord) -> Actor {
-        self.actor_map.remove(&xy).unwrap()
+    pub fn remove_actor(&mut self, coord: Coord) -> Actor {
+        self.actor_map.remove(&coord).unwrap()
     }
 
     /// Inserts an object into the object hash map.
-    pub fn add_object(&mut self, xy: Coord, o: Object) {
-        debug_assert!(!self.object_map.contains_key(&xy));
+    pub fn add_object(&mut self, coord: Coord, o: Object) {
+        debug_assert!(!self.object_map.contains_key(&coord));
 
-        self.object_map.insert(xy, o);
+        self.object_map.insert(coord, o);
     }
 
     /// Removes an object from the map
-    pub fn remove_object(&mut self, xy: Coord) -> Object {
-        self.object_map.remove(&xy).unwrap()
+    pub fn remove_object(&mut self, coord: Coord) -> Object {
+        self.object_map.remove(&coord).unwrap()
     }
 
     /// Inserts an item into the stack hash map.
-    pub fn add_item(&mut self, xy: Coord, i: Item) {
-        let mut stack = match self.stack_map.remove(&xy) {
+    pub fn add_item(&mut self, coord: Coord, i: Item) {
+        let mut stack = match self.stack_map.remove(&coord) {
             Some(s) => s,
             None => ItemStack::new(), // create new stack if one doesn't exist
         };
 
         stack.add(i);
-        self.stack_map.insert(xy, stack);
+        self.stack_map.insert(coord, stack);
     }
 
     /// Removes an item with given index from the stack.
     ///
     /// # Panics
     /// If the passed in index is invalid.
-    pub fn remove_item(&mut self, xy: Coord, index: usize) -> Item {
-        let mut stack = self.stack_map.get_mut(&xy).unwrap();
+    pub fn remove_item(&mut self, coord: Coord, index: usize) -> Item {
+        let mut stack = self.stack_map.get_mut(&coord).unwrap();
 
         stack.remove(index)
     }
 
     /// Returns the amount of items in a stack.
-    pub fn stack_size(&self, xy: Coord) -> usize {
-        match self.stack_map.get(&xy) {
+    pub fn stack_size(&self, coord: Coord) -> usize {
+        match self.stack_map.get(&coord) {
             Some(s) => s.len(),
             None => 0,
         }
@@ -231,14 +231,14 @@ impl Dungeon {
     /// Returns an available coordinate, not currently occupied by any actors.
     pub fn random_avail_coord_actor(&self) -> Coord {
         let mut found = false;
-        let mut xy: Coord = Default::default();
+        let mut coord: Coord = Default::default();
 
         while !found {
-            xy = self.random_coord();
-            found = self.has_actor(xy);
+            coord = self.random_coord();
+            found = self.has_actor(coord);
         }
 
-        xy
+        coord
     }
 
     /// Runs the main game loop by iterating over the actor priority queue
@@ -253,7 +253,7 @@ impl Dungeon {
             // If there is no actor at the coordinates or the id doesn't match,
             // this actor has been removed and we simply continue without reinserting
             // it into the queue.
-            let mut a = match self.actor_map.remove(&coordt.xy) {
+            let mut a = match self.actor_map.remove(&coordt.coord) {
                 Some(a) => {
                     if a.id() != coordt.id {
                         continue;
@@ -279,7 +279,7 @@ impl Dungeon {
             };
 
             // Push the actor's associated CoordTurn back on the queue.
-            coordt.xy = a.coord();
+            coordt.coord = a.coord();
             coordt.turn = a.turn();
             self.actor_queue.push(coordt);
         }

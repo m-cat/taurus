@@ -10,7 +10,7 @@ pub struct Object {
     active: bool,
 
     /// The coordinate of the object.
-    xy: Option<Coord>,
+    coord: Option<Coord>,
 }
 
 impl Object {
@@ -22,7 +22,7 @@ impl Object {
             material: Material::string_to_material(object_database.get("material").get_str()),
             active: active,
 
-            xy: None,
+            coord: None,
         }
     }
 }

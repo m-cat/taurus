@@ -34,7 +34,7 @@ pub struct Game {
     /// Current depth of the player, indexed starting at 1.
     player_depth: Option<usize>,
     /// Current coordinates of the player.
-    player_xy: Option<Coord>,
+    player_coord: Option<Coord>,
 
     /// Current global game turn.
     turn: Cell<Fraction>, // We need interior mutability here
@@ -51,7 +51,7 @@ impl Game {
             database: database,
             message_deque: VecDeque::with_capacity(constants::MESSAGE_DEQUE_SIZE),
             player_depth: None,
-            player_xy: None,
+            player_coord: None,
             turn: Cell::new(Fraction::zero()),
             num_actors: Cell::new(0),
         })
@@ -72,11 +72,11 @@ impl Game {
     ///
     /// # Panics
     /// If the player doesn't exist.
-    pub fn player_xy(&self) -> Coord {
-        self.player_xy.unwrap()
+    pub fn player_coord(&self) -> Coord {
+        self.player_coord.unwrap()
     }
-    pub fn set_player_xy(&mut self, value: Coord) {
-        self.player_xy = Some(value);
+    pub fn set_player_coord(&mut self, value: Coord) {
+        self.player_coord = Some(value);
     }
 
     pub fn turn(&self) -> Fraction {

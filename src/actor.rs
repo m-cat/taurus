@@ -16,7 +16,7 @@ pub struct Actor {
     /// Character to draw to the console with.
     c: char,
     /// Coordinate location in level.
-    xy: Coord,
+    coord: Coord,
     /// Current turn.
     turn: Fraction,
 
@@ -32,7 +32,7 @@ pub struct Actor {
 }
 
 impl Actor {
-    pub fn insert_new(game: &Game, dungeon: &mut Dungeon, xy: Coord, name: &str) {
+    pub fn insert_new(game: &Game, dungeon: &mut Dungeon, coord: Coord, name: &str) {
         let actor_database = game.database.get("actor").get(name);
 
         let hp = actor_database.get("hp").get_uint();
@@ -40,7 +40,7 @@ impl Actor {
         let mut a = Actor {
             id: game.actor_id(),
             c: actor_database.get("c").get_char(),
-            xy: xy,
+            coord: coord,
             turn: game.turn(), // we update this later in this function
 
             hp_cur: hp as int,
@@ -51,7 +51,7 @@ impl Actor {
         };
         a.turn += a.speed(); // Set the actor's turn.
 
-        dungeon.add_actor(xy, a);
+        dungeon.add_actor(coord, a);
     }
 
     /// Returns the actor id for this actor.
@@ -78,12 +78,12 @@ impl Actor {
 
     /// Returns this actor's coordinates.
     pub fn coord(&self) -> Coord {
-        self.xy
+        self.coord
     }
 
     /// Sets this actor's coordinates.
-    pub fn set_coord(&mut self, xy: Coord) {
-        self.xy = xy;
+    pub fn set_coord(&mut self, coord: Coord) {
+        self.coord = coord;
     }
 
     /// Returns this actor's next turn value.
@@ -172,7 +172,7 @@ pub enum ActResult {
 /// This allows the actor map to fully own the actors. We always get actors from one place,
 /// the actor map, keyed by Coord.
 pub struct CoordTurn {
-    pub xy: Coord,
+    pub coord: Coord,
     pub turn: Fraction,
     /// The id of the actor.
     pub id: uint,

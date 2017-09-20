@@ -49,8 +49,8 @@ fn gen_pits(game: &Game, dungeon_list: &mut Vec<Dungeon>, index: usize) {
 
 /// Creates an actor of type `name` and places it in a random open location in `dungeon`.
 fn gen_actor_random_coord(game: &Game, dungeon: &mut Dungeon, name: &str) {
-    let xy = dungeon.random_avail_coord_actor();
-    Actor::insert_new(game, dungeon, xy, name);
+    let coord = dungeon.random_avail_coord_actor();
+    Actor::insert_new(game, dungeon, coord, name);
 }
 
 /// Creates the player and places him in a random location of the dungeon.

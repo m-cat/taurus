@@ -32,16 +32,16 @@ mod tests {
 
     #[test]
     fn test_adjacent() {
-        let xy1 = Coord::new(1, 1);
-        let xy2 = Coord::new(0, 0);
-        let xy3 = Coord::new(2, 2);
-        let xy4 = Coord::new(2, 2);
-        let xy5 = Coord::new(1, 0);
+        let coord1 = Coord::new(1, 1);
+        let coord2 = Coord::new(0, 0);
+        let coord3 = Coord::new(2, 2);
+        let coord4 = Coord::new(2, 2);
+        let coord5 = Coord::new(1, 0);
 
-        assert!(xy1.adjacent(&xy2));
-        assert!(xy1.adjacent(&xy3));
-        assert!(xy1.adjacent(&xy5));
-        assert!(!xy2.adjacent(&xy3));
-        assert!(!xy3.adjacent(&xy4));
+        assert!(coord1.adjacent(&coord2));
+        assert!(coord1.adjacent(&coord3));
+        assert!(coord1.adjacent(&coord5));
+        assert!(!coord2.adjacent(&coord3));
+        assert!(!coord3.adjacent(&coord4));
     }
 }
