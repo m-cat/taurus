@@ -20,7 +20,7 @@ use util::rand::Choose;
 /// This struct is also responsible for running the actor priority queue.
 pub struct Dungeon {
     depth: usize,
-    tile_grid: Option<Vec<Vec<Tile>>>, // indexed x,y
+    tile_grid: Vec<Vec<Tile>>, // indexed x,y
 
     actor_map: HashMap<Coord, Actor>,
     actor_queue: BinaryHeap<CoordTurn>,
@@ -32,7 +32,7 @@ impl Dungeon {
     pub fn new(depth: usize) -> Dungeon {
         Dungeon {
             depth: depth,
-            tile_grid: None,
+            tile_grid: Vec::new(),
 
             actor_map: HashMap::new(),
             actor_queue: BinaryHeap::new(),
@@ -42,35 +42,30 @@ impl Dungeon {
     }
 
     /// Returns the width of the tile grid.
-    ///
-    /// # Panics
-    /// If the tile grid hasn't been initialized.
     pub fn width(&self) -> usize {
-        self.tile_grid.as_ref().unwrap().len()
+        self.tile_grid.len()
     }
 
     /// Returns the height of the tile grid.
-    ///
-    /// # Panics
-    /// If the tile grid hasn't been initialized.
     pub fn height(&self) -> usize {
-        let column_list = self.tile_grid.as_ref().unwrap();
-        column_list[0].len()
+        let column_list = &self.tile_grid;
+        if column_list.len() > 0 {
+            column_list[0].len()
+        } else {
+            0
+        }
     }
 
     /// Returns the number of actors in the dungeon.
-    ///
-    /// # Panics
-    /// If the map size doesn't equal the queue size.
     pub fn num_actors(&self) -> usize {
         debug_assert_eq!(self.actor_queue.len(), self.actor_map.len());
 
         self.actor_queue.len()
     }
 
-    /// Initializes the tile grid, should only be called in generation functions
+    /// Initializes the tile grid, should only be called in generation functions.
     fn create_grid(&mut self, width: usize, height: usize) {
-        self.tile_grid = Some(Vec::with_capacity(width));
+        self.tile_grid = Vec::with_capacity(width);
 
         for _ in 0..width {
             let mut column: Vec<Tile> = Vec::with_capacity(height);
@@ -78,24 +73,25 @@ impl Dungeon {
             for _ in 0..height {
                 column.push(Default::default());
             }
-            self.tile_grid.as_mut().unwrap().push(column);
+            self.tile_grid.push(column);
         }
     }
 
     /// Adds actor to both the coordinate map and the priority queue.
-    ///
-    /// # Panics
-    /// Panics if the actor's coordinates are unavailable.
     pub fn add_actor(&mut self, xy: Coord, mut a: Actor) {
         debug_assert!(!self.actor_map.contains_key(&xy)); // actors can't share tiles
 
+        let turn = a.turn();
+        let id = a.id();
+
         a.set_coord(xy);
+        self.actor_map.insert(xy, a); // add actor to map
+
         let coordt = CoordTurn {
             xy: xy,
-            turn: a.turn,
-            id: a.id,
+            turn: turn,
+            id: id,
         };
-        self.actor_map.insert(xy, a); // add actor to map
         self.actor_queue.push(coordt); // add actor to queue
     }
 
@@ -114,17 +110,16 @@ impl Dungeon {
         self.actor_map.get_mut(&xy)
     }
 
-    /// Sets an actor's coordinates.
+    /// Moves the actor at coordinates `xy` to coordinates `new_xy`.
     /// Note that this is rather inefficient due to the need to rebuild the priority queue.
     ///
     /// # Panics
-    /// If the new coordinates are unavailable.
     /// If the actor could not be found at the given coordinates.
     pub fn set_actor_coord(&mut self, xy: Coord, new_xy: Coord) {
-        assert!(!self.actor_map.contains_key(&new_xy));
+        debug_assert!(!self.actor_map.contains_key(&new_xy));
 
         let (mut actor_list, option) = self.unroll_queue_get_actor(xy);
-        let mut actor = option.expect("Dungeon::set_actor_coord failed: could not find actor.");
+        let mut actor = option.unwrap();
 
         actor.set_coord(new_xy);
         actor_list.push(actor);
@@ -139,7 +134,7 @@ impl Dungeon {
     /// If the actor could not be found at the given coordinates.
     pub fn set_actor_turn(&mut self, xy: Coord, new_turn: Fraction) {
         let (mut actor_list, option) = self.unroll_queue_get_actor(xy);
-        let mut actor = option.expect("Dungeon::set_actor_coord failed: could not find actor.");
+        let mut actor = option.unwrap();
 
         actor.set_turn(new_turn);
         actor_list.push(actor);
@@ -181,25 +176,19 @@ impl Dungeon {
     /// The priority queue will know it's gone when it gets to it.
     /// Passes in the actor's coordinates to find it.
     pub fn remove_actor(&mut self, xy: Coord) -> Actor {
-        self.actor_map.remove(&xy).expect(
-            "Dungeon::remove_actor failed: invalid coordinate.",
-        )
+        self.actor_map.remove(&xy).unwrap()
     }
 
     /// Inserts an object into the object hash map.
-    ///
-    /// # Panics
-    /// Panics if the tile already contains an object.
     pub fn add_object(&mut self, xy: Coord, o: Object) {
         debug_assert!(!self.object_map.contains_key(&xy));
+
         self.object_map.insert(xy, o);
     }
 
     /// Removes an object from the map
     pub fn remove_object(&mut self, xy: Coord) -> Object {
-        self.object_map.remove(&xy).expect(
-            "Dungeon::remove_object failed, invalid coordinate",
-        )
+        self.object_map.remove(&xy).unwrap()
     }
 
     /// Inserts an item into the stack hash map.
@@ -216,11 +205,9 @@ impl Dungeon {
     /// Removes an item with given index from the stack.
     ///
     /// # Panics
-    /// Panics if the passed in index is invalid.
+    /// If the passed in index is invalid.
     pub fn remove_item(&mut self, xy: Coord, index: usize) -> Item {
-        let mut stack = self.stack_map.get_mut(&xy).expect(
-            "Dungeon::remove_item failed, invalid coordinate",
-        );
+        let mut stack = self.stack_map.get_mut(&xy).unwrap();
 
         stack.remove(index)
     }
@@ -235,7 +222,7 @@ impl Dungeon {
 
     /// Returns a random coordinate.
     pub fn random_coord(&self) -> Coord {
-        let grid = self.tile_grid.as_ref().unwrap();
+        let grid = &self.tile_grid;
         let (x, column) = grid.choose_enumerate().unwrap();
         let y = column.choose_index().unwrap();
         Coord::new(x as int, y as int)
@@ -268,7 +255,7 @@ impl Dungeon {
             // it into the queue.
             let mut a = match self.actor_map.remove(&coordt.xy) {
                 Some(a) => {
-                    if a.id != coordt.id {
+                    if a.id() != coordt.id {
                         continue;
                     }
                     a
@@ -277,10 +264,10 @@ impl Dungeon {
             };
 
             // Update the global game turn.
-            game.set_turn(a.turn);
+            game.set_turn(a.turn());
 
             // Let the actor do its thing.
-            let result = match a.behavior {
+            let result = match a.behavior() {
                 Behavior::Player => player::player_act(&mut a, game, self, console),
                 _ => a.act(game, self),
             };
@@ -293,7 +280,7 @@ impl Dungeon {
 
             // Push the actor's associated CoordTurn back on the queue.
             coordt.xy = a.coord();
-            coordt.turn = a.turn;
+            coordt.turn = a.turn();
             self.actor_queue.push(coordt);
         }
     }
@@ -303,18 +290,12 @@ impl Dungeon {
 impl Index<usize> for Dungeon {
     type Output = Vec<Tile>;
 
-    /// # Panics
-    /// Panics if the tile grid hasn't been initialized.
     fn index(&self, index: usize) -> &Vec<Tile> {
-        &self.tile_grid.as_ref().unwrap()[index]
-        // let temp: Vec<Vec<Tile>> = self.tile_grid.unwrap();
-        // &temp[index]
+        &self.tile_grid[index]
     }
 }
 impl IndexMut<usize> for Dungeon {
-    /// # Panics
-    /// Panics if the tile grid hasn't been initialized.
     fn index_mut(&mut self, index: usize) -> &mut Vec<Tile> {
-        &mut self.tile_grid.as_mut().unwrap()[index]
+        &mut self.tile_grid[index]
     }
 }

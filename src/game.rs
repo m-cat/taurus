@@ -9,6 +9,7 @@ use std::collections::VecDeque;
 use std::io;
 use util::uint;
 
+/// Result of the main game loop.
 pub enum GameLoopResult {
     /// The player has changed depth
     DepthChanged(usize),
@@ -30,20 +31,20 @@ pub struct Game {
     /// Message deque storing a fixed number of messages.
     message_deque: VecDeque<String>,
 
-    /// Current depth that the player is on, indexed starting at 1.
+    /// Current depth of the player, indexed starting at 1.
     player_depth: Option<usize>,
-    /// Current coordinates of the player
+    /// Current coordinates of the player.
     player_xy: Option<Coord>,
 
     /// Current global game turn.
-    turn: Cell<Fraction>, // Cell type used for interior mutability
+    turn: Cell<Fraction>, // We need interior mutability here
     /// Number of actors created, used for assigning unique id's.
-    num_actors: Cell<uint>, // Cell type for interior mutability
+    num_actors: Cell<uint>, // We need interior mutability here
 }
 
 impl Game {
     pub fn new() -> io::Result<Game> {
-        let mut database = Database::new(); // initialize the database
+        let mut database = Database::new();
         data::init_game(&mut database)?;
 
         Ok(Game {
@@ -61,9 +62,7 @@ impl Game {
     /// # Panics
     /// If the player doesn't exist.
     pub fn player_depth(&self) -> usize {
-        self.player_depth.expect(
-            "Game::player_depth failed: player does not exist.",
-        )
+        self.player_depth.unwrap()
     }
     pub fn set_player_depth(&mut self, value: usize) {
         self.player_depth = Some(value);
@@ -74,9 +73,7 @@ impl Game {
     /// # Panics
     /// If the player doesn't exist.
     pub fn player_xy(&self) -> Coord {
-        self.player_xy.expect(
-            "Game::player_xy failed: player does not exist.",
-        )
+        self.player_xy.unwrap()
     }
     pub fn set_player_xy(&mut self, value: Coord) {
         self.player_xy = Some(value);

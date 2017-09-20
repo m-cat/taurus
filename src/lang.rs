@@ -3,11 +3,10 @@
 use util::rand::{dice, rand_range};
 
 /// Capitalizes the first letter of the string.
-///
-/// # Panics
-/// Panics if the input string is empty.
 pub fn cap(s: &str) -> String {
-    debug_assert!(!s.is_empty(), format!("Assert failed: cap({})", s));
+    if s.is_empty() {
+        return String::new();
+    }
     let c = &s[0..1];
     format!("{}{}", c.to_uppercase(), &s[1..])
 }
@@ -94,8 +93,6 @@ fn pick_seq(s: &str, n: usize) -> &str {
     &s[n * i..n * (i + 1)]
 }
 
-// UNIT TESTS
-
 #[cfg(test)]
 mod tests {
     use lang::*;
@@ -108,5 +105,6 @@ mod tests {
 
         assert_eq!("Cap", cap(&str1));
         assert_eq!("Yabba dabba doo", cap(&str2));
+        assert_eq!("", cap(&String::new()));
     }
 }

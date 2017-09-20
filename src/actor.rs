@@ -11,14 +11,14 @@ use util::{int, uint};
 /// An object can share a tile with an actor.
 pub struct Actor {
     /// Unique id for this instance.
-    pub id: uint,
+    id: uint,
     // kind: ActorEnum,
     /// Character to draw to the console with.
-    pub c: char,
+    c: char,
     /// Coordinate location in level.
-    xy: Option<Coord>,
+    xy: Coord,
     /// Current turn.
-    pub turn: Fraction,
+    turn: Fraction,
 
     // STATS
     hp_cur: int, // int, because this value can be negative!
@@ -28,18 +28,19 @@ pub struct Actor {
     // COMBAT STATE
 
     // AI ATTRIBUTES
-    pub behavior: Behavior,
+    behavior: Behavior,
 }
 
 impl Actor {
-    pub fn new(game: &Game, name: &str) -> Actor {
+    pub fn insert_new(game: &Game, dungeon: &mut Dungeon, xy: Coord, name: &str) {
         let actor_database = game.database.get("actor").get(name);
 
         let hp = actor_database.get("hp").get_uint();
+
         let mut a = Actor {
             id: game.actor_id(),
             c: actor_database.get("c").get_char(),
-            xy: None, // we set this once actor is added to the dungeon
+            xy: xy,
             turn: game.turn(), // we update this later in this function
 
             hp_cur: hp as int,
@@ -48,10 +49,14 @@ impl Actor {
 
             behavior: Behavior::string_to_behavior(actor_database.get("behavior").get_str()),
         };
-
         a.turn += a.speed(); // Set the actor's turn.
 
-        a
+        dungeon.add_actor(xy, a);
+    }
+
+    /// Returns the actor id for this actor.
+    pub fn id(&self) -> uint {
+        self.id
     }
 
     /// Returns the name associated with this actor.
@@ -72,16 +77,18 @@ impl Actor {
     }
 
     /// Returns this actor's coordinates.
-    ///
-    /// # Panics
-    /// Panics if the actor hasn't been added to a dungeon yet.
     pub fn coord(&self) -> Coord {
-        self.xy.unwrap()
+        self.xy
     }
 
     /// Sets this actor's coordinates.
     pub fn set_coord(&mut self, xy: Coord) {
-        self.xy = Some(xy);
+        self.xy = xy;
+    }
+
+    /// Returns this actor's next turn value.
+    pub fn turn(&self) -> Fraction {
+        self.turn
     }
 
     /// Sets this actor's turn to a new value.
@@ -94,10 +101,17 @@ impl Actor {
         self.turn += self.speed();
     }
 
+    /// Returns this actor's behavior value.
+    pub fn behavior(&self) -> Behavior {
+        self.behavior
+    }
+
     /// Acts out the actor's turn.
     /// Could change itself or the dungeon as a side effect.
     /// Actor should update its own `turn` value.
     pub fn act(&mut self, game: &Game, dungeon: &mut Dungeon) -> ActResult {
+        unimplemented!();
+
         // let result = match self.behavior {
         //     Behavior::Player => player::player_act(self, game, dungeon),
         //     _ => ActResult::None,
@@ -108,11 +122,12 @@ impl Actor {
         //     _ => return result,
         // }
 
-        ActResult::None
+        // ActResult::None
     }
 }
 
 /// Enum listing possible AI states of an actor.
+#[derive(Clone, Copy)]
 pub enum Behavior {
     /// Behavior corresponding to the player itself.
     Player,
@@ -127,7 +142,7 @@ impl Behavior {
     /// Converts `string` to a `Behavior` enum.
     ///
     /// # Panics
-    /// Panics if `string` does not correspond to a Behavior value.
+    /// If `string` does not correspond to a Behavior value.
     pub fn string_to_behavior(string: &str) -> Behavior {
         match string {
             "Player" => Behavior::Player,
@@ -179,10 +194,7 @@ impl Ord for CoordTurn {
     fn cmp(&self, other: &CoordTurn) -> Ordering {
         // Since we're comparing floating values here, we have to use partial_cmp.
         // We should never do an invalid comparison here, so this is okay
-        match other.turn.partial_cmp(&self.turn) {
-            Some(order) => order,
-            None => panic!("cmp failed for CoordTurn"), // TODO
-        }
+        other.turn.partial_cmp(&self.turn).unwrap()
     }
 }
 impl PartialOrd for CoordTurn {

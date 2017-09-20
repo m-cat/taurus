@@ -37,7 +37,7 @@ impl Class {
     /// Converts `string` to a Class enum.
     ///
     /// # Panics
-    /// Panics if `string` does not correspond to a Class value.
+    /// If `string` does not correspond to a Class value.
     pub fn string_to_class(string: &str) -> Class {
         match string {
             "Door" => Class::Door,
@@ -62,7 +62,7 @@ impl Material {
     /// Converts `string` to a `Material` enum.
     ///
     /// # Panics
-    /// Panics if `string` does not correspond to a Material value.
+    /// If `string` does not correspond to a Material value.
     pub fn string_to_material(string: &str) -> Material {
         match string {
             "Wood" => Material::Wood,

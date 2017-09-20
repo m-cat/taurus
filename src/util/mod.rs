@@ -19,7 +19,7 @@ pub type int = i32;
 #[allow(non_camel_case_types)]
 pub type uint = u32;
 
-/// Enum for the 8 possible cardinal directions.
+/// Enum for the eight possible compass directions.
 #[derive(Clone, Copy)]
 pub enum Direction {
     N,
@@ -30,6 +30,15 @@ pub enum Direction {
     SE,
     SW,
     NW,
+}
+
+/// Enum for the four possible orthogonal directions.
+#[derive(Clone, Copy)]
+pub enum CardinalDirection {
+    N,
+    E,
+    S,
+    W,
 }
 
 /// Tries evaluating `e` `n` times, returning `Some(s)` the first time `e` evaluates to `Some`

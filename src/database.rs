@@ -46,9 +46,9 @@ impl Database {
     pub fn get(&self, name: &str) -> &Database {
         self.subtrees
             .as_ref()
-            .expect("Database::get failed: map not initialized.")
+            .unwrap()
             .get(&String::from(name))
-            .expect("Database::get failed: subtree not found.")
+            .unwrap()
     }
 
     /// Returns the number of fields for this Database (children not included).
@@ -56,9 +56,7 @@ impl Database {
     /// # Panics
     /// If no fields have been set.
     pub fn num(&self) -> usize {
-        let vec = self.fields.as_ref().expect(
-            "Database::num failed: vector not instantiated.",
-        );
+        let vec = self.fields.as_ref().unwrap();
         vec.len()
     }
 
@@ -199,10 +197,7 @@ impl Database {
     /// # Panics
     /// If no values exist for this Database.
     pub fn iter(&self) -> Iter<Value> {
-        self.fields
-            .as_ref()
-            .expect("Database::iter failed: no values found.")
-            .iter()
+        self.fields.as_ref().unwrap().iter()
     }
 
     // TODO

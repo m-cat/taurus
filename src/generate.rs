@@ -6,9 +6,9 @@ use coord::Coord;
 use dungeon::Dungeon;
 use game::Game;
 use object::Object;
-use util::{Direction, int};
-use util::Direction::*;
-use util::math::overlaps;
+use util::{CardinalDirection, int};
+use util::CardinalDirection::*;
+use util::math::{min_max, overlaps};
 use util::rand::{Choose, dice, rand_range};
 
 /// Generates the entire dungeon.
@@ -33,9 +33,7 @@ pub fn gen_game(game: &mut Game, dungeon_list: &mut Vec<Dungeon>) {
 
 /// Generates a single depth of the dungeon.
 fn gen_depth(game: &Game, dungeon_list: &mut Vec<Dungeon>, index: usize) {
-    let mut dungeon = dungeon_list.get_mut(index).expect(
-        "Generate::gen_depth failed, invalid index",
-    );
+    let mut dungeon = dungeon_list.get_mut(index).unwrap();
 
     gen_dungeon_room_method(game, &mut dungeon, index);
     // let a = Actor::new(game);
@@ -43,18 +41,16 @@ fn gen_depth(game: &Game, dungeon_list: &mut Vec<Dungeon>, index: usize) {
 }
 
 /// Generates pits for a depth of the dungeon.
-///
-/// # Panics
-/// If `index` corresponds to the last depth in `dungeon_list`.
 fn gen_pits(game: &Game, dungeon_list: &mut Vec<Dungeon>, index: usize) {
-    assert!(index < dungeon_list.len() - 1);
+    debug_assert!(index < dungeon_list.len() - 1);
+
+    unimplemented!();
 }
 
 /// Creates an actor of type `name` and places it in a random open location in `dungeon`.
 fn gen_actor_random_coord(game: &Game, dungeon: &mut Dungeon, name: &str) {
     let xy = dungeon.random_avail_coord_actor();
-    let a = Actor::new(game, name);
-    dungeon.add_actor(xy, a);
+    Actor::insert_new(game, dungeon, xy, name);
 }
 
 /// Creates the player and places him in a random location of the dungeon.
@@ -114,13 +110,10 @@ fn gen_dungeon_room_method(game: &Game, dungeon: &mut Dungeon, index: usize) {
 }
 
 /// Generates a room adjacent to `room`, or returns `None`.
-///
-/// # Panics
-/// Panics if `direction` is not orthogonal.
 fn gen_room_adjacent(
     game: &Game,
     room: &Room,
-    direction: Direction,
+    direction: CardinalDirection,
     room_list: &[Room],
     object_list: &mut Vec<(Coord, Object)>,
     index: usize,
@@ -147,7 +140,6 @@ fn gen_room_adjacent(
             top = rand_range(room.top - height + 1, room.bottom);
             left = room.left - width - 1;
         }
-        _ => panic!("Generate::gen_room_adjacent failed: non-orthogonal direction."),
     };
     let new_room = Room::from_dimensions(top, left, width as usize, height as usize);
 
@@ -161,14 +153,11 @@ fn gen_room_adjacent(
 }
 
 /// Generates a door between two adjacent `Room`s in given `Direction`.
-///
-/// # Panics
-/// Panics if `direction` is not orthogonal.
 fn gen_room_adjacent_door(
     game: &Game,
     room: &Room,
     other: &Room,
-    direction: Direction,
+    direction: CardinalDirection,
 ) -> (Coord, Object) {
     let x: int;
     let y: int;
@@ -190,7 +179,6 @@ fn gen_room_adjacent_door(
             x = room.left - 1;
             y = rand_range(max!(room.top, other.top), min!(room.bottom, other.bottom));
         }
-        _ => panic!("Generate::gen_room_adjacent_door failed: non-orthogonal direction."),
     }
 
     let coord = Coord::new(x, y);
@@ -235,13 +223,11 @@ struct Room {
 }
 
 impl Room {
-    #[allow(dead_code)]
     /// Returns a new `Room` with given bounding boxes.
-    ///
-    /// # Panics
-    /// Panics if `right < left` or `bottom < top`.
+    #[allow(dead_code)]
     pub fn new(left: int, top: int, right: int, bottom: int) -> Room {
-        assert!(right >= left && bottom >= top);
+        let (left, right) = min_max(left, right);
+        let (top, bottom) = min_max(top, bottom);
 
         Room {
             left: left,
@@ -252,11 +238,8 @@ impl Room {
     }
 
     /// Returns a new `Room` created from given `width` and `height`.
-    ///
-    /// # Panics
-    /// Panics if `width` or `height` are 0.
     pub fn from_dimensions(left: int, top: int, width: usize, height: usize) -> Room {
-        assert!(width > 0 && height > 0);
+        debug_assert!(width > 0 && height > 0);
 
         Room {
             left: left,

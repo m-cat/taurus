@@ -55,21 +55,25 @@ pub fn run_game() -> io::Result<()> {
     loop {
         // Get the current dungeon from the list
         let depth = game.player_depth();
-        let mut dungeon = dungeon_list.get_mut(depth).expect(
-            "Game::run failed, invalid index",
-        );
+        let mut dungeon = dungeon_list.get_mut(depth).unwrap();
 
         // Main game loop
         match dungeon.run_loop(&game, &mut console) {
             GameLoopResult::DepthChanged(depth) => {
-                // TODO
+                unimplemented!(); // TODO
             }
             GameLoopResult::WindowClosed => {
-                println!("Window closed, exiting!"); // TODO
+                unimplemented!(); // TODO
             }
-            GameLoopResult::PlayerDead => {} // TODO
-            GameLoopResult::NoActors => {} // TODO
-            GameLoopResult::None => {} // TODO
+            GameLoopResult::PlayerDead => {
+                unimplemented!(); // TODO
+            }
+            GameLoopResult::NoActors => {
+                unimplemented!(); // TODO
+            }
+            GameLoopResult::None => {
+                unimplemented!(); // TODO
+            }
         }
     }
 }
