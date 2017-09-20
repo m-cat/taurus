@@ -45,6 +45,7 @@ use std::io;
 
 /// Runs the main game loop
 pub fn run_game() -> io::Result<()> {
+    // Display random names. TODO: remove this
     for _ in 1..100 {
         println!("{}", lang::name_gen(constants::MAX_NAME_LEN));
     }
@@ -55,7 +56,7 @@ pub fn run_game() -> io::Result<()> {
     loop {
         // Get the current dungeon from the list
         let depth = game.player_depth();
-        let mut dungeon = dungeon_list.get_mut(depth).unwrap();
+        let mut dungeon = &mut dungeon_list[depth];
 
         // Main game loop
         match dungeon.run_loop(&game, &mut console) {

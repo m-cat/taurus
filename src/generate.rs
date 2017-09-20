@@ -33,7 +33,7 @@ pub fn gen_game(game: &mut Game, dungeon_list: &mut Vec<Dungeon>) {
 
 /// Generates a single depth of the dungeon.
 fn gen_depth(game: &Game, dungeon_list: &mut Vec<Dungeon>, index: usize) {
-    let mut dungeon = dungeon_list.get_mut(index).unwrap();
+    let mut dungeon = &mut dungeon_list[index];
 
     gen_dungeon_room_method(game, &mut dungeon, index);
     // let a = Actor::new(game);

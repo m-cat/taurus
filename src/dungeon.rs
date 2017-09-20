@@ -49,7 +49,7 @@ impl Dungeon {
     /// Returns the height of the tile grid.
     pub fn height(&self) -> usize {
         let column_list = &self.tile_grid;
-        if column_list.len() > 0 {
+        if !column_list.is_empty() {
             column_list[0].len()
         } else {
             0
