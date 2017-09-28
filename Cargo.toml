@@ -1,15 +1,17 @@
 [package]
-name = "taurus"
-version = "0.1.0"
-authors = ["m-cat <scatman@bu.edu>"]
+authors = ["Marcin S. <scatman@bu.edu>"]
 description = "A WIP roguelike game being developed in Rust."
 license = "MIT"
-repository = "https://github.com/m-cat/taurus"
+name = "taurus"
 readme = "README.md"
+repository = "https://github.com/m-cat/taurus"
+version = "0.1.0"
 
 [dependencies]
-num-traits = "0.1.37"
-num="0.1"
-rand="0.3.0"
-fraction="0.3.4"
+failure = "0.1"
+failure_derive = "0.1"
+num = "0.1"
+num-traits = "0.1"
+over = "0.4"
+rand = "0.3"
 tcod = "0.11"

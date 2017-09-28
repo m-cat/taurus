@@ -6,24 +6,29 @@
 // TODO: Get to the point where we can remove this without it causing an avalanche of warnings.
 #![allow(dead_code, unused_variables)]
 
-extern crate fraction;
+extern crate failure;
+#[macro_use]
+extern crate failure_derive;
+
 extern crate num;
 extern crate num_traits;
+extern crate over;
 extern crate rand;
 extern crate tcod;
 
-// Game logic
-// TODO: refactor this out into a different crate?
+// These modules are public so that they can be used in external integration tests.
 
 #[macro_use]
-mod util;
+pub mod util;
 
 pub mod actor;
 pub mod console;
 pub mod coord;
 pub mod database;
+pub mod defs;
 pub mod dungeon;
-pub mod game;
+pub mod error;
+pub mod game_data;
 pub mod generate;
 pub mod item;
 pub mod lang;
@@ -33,59 +38,71 @@ pub mod tile;
 pub mod ui;
 
 mod constants;
-mod data;
 #[cfg(test)]
 mod tests;
 
-use console::GameConsole;
-use dungeon::Dungeon;
-use game::Game;
-use game::GameLoopResult;
-use std::io;
+use console::Console;
+use dungeon::DungeonList;
+use error::GameError;
+use game_data::{GameData, GameLoopOutcome};
 
-/// Runs the main game loop
-pub fn run_game() -> io::Result<()> {
+/// A generic result type used throughout the game.
+pub type GameResult<T> = Result<T, failure::Error>;
+
+/// Runs the main game loop.
+pub fn run_game() -> GameResult<()> {
     // Display random names. TODO: remove this
     for _ in 1..100 {
-        println!("{}", lang::name_gen(constants::MAX_NAME_LEN));
+        println!("{}", lang::name_gen(3, 4)); //constants::MAX_NAME_LEN));
     }
 
     // Initialize a brand new game
-    let (mut console, game, mut dungeon_list) = init_new_game()?;
+    let (mut console, mut dungeon_list) = init_new_game()?;
 
     loop {
         // Get the current dungeon from the list
-        let depth = game.player_depth();
-        let mut dungeon = &mut dungeon_list[depth];
+        let dungeon = dungeon_list.current_dungeon();
 
         // Main game loop
-        match dungeon.run_loop(&game, &mut console) {
-            GameLoopResult::DepthChanged(depth) => {
+        match dungeon.run_loop(&mut console) {
+            GameLoopOutcome::DepthChanged => {
                 unimplemented!(); // TODO
             }
-            GameLoopResult::WindowClosed => {
+            GameLoopOutcome::WindowClosed => {
                 unimplemented!(); // TODO
             }
-            GameLoopResult::PlayerDead => {
+            GameLoopOutcome::PlayerDead => {
                 unimplemented!(); // TODO
             }
-            GameLoopResult::NoActors => {
-                unimplemented!(); // TODO
+            GameLoopOutcome::QuitGame => {
+                unimplemented!();
             }
-            GameLoopResult::None => {
+            GameLoopOutcome::NoActors => {
+                unreachable!();
+            }
+            GameLoopOutcome::None => {
                 unimplemented!(); // TODO
             }
         }
     }
 }
 
-fn init_new_game() -> io::Result<(GameConsole, Game, Vec<Dungeon>)> {
-    let console = GameConsole::init(); // initialize the console
-    let mut game = Game::new()?;
-    let mut dungeon_list: Vec<Dungeon> = Vec::new();
+fn init_new_game() -> GameResult<(Console, DungeonList)> {
+    // Initialize the console.
+    let console = Console::init(
+        constants::SCR_WIDTH,
+        constants::SCR_HEIGHT,
+        constants::TITLE,
+        constants::FONT_DEFAULT,
+        constants::FPS,
+    );
+    let game_data = GameData::new()?;
+
+    let mut dungeon_list = DungeonList::new(constants::NUM_DUNGEONS, game_data);
 
     // Generate game
-    generate::gen_game(&mut game, &mut dungeon_list); // TODO: add piecemeal generation
+    generate::gen_game(&mut dungeon_list)?; // TODO: add piecemeal generation
+    let depth = dungeon_list.game_data().player_depth();
 
-    Ok((console, game, dungeon_list))
+    Ok((console, dungeon_list))
 }

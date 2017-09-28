@@ -3,49 +3,89 @@
 //! This module is designed so that it can be replaced with a different console
 //! implementation if necessary - it is an abstraction over tcod.
 
-use constants::*;
-use tcod;
-use tcod::Console;
-use tcod::colors;
-use tcod::console::*;
-use tcod::input::Key;
-use util::uint;
+pub use tcod::input::{Key, KeyCode};
 
-pub struct GameConsole {
+use GameError;
+use defs::int;
+use std::str::FromStr;
+use tcod;
+use tcod::Color as TcodColor;
+use tcod::Console as TcodConsole;
+use tcod::console::*;
+use util::convert::color_code_to_rgb;
+
+/// Color struct.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Color {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+}
+
+impl Color {
+    /// Returns a new `Color`.
+    pub fn new(r: u8, g: u8, b: u8) -> Color {
+        Color { r, g, b }
+    }
+
+    /// Converts this `Color` to a tcod Color.
+    pub fn to_tcod(&self) -> TcodColor {
+        let Color { r, g, b } = *self;
+        TcodColor::new(r, g, b)
+    }
+}
+
+impl FromStr for Color {
+    type Err = GameError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match color_code_to_rgb(s) {
+            Some((r, g, b)) => Ok(Color { r, g, b }),
+            None => Err(GameError::ConversionError {
+                val: s.into(),
+                msg: "Make sure the string is in the format \"#FFFFFF\".",
+            }),
+        }
+    }
+}
+
+/// Console object responsible for display and input.
+pub struct Console {
     root: Root,
 }
 
-impl GameConsole {
-    pub fn init() -> GameConsole {
-        tcod::system::set_fps(FPS as i32);
+impl Console {
+    /// Initialize a console.
+    pub fn init(width: usize, height: usize, title: &str, font: &str, fps: usize) -> Console {
+        tcod::system::set_fps(fps as i32);
 
-        GameConsole {
+        Console {
             root: Root::initializer()
-                .font(FONT_DEFAULT, FontLayout::Tcod)
+                .font(font, FontLayout::Tcod)
                 .font_type(FontType::Greyscale)
-                .size(SCR_WIDTH as i32, SCR_HEIGHT as i32)
-                .title(TITLE)
+                .size(width as i32, height as i32)
+                .title(title)
                 .init(),
         }
     }
 
+    /// Returns true if the Root console has been closed.
     pub fn window_closed(&self) -> bool {
         self.root.window_closed()
     }
 
-    // TODO
-    pub fn put_char(&mut self, x: uint, y: uint, c: char) {
-        // TODO
-        self.root.set_default_foreground(colors::WHITE);
-        self.root.put_char(
+    /// Puts given char `c` to coordinates at `x` and `y` with `color`.
+    pub fn put_char(&mut self, x: int, y: int, c: char, color: Color) {
+        self.root.set_char(x as i32, y as i32, c);
+        self.root.set_char_foreground(
             x as i32,
             y as i32,
-            c,
-            BackgroundFlag::None,
+            color.to_tcod(),
         );
-        self.root.flush();
     }
 
+    /// This function will wait for a keypress event from the user, returning the `KeyState` that
+    /// represents the event.
     /// If `flush` is true, all pending keypresses are flushed from the keyboard buffer.
     /// If `flush` is false, it returns the first element from it.
     pub fn wait_for_keypress(&mut self, flush: bool) -> Key {

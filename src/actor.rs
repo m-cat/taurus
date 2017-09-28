@@ -1,29 +1,42 @@
-use coord::Coord;
-use dungeon::Dungeon;
-use fraction::Fraction;
-use game::Game;
-use std::cmp::Ordering;
-use util::{int, uint};
+//! Game actors.
 
-/// An actor is any entity which could conceivably `act`, that is, have a turn.
-/// Only one actor can occupy a tile at a time.
-/// For things like doors and traps, we have a separate struct named Object.
-/// An object can share a tile with an actor.
+use {GameError, GameResult};
+use console::{Color, Console};
+use coord::Coord;
+use defs::{TurnRatio, big_to_u32, to_turnratio};
+use defs::{int, uint};
+use dungeon::Dungeon;
+use game_data::GameData;
+use player;
+use std::cmp::Ordering;
+use std::str::FromStr;
+use ui::Draw;
+use util::direction::CompassDirection;
+
+/// Actor object.
+///
+/// An `Actor` is any entity which could conceivably "act", that is, have a turn. Only one `Actor`
+/// can occupy a tile at a time. For things like doors and traps, we have a separate struct named
+/// `Object`. An `Object` can share a tile with an `Actor`.
 pub struct Actor {
-    /// Unique id for this instance.
+    // Generic name.
+    name: String,
+    // Unique id for this instance.
     id: uint,
-    // kind: ActorEnum,
-    /// Character to draw to the console with.
+    // Character to draw to the console with.
     c: char,
-    /// Coordinate location in level.
+    // Color to draw with.
+    color: Color,
+
+    // Coordinate location in level.
     coord: Coord,
-    /// Current turn.
-    turn: Fraction,
+    // Current turn.
+    turn: TurnRatio,
 
     // STATS
     hp_cur: int, // int, because this value can be negative!
     hp_max: uint,
-    speed: Fraction,
+    speed: TurnRatio,
 
     // COMBAT STATE
 
@@ -32,31 +45,67 @@ pub struct Actor {
 }
 
 impl Actor {
-    pub fn insert_new(game: &Game, dungeon: &mut Dungeon, coord: Coord, name: &str) {
-        let actor_database = game.database.get("actor").get(name);
+    /// Creates a new actor at the given coordinates.
+    pub fn new(game_data: &mut GameData, coord: Coord, name: &str) -> GameResult<Actor> {
+        let data = game_data.database().get_obj("actors")?.get_obj(name)?;
 
-        let hp = actor_database.get("hp").get_uint();
+        // Load all data from the database.
 
-        let mut a = Actor {
-            id: game.actor_id(),
-            c: actor_database.get("c").get_char(),
-            coord: coord,
-            turn: game.turn(), // we update this later in this function
+        let name = String::from(name);
+        let id = game_data.actor_id();
+        let c = data.get_char("c")?;
+        let color = Color::from_str(&data.get_str("color")?)?;
+        let turn = game_data.turn();
 
-            hp_cur: hp as int,
-            hp_max: hp,
-            speed: actor_database.get("speed").get_fraction(),
+        let hp = big_to_u32(data.get_int("hp")?)?;
+        let hp_cur = hp as int;
+        let hp_max = hp as uint;
+        let speed = to_turnratio(data.get_frac("speed")?)?;
 
-            behavior: Behavior::string_to_behavior(actor_database.get("behavior").get_str()),
+        let behavior = Behavior::from_str(&data.get_str("behavior")?)?;
+
+        let mut actor = Actor {
+            name,
+            id,
+            c,
+            color,
+            coord,
+            turn, // We update this later in this function.
+
+            hp_cur,
+            hp_max,
+            speed,
+
+            behavior,
         };
-        a.turn += a.speed(); // Set the actor's turn.
+        actor.update_turn(); // Set the actor's turn.
 
-        dungeon.add_actor(coord, a);
+        Ok(actor)
+    }
+
+    /// Inserts the actor into the given dungeon.
+    pub fn insert(a: Actor, dungeon: &mut Dungeon) {
+        dungeon.add_actor(a);
+    }
+
+    pub fn insert_new(dungeon: &mut Dungeon, coord: Coord, name: &str) -> GameResult<()> {
+        Self::insert(Self::new(dungeon.mut_game_data(), coord, name)?, dungeon);
+        Ok(())
     }
 
     /// Returns the actor id for this actor.
     pub fn id(&self) -> uint {
         self.id
+    }
+
+    /// Returns the character this actor is drawn with.
+    pub fn c(&self) -> char {
+        self.c
+    }
+
+    /// Returns the color this actor is drawn with.
+    pub fn color(&self) -> Color {
+        self.color
     }
 
     /// Returns the name associated with this actor.
@@ -72,7 +121,7 @@ impl Actor {
     }
 
     /// Returns this actor's base speed.
-    pub fn speed(&self) -> Fraction {
+    pub fn speed(&self) -> TurnRatio {
         self.speed
     }
 
@@ -87,18 +136,18 @@ impl Actor {
     }
 
     /// Returns this actor's next turn value.
-    pub fn turn(&self) -> Fraction {
+    pub fn turn(&self) -> TurnRatio {
         self.turn
     }
 
     /// Sets this actor's turn to a new value.
-    pub fn set_turn(&mut self, turn: Fraction) {
+    pub fn set_turn(&mut self, turn: TurnRatio) {
         self.turn = turn;
     }
 
     /// Updates this actor's turn.
     pub fn update_turn(&mut self) {
-        self.turn += self.speed();
+        self.turn = self.turn + self.speed();
     }
 
     /// Returns this actor's behavior value.
@@ -108,21 +157,41 @@ impl Actor {
 
     /// Acts out the actor's turn.
     /// Could change itself or the dungeon as a side effect.
-    /// Actor should update its own `turn` value.
-    pub fn act(&mut self, game: &Game, dungeon: &mut Dungeon) -> ActResult {
-        unimplemented!();
+    pub fn act(&mut self, dungeon: &mut Dungeon, console: &mut Console) -> ActResult {
+        match self.behavior {
+            Behavior::Player => player::player_act(self, dungeon, console),
+            _ => ActResult::None,
+        }
+    }
 
-        // let result = match self.behavior {
-        //     Behavior::Player => player::player_act(self, game, dungeon),
-        //     _ => ActResult::None,
-        // };
+    /// Tries to move in the specified direction.
+    pub fn try_move_dir(
+        &mut self,
+        dungeon: &mut Dungeon,
+        dir: CompassDirection,
+    ) -> (ActResult, bool) {
+        let coord = self.coord().coord_in_dir(dir, 1);
+        self.try_move_to(dungeon, coord)
+    }
 
-        // match result {
-        //     ActResult::None => {}
-        //     _ => return result,
-        // }
+    // Tries to move to the specified coordinate.
+    fn try_move_to(&mut self, dungeon: &mut Dungeon, coord: Coord) -> (ActResult, bool) {
+        unimplemented!()
+    }
 
-        // ActResult::None
+    // Moves to the specified coordinate unconditionally.
+    // Note: This function should remain private.
+    fn move_to(&mut self, dungeon: &mut Dungeon, coord: Coord) {
+        self.set_coord(coord);
+    }
+}
+
+impl Draw for Actor {
+    fn draw_c(&self) -> char {
+        self.c()
+    }
+    fn draw_color(&self) -> Color {
+        self.color()
     }
 }
 
@@ -138,32 +207,31 @@ pub enum Behavior {
     Hunting,
 }
 
-impl Behavior {
-    /// Converts `string` to a `Behavior` enum.
-    ///
-    /// # Panics
-    /// If `string` does not correspond to a Behavior value.
-    pub fn string_to_behavior(string: &str) -> Behavior {
-        match string {
-            "Player" => Behavior::Player,
-            "Friendly" => Behavior::Friendly,
-            "Wary" => Behavior::Wary,
-            "Defensive" => Behavior::Defensive,
-            "Hostile" => Behavior::Hostile,
-            "Hunting" => Behavior::Hunting,
+impl FromStr for Behavior {
+    type Err = GameError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
+            "player" => Behavior::Player,
+            "friendly" => Behavior::Friendly,
+            "wary" => Behavior::Wary,
+            "defensive" => Behavior::Defensive,
+            "hostile" => Behavior::Hostile,
+            "hunting" => Behavior::Hunting,
             _ => {
-                panic!(
-                    "Behavior::string_to_behavior failed: invalid input \"{}\"",
-                    string
-                )
+                return Err(GameError::ConversionError {
+                    val: s.into(),
+                    msg: "Invalid actor behavior",
+                })
             }
-        }
+        })
     }
 }
 
-/// Enum of possible results of a player acton.
+/// Enum of possible results of an actor action.
 pub enum ActResult {
     WindowClosed,
+    QuitGame,
     None,
 }
 
@@ -173,7 +241,7 @@ pub enum ActResult {
 /// the actor map, keyed by Coord.
 pub struct CoordTurn {
     pub coord: Coord,
-    pub turn: Fraction,
+    pub turn: TurnRatio,
     /// The id of the actor.
     pub id: uint,
 }

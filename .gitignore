@@ -4,3 +4,6 @@
 
 # Rustfmt backup files
 *.bk
+
+# Misc
+.DS_Store

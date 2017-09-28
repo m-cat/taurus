@@ -1,54 +1,102 @@
-use coord::Coord;
-use game::Game;
+//! Game objects.
 
-/// A data structure for things like doors and traps which
-/// can be interacted with. For more about the differences
-/// between objects and actors, see actor.rs.
+use {GameError, GameResult};
+use console::Color;
+use coord::Coord;
+use dungeon::Dungeon;
+use game_data::GameData;
+use std::str::FromStr;
+use ui::Draw;
+
+/// An `Object` object.
+///
+/// A data structure for things like doors and traps which can be interacted with. For more about
+/// the differences between `Object`s and `Actor`s, see module `actor`.
 pub struct Object {
-    class: Class,
+    c: char,
+    color: Color,
+
+    coord: Coord,
+
+    class: ObjectClass,
     material: Material,
     active: bool,
-
-    /// The coordinate of the object.
-    coord: Option<Coord>,
 }
 
 impl Object {
-    pub fn new(game: &Game, name: &str, active: bool) -> Object {
-        let object_database = game.database.get("Object").get(name);
+    /// Creates a new `Object` at the given coordinates.
+    pub fn new(game_data: &GameData, coord: Coord, name: &str, active: bool) -> GameResult<Object> {
+        let data = game_data.database().get_obj("objects")?.get_obj(name)?;
 
-        Object {
-            class: Class::string_to_class(object_database.get("class").get_str()),
-            material: Material::string_to_material(object_database.get("material").get_str()),
-            active: active,
+        // Load all data from the database.
 
-            coord: None,
-        }
+        let c = data.get_char("c")?;
+        let color = Color::from_str(&data.get_str("color")?)?;
+
+        let class = ObjectClass::from_str(&data.get_str("class")?)?;
+        let material = Material::from_str(&data.get_str("material")?)?;
+
+        Ok(Object {
+            c,
+            color,
+            coord,
+
+            class,
+            material,
+            active,
+        })
+    }
+
+    /// Inserts the object into the given dungeon.
+    pub fn insert(object: Object, dungeon: &mut Dungeon) {
+        dungeon.add_object(object);
+    }
+
+    /// Returns this object's coordinates.
+    pub fn coord(&self) -> Coord {
+        self.coord
+    }
+
+    /// Returns the character this object is drawn with.
+    pub fn draw_c(&self) -> char {
+        self.c
+    }
+
+    /// Returns the color this object is drawn with.
+    pub fn draw_color(&self) -> Color {
+        self.color
+    }
+}
+
+impl Draw for Object {
+    fn draw_c(&self) -> char {
+        self.c
+    }
+    fn draw_color(&self) -> Color {
+        self.color
     }
 }
 
 /// Enum listing possible object classes.
-pub enum Class {
+pub enum ObjectClass {
     Door,
     Trap,
 }
 
-impl Class {
-    /// Converts `string` to a Class enum.
-    ///
-    /// # Panics
-    /// If `string` does not correspond to a Class value.
-    pub fn string_to_class(string: &str) -> Class {
-        match string {
-            "Door" => Class::Door,
-            "Trap" => Class::Trap,
+impl FromStr for ObjectClass {
+    type Err = GameError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
+            "door" => ObjectClass::Door,
+            "trap" => ObjectClass::Trap,
             _ => {
-                panic!(
-                    "Class::string_to_class failed: invalid input \"{}\"",
-                    string
-                )
+                return Err(GameError::ConversionError {
+                    val: s.into(),
+                    msg: "Invalid object class.",
+                })
             }
-        }
+        })
     }
 }
 
@@ -58,21 +106,19 @@ pub enum Material {
     Iron,
 }
 
-impl Material {
-    /// Converts `string` to a `Material` enum.
-    ///
-    /// # Panics
-    /// If `string` does not correspond to a Material value.
-    pub fn string_to_material(string: &str) -> Material {
-        match string {
-            "Wood" => Material::Wood,
-            "Iron" => Material::Iron,
+impl FromStr for Material {
+    type Err = GameError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
+            "wood" => Material::Wood,
+            "iron" => Material::Iron,
             _ => {
-                panic!(
-                    "Material::string_to_material failed: invalid input \"{}\"",
-                    string
-                )
+                return Err(GameError::ConversionError {
+                    val: s.into(),
+                    msg: "Invalid object material.",
+                })
             }
-        }
+        })
     }
 }

@@ -1,67 +1,77 @@
 //! Module containing dungeon generation algorithms.
 
+use GameResult;
 use actor::Actor;
-use constants;
 use coord::Coord;
-use dungeon::Dungeon;
-use game::Game;
+use defs::int;
+use dungeon::{Dungeon, DungeonList};
 use object::Object;
-use util::{CardinalDirection, int};
-use util::CardinalDirection::*;
+use util::direction::CardinalDirection;
+use util::direction::CardinalDirection::*;
 use util::math::{min_max, overlaps};
 use util::rand::{Choose, dice, rand_range};
 
 /// Generates the entire dungeon.
-pub fn gen_game(game: &mut Game, dungeon_list: &mut Vec<Dungeon>) {
-    // Create the list of dungeons
-    for n in 0..constants::NUM_DUNGEONS {
-        dungeon_list.push(Dungeon::new(n + 1));
+pub fn gen_game(dungeon_list: &mut DungeonList) -> GameResult<()> {
+    // Generate each depth.
+    for n in 0..dungeon_list.len() {
+        gen_depth(dungeon_list, n)?;
     }
 
-    // Generate each depth
-    for n in 0..constants::NUM_DUNGEONS {
-        gen_depth(game, dungeon_list, n);
+    // Generate pits, skipping the last depth.
+    for n in 0..dungeon_list.len() - 1 {
+        gen_pits(dungeon_list, n);
     }
 
-    // Generate pits
-    for n in 0..constants::NUM_DUNGEONS - 1 {
-        gen_pits(game, dungeon_list, n);
-    }
-
-    gen_player(game, &mut dungeon_list[0]);
+    gen_player(&mut dungeon_list[0])
 }
 
 /// Generates a single depth of the dungeon.
-fn gen_depth(game: &Game, dungeon_list: &mut Vec<Dungeon>, index: usize) {
+fn gen_depth(dungeon_list: &mut DungeonList, index: usize) -> GameResult<()> {
     let mut dungeon = &mut dungeon_list[index];
 
-    gen_dungeon_room_method(game, &mut dungeon, index);
+    gen_dungeon_room_method(&mut dungeon, index)?;
     // let a = Actor::new(game);
     // add_actor_random_coord(dungeon, a);
+
+    Ok(())
 }
 
 /// Generates pits for a depth of the dungeon.
-fn gen_pits(game: &Game, dungeon_list: &mut Vec<Dungeon>, index: usize) {
+fn gen_pits(dungeon_list: &mut DungeonList, index: usize) {
     debug_assert!(index < dungeon_list.len() - 1);
 
     unimplemented!();
 }
 
 /// Creates an actor of type `name` and places it in a random open location in `dungeon`.
-fn gen_actor_random_coord(game: &Game, dungeon: &mut Dungeon, name: &str) {
-    let coord = dungeon.random_avail_coord_actor();
-    Actor::insert_new(game, dungeon, coord, name);
+fn gen_actor_random_coord(dungeon: &mut Dungeon, name: &str) -> GameResult<()> {
+    let coord = dungeon.random_open_coord_actor();
+
+    debug_assert!(coord.is_some());
+
+    // If we're out of squares, don't add the actor.
+    let coord = match coord {
+        Some(coord) => coord,
+        None => return Ok(()),
+    };
+
+    let a = Actor::new(dungeon.mut_game_data(), coord, name)?;
+    dungeon.add_actor(a);
+
+    Ok(())
 }
 
 /// Creates the player and places him in a random location of the dungeon.
-fn gen_player(game: &Game, dungeon: &mut Dungeon) {
-    gen_actor_random_coord(game, dungeon, "player");
+// TODO: Check if the actor was added successfully. This should never fail.
+fn gen_player(dungeon: &mut Dungeon) -> GameResult<()> {
+    gen_actor_random_coord(dungeon, "player")
 }
 
 /// Generates a dungeon level using the "room method".
-fn gen_dungeon_room_method(game: &Game, dungeon: &mut Dungeon, index: usize) {
+fn gen_dungeon_room_method(dungeon: &mut Dungeon, index: usize) -> GameResult<()> {
     let mut room_list: Vec<Room> = Vec::new();
-    let mut object_list: Vec<(Coord, Object)> = Vec::new();
+    let mut object_list: Vec<Object> = Vec::new();
     let direction_list = vec![N, E, S, W];
     let goal_num_rooms = gen_num_rooms(index);
 
@@ -82,13 +92,13 @@ fn gen_dungeon_room_method(game: &Game, dungeon: &mut Dungeon, index: usize) {
             // Try a few times to generate a room here
             if let Some(new_room) = try_some!(
                 gen_room_adjacent(
-                    game,
+                    dungeon,
                     &room,
                     *direction,
                     &room_list,
                     &mut object_list,
                     index,
-                ),
+                )?,
                 3
             )
             {
@@ -104,20 +114,22 @@ fn gen_dungeon_room_method(game: &Game, dungeon: &mut Dungeon, index: usize) {
     // Convert the list of rooms into a tile grid representation
 
     // Add doors
-    for (coord, object) in object_list {
-        dungeon.add_object(coord, object);
+    for object in object_list {
+        dungeon.add_object(object);
     }
+
+    Ok(())
 }
 
 /// Generates a room adjacent to `room`, or returns `None`.
 fn gen_room_adjacent(
-    game: &Game,
+    dungeon: &mut Dungeon,
     room: &Room,
     direction: CardinalDirection,
     room_list: &[Room],
-    object_list: &mut Vec<(Coord, Object)>,
+    object_list: &mut Vec<Object>,
     index: usize,
-) -> Option<Room> {
+) -> GameResult<Option<Room>> {
     let top: int;
     let left: int;
     let width = gen_room_width(index) as int;
@@ -143,22 +155,22 @@ fn gen_room_adjacent(
     };
     let new_room = Room::from_dimensions(top, left, width as usize, height as usize);
 
-    if check_room_free(&new_room, room_list) {
-        let coord_door = gen_room_adjacent_door(game, room, &new_room, direction);
-        object_list.push(coord_door);
+    Ok(if check_room_free(&new_room, room_list) {
+        let door = gen_room_adjacent_door(dungeon, room, &new_room, direction)?;
+        object_list.push(door);
         Some(new_room)
     } else {
         None
-    }
+    })
 }
 
 /// Generates a door between two adjacent `Room`s in given `Direction`.
 fn gen_room_adjacent_door(
-    game: &Game,
+    dungeon: &mut Dungeon,
     room: &Room,
     other: &Room,
     direction: CardinalDirection,
-) -> (Coord, Object) {
+) -> GameResult<Object> {
     let x: int;
     let y: int;
 
@@ -182,11 +194,10 @@ fn gen_room_adjacent_door(
     }
 
     let coord = Coord::new(x, y);
-    let door = Object::new(game, "wooden door", dice(8, 10));
-    (coord, door)
+    Object::new(dungeon.game_data(), coord, "wooden door", dice(8, 10))
 }
 
-/// Check if `room` does not collide with any `Room`s in `room_list`.
+/// Checks if `room` does not collide with any `Room`s in `room_list`.
 fn check_room_free(room: &Room, room_list: &[Room]) -> bool {
     !room_list.iter().any(|other| room.overlaps(other))
 }
@@ -263,12 +274,12 @@ mod tests {
     use generate::Room;
 
     #[test]
-    fn test_room_new() {
+    fn room_new() {
         assert_eq!(Room::new(1, 1, 2, 2), Room::from_dimensions(1, 1, 2, 2));
     }
 
     #[test]
-    fn test_room_overlaps() {
+    fn room_overlaps() {
         let rooms = vec![
             Room::new(0, 0, 1, 1),
             Room::new(1, 0, 3, 3),

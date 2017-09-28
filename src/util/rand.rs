@@ -8,7 +8,7 @@ use rand::Rng;
 use rand::distributions::range::SampleRange;
 use std::fmt::Display;
 
-/// A trait allowing access to random elements and/or indices in implementing containers.
+/// Trait allowing access to random elements and/or indices in implementing containers.
 pub trait Choose<T> {
     /// Returns an element picked randomly from `&self`, or `None` if no elements exist.
     fn choose(&self) -> Option<&T>;
@@ -42,7 +42,7 @@ impl<T> Choose<T> for Vec<T> {
     }
 }
 
-/// Returns a random usize in the range `[x, y]` inclusive.
+/// Returns a random Integer in the range `[x, y]` inclusive.
 pub fn rand_range<T>(x: T, y: T) -> T
 where
     T: Integer + SampleRange,

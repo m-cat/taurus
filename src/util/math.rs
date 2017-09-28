@@ -3,36 +3,39 @@
 #![allow(unknown_lints)]
 
 use num::Integer;
-use std::cmp::{max, min};
 
-/// Returns the max of all given elements.
-#[macro_export]
-macro_rules! max {
+/// Returns the min of all given elements.
+///
+/// # Examples
+/// assert_eq!(-2, min!(0, 2, -2, -1));
+macro_rules! min {
     ( $x:expr, $( $e:expr ),+ ) => {
         {
-            let mut max = $x;
+            let mut res = $x;
             $(
-                if $e > max {
-                    max = $e;
+                if $e.min(res) == $e {
+                    res = $e;
                 }
             )+
-            max
+            res
         }
     }
 }
 
-/// Returns the min of all given elements.
-#[macro_export]
-macro_rules! min {
+/// Returns the max of all given elements.
+///
+/// # Examples
+/// assert_eq!(2, max!(0, 2, -2, -1));
+macro_rules! max {
     ( $x:expr, $( $e:expr ),+ ) => {
         {
-            let mut min = $x;
+            let mut res = $x;
             $(
-                if $e < min {
-                    min = $e;
+                if $e.max(res) == $e {
+                    res = $e;
                 }
             )+
-            min
+            res
         }
     }
 }
@@ -42,7 +45,7 @@ pub fn min_max<T>(a: T, b: T) -> (T, T)
 where
     T: Integer + Copy,
 {
-    (min(a, b), max(a, b))
+    if a.min(b) == a { (a, b) } else { (b, a) }
 }
 
 /// Returns true if two inclusive ranges `[a1, a2]` and `[b1, b2]` overlap.
@@ -96,7 +99,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use util::math::*;
+    use super::*;
     use util::rand::rand_range;
 
     #[test]

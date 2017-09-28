@@ -2,18 +2,32 @@
 
 use util::rand::{dice, rand_range};
 
-/// Capitalizes the first letter of the string.
+/// Capitalizes the first letter of a string.
 pub fn cap(s: &str) -> String {
-    if s.is_empty() {
-        return String::new();
+    let mut res = String::with_capacity(s.len());
+    let mut chars = s.chars();
+
+    match chars.next() {
+        Some(c) => res.push_str(&c.to_uppercase().to_string()),
+        None => return res,
     }
-    let c = &s[0..1];
-    format!("{}{}", c.to_uppercase(), &s[1..])
+    loop {
+        match chars.next() {
+            Some(c) => res.push(c),
+            None => return res,
+        }
+    }
 }
 
 /// Returns a randomly-generated name.
 #[allow(collapsible_if)]
-pub fn name_gen(max_len: usize) -> String {
+pub fn name_gen(min_len: usize, max_len: usize) -> String {
+    debug_assert!(max_len >= 3, "The maximum length must be greater than 3.");
+    debug_assert!(
+        max_len >= min_len,
+        "The maximum length must be greater than the minimum length"
+    );
+
     // Define the list of consonant, double consonant, etc. sequences
     let consonants = "bdfgklmnprsstvx";
     let start_consonants = "bdfghklmnprsstvwjz";
@@ -27,12 +41,13 @@ pub fn name_gen(max_len: usize) -> String {
     let dvowels = "iaio";
     let end_dvowels = "ia";
 
-    let mut word = String::with_capacity(max_len);
+    let len = rand_range(min_len, max_len);
+    let mut word = String::with_capacity(len);
 
-    // Pick starting sequence
-    let mut is_vowel = dice(1, 3); // start with vowel?
-    if is_vowel {
+    // Pick starting sequence.
+    let mut is_vowel = if dice(1, 3) {
         word.push_str(pick_seq(vowels, 1));
+        false
     } else {
         let c = match rand_range(1, 100) {
             1...40 => pick_seq(start_consonants, 1),
@@ -40,54 +55,53 @@ pub fn name_gen(max_len: usize) -> String {
             _ => pick_seq(tconsonants, 3),
         };
         word.push_str(c);
-    }
+        true
+    };
 
-    // Alternate between choosing vowel and consonant sequences
-    let mut m = rand_range(2, 5);
-    while m > 0 && word.len() < max_len {
-        m -= 1;
-        is_vowel = !is_vowel;
+    // Pick middle sequences.
+    // Alternate between choosing vowel and consonant sequences.
+    while word.len() <= len - 3 {
         if is_vowel {
             // Pick vowel sequence
-            if m == 0 {
-                // Last sequence
-                let c = match rand_range(1, 100) {
-                    1...90 => pick_seq(end_vowels, 1),
-                    _ => pick_seq(end_dvowels, 2),
-                };
-                word.push_str(c);
-            } else {
-                let c = match rand_range(1, 100) {
-                    1...85 => pick_seq(vowels, 1),
-                    _ => pick_seq(dvowels, 2),
-                };
-                word.push_str(c);
-            }
+            let c = match rand_range(1, 100) {
+                1...85 => pick_seq(vowels, 1),
+                _ => pick_seq(dvowels, 2),
+            };
+            word.push_str(c);
         } else {
             // Pick consonant sequence
-            if m == 0 {
-                // Last sequence
-                let c = match rand_range(1, 100) {
-                    1...60 => pick_seq(end_consonants, 1),
-                    _ => pick_seq(end_dconsonants, 2),
-                };
-                word.push_str(c);
-            } else {
-                // Middle sequence
-                let c = match rand_range(1, 100) {
-                    1...60 => pick_seq(consonants, 1),
-                    61...90 => pick_seq(dconsonants, 2),
-                    _ => pick_seq(tconsonants, 3),
-                };
-                word.push_str(c);
-            }
+            let c = match rand_range(1, 100) {
+                1...60 => pick_seq(consonants, 1),
+                61...90 => pick_seq(dconsonants, 2),
+                _ => pick_seq(tconsonants, 3),
+            };
+            word.push_str(c);
         }
+
+        is_vowel = !is_vowel;
+    }
+
+    // Pick last sequence.
+    if is_vowel {
+        // Pick vowel.
+        let c = match rand_range(1, 100) {
+            1...90 => pick_seq(end_vowels, 1),
+            _ => pick_seq(end_dvowels, 2),
+        };
+        word.push_str(c);
+    } else {
+        // Pick consonant.
+        let c = match rand_range(1, 100) {
+            1...60 => pick_seq(end_consonants, 1),
+            _ => pick_seq(end_dconsonants, 2),
+        };
+        word.push_str(c);
     }
 
     cap(&word)
 }
 
-/// Helper function for [`name_gen`].
+// Helper function for `name_gen`.
 fn pick_seq(s: &str, n: usize) -> &str {
     let i = rand_range(0, s.len() / n - 1);
     &s[n * i..n * (i + 1)]
@@ -96,15 +110,24 @@ fn pick_seq(s: &str, n: usize) -> &str {
 #[cfg(test)]
 mod tests {
     use lang::*;
-    use std::str::*;
 
     #[test]
     fn test_cap() {
-        let str1 = String::from_str("cap").unwrap();
-        let str2 = String::from_str("yabba dabba doo").unwrap();
+        assert_eq!("C", cap("c"));
+        assert_eq!("", cap(""));
+        assert_eq!("Cap", cap("cap"));
+        assert_eq!("Yabba dabba", cap("yabba dabba"));
+    }
 
-        assert_eq!("Cap", cap(&str1));
-        assert_eq!("Yabba dabba doo", cap(&str2));
-        assert_eq!("", cap(&String::new()));
+    #[test]
+    fn test_name_gen() {
+        for n in 1..1000 {
+            let min = rand_range(3, 5);
+            let max = rand_range(6, 40);
+            let name = name_gen(min, max);
+
+            assert!(name.len() >= min);
+            assert!(name.len() <= max);
+        }
     }
 }

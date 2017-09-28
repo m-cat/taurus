@@ -1,25 +1,26 @@
-use GameLoopResult;
+//! Dungeon object.
+
+use GameLoopOutcome;
 use actor::*;
-use console::GameConsole;
+use console::Console;
 use coord::Coord;
-use fraction::Fraction;
-use game::Game;
-use item::Item;
-use item::ItemStack;
+use defs::TurnRatio;
+use defs::int;
+use game_data::GameData;
+use item::{Item, ItemStack};
 use object::Object;
-use player;
-use std::collections::BinaryHeap;
-use std::collections::HashMap;
-use std::ops::Index;
-use std::ops::IndexMut;
+use std::collections::{BinaryHeap, HashMap};
+use std::ops::{Deref, DerefMut};
+use std::ops::{Index, IndexMut};
 use tile::Tile;
-use util::int;
 use util::rand::Choose;
 
-/// Struct containing a single depth of the dungeon, including the depth layout.
+/// Struct containing a single depth of the dungeon.
 /// This struct is also responsible for running the actor priority queue.
 pub struct Dungeon {
     depth: usize,
+    game_data: GameData,
+
     tile_grid: Vec<Vec<Tile>>, // indexed x,y
 
     actor_map: HashMap<Coord, Actor>,
@@ -29,9 +30,11 @@ pub struct Dungeon {
 }
 
 impl Dungeon {
-    pub fn new(depth: usize) -> Dungeon {
+    pub fn new(depth: usize, game_data: GameData) -> Dungeon {
         Dungeon {
             depth: depth,
+            game_data: game_data,
+
             tile_grid: Vec::new(),
 
             actor_map: HashMap::new(),
@@ -39,6 +42,21 @@ impl Dungeon {
             object_map: HashMap::new(),
             stack_map: HashMap::new(),
         }
+    }
+
+    /// Returns the depth of the dungeon.
+    pub fn depth(&self) -> usize {
+        self.depth
+    }
+
+    /// Returns a reference to the game data.
+    pub fn game_data(&self) -> &GameData {
+        &self.game_data
+    }
+
+    /// Returns a mutable reference to the game data.
+    pub fn mut_game_data(&mut self) -> &mut GameData {
+        &mut self.game_data
     }
 
     /// Returns the width of the tile grid.
@@ -56,6 +74,20 @@ impl Dungeon {
         }
     }
 
+    // /// Initializes the tile grid, should only be called in generation functions.
+    // fn create_grid(&mut self, width: usize, height: usize) {
+    //     self.tile_grid = Vec::with_capacity(width);
+
+    //     for _ in 0..width {
+    //         let mut column: Vec<Tile> = Vec::with_capacity(height);
+
+    //         for _ in 0..height {
+    //             column.push(Default::default());
+    //         }
+    //         self.tile_grid.push(column);
+    //     }
+    // }
+
     /// Returns the number of actors in the dungeon.
     pub fn num_actors(&self) -> usize {
         debug_assert_eq!(self.actor_queue.len(), self.actor_map.len());
@@ -63,36 +95,22 @@ impl Dungeon {
         self.actor_queue.len()
     }
 
-    /// Initializes the tile grid, should only be called in generation functions.
-    fn create_grid(&mut self, width: usize, height: usize) {
-        self.tile_grid = Vec::with_capacity(width);
-
-        for _ in 0..width {
-            let mut column: Vec<Tile> = Vec::with_capacity(height);
-
-            for _ in 0..height {
-                column.push(Default::default());
-            }
-            self.tile_grid.push(column);
-        }
-    }
-
     /// Adds actor to both the coordinate map and the priority queue.
-    pub fn add_actor(&mut self, coord: Coord, mut a: Actor) {
-        debug_assert!(!self.actor_map.contains_key(&coord)); // actors can't share tiles
+    pub fn add_actor(&mut self, a: Actor) {
+        let coord = a.coord();
+        debug_assert!(!self.actor_map.contains_key(&coord)); // Actors can't share tiles.
 
         let turn = a.turn();
         let id = a.id();
 
-        a.set_coord(coord);
-        self.actor_map.insert(coord, a); // add actor to map
+        self.actor_map.insert(coord, a); // Add actor to map.
 
         let coordt = CoordTurn {
             coord: coord,
             turn: turn,
             id: id,
         };
-        self.actor_queue.push(coordt); // add actor to queue
+        self.actor_queue.push(coordt); // Add actor to queue.
     }
 
     /// Returns true if there is an actor at `coord`.
@@ -100,13 +118,13 @@ impl Dungeon {
         self.actor_map.contains_key(&coord)
     }
 
-    /// Gets an immutable reference to an actor.
-    pub fn get_actor(&self, coord: Coord) -> Option<&Actor> {
+    /// Gets a reference to an actor.
+    pub fn actor(&self, coord: Coord) -> Option<&Actor> {
         self.actor_map.get(&coord)
     }
 
     /// Gets a mutable reference to an actor.
-    pub fn get_mut_actor(&mut self, coord: Coord) -> Option<&mut Actor> {
+    pub fn mut_actor(&mut self, coord: Coord) -> Option<&mut Actor> {
         self.actor_map.get_mut(&coord)
     }
 
@@ -132,7 +150,7 @@ impl Dungeon {
     ///
     /// # Panics
     /// If the actor could not be found at the given coordinates.
-    pub fn set_actor_turn(&mut self, coord: Coord, new_turn: Fraction) {
+    pub fn set_actor_turn(&mut self, coord: Coord, new_turn: TurnRatio) {
         let (mut actor_list, option) = self.unroll_queue_get_actor(coord);
         let mut actor = option.unwrap();
 
@@ -168,7 +186,7 @@ impl Dungeon {
     /// Builds the actor queue from a list of actors.
     fn rebuild_queue(&mut self, actor_list: Vec<Actor>) {
         for actor in actor_list {
-            self.add_actor(actor.coord(), actor);
+            self.add_actor(actor);
         }
     }
 
@@ -180,7 +198,8 @@ impl Dungeon {
     }
 
     /// Inserts an object into the object hash map.
-    pub fn add_object(&mut self, coord: Coord, o: Object) {
+    pub fn add_object(&mut self, o: Object) {
+        let coord = o.coord();
         debug_assert!(!self.object_map.contains_key(&coord));
 
         self.object_map.insert(coord, o);
@@ -195,7 +214,7 @@ impl Dungeon {
     pub fn add_item(&mut self, coord: Coord, i: Item) {
         let mut stack = match self.stack_map.remove(&coord) {
             Some(s) => s,
-            None => ItemStack::new(), // create new stack if one doesn't exist
+            None => ItemStack::new(), // Create new stack if one doesn't exist.
         };
 
         stack.add(i);
@@ -207,7 +226,7 @@ impl Dungeon {
     /// # Panics
     /// If the passed in index is invalid.
     pub fn remove_item(&mut self, coord: Coord, index: usize) -> Item {
-        let mut stack = self.stack_map.get_mut(&coord).unwrap();
+        let stack = self.stack_map.get_mut(&coord).unwrap();
 
         stack.remove(index)
     }
@@ -221,33 +240,43 @@ impl Dungeon {
     }
 
     /// Returns a random coordinate.
-    pub fn random_coord(&self) -> Coord {
+    pub fn random_coord(&self) -> Option<Coord> {
         let grid = &self.tile_grid;
-        let (x, column) = grid.choose_enumerate().unwrap();
-        let y = column.choose_index().unwrap();
-        Coord::new(x as int, y as int)
+        let (x, column) = match grid.choose_enumerate() {
+            Some(t) => t,
+            None => return None,
+        };
+        let y = match column.choose_index() {
+            Some(t) => t,
+            None => return None,
+        };
+        Some(Coord::new(x as int, y as int))
     }
 
-    /// Returns an available coordinate, not currently occupied by any actors.
-    pub fn random_avail_coord_actor(&self) -> Coord {
-        let mut found = false;
+    /// Returns a random available coordinate, not currently occupied by any actors.
+    // TODO: Check for impassable tiles and avoid picking staircases.
+    pub fn random_open_coord_actor(&self) -> Option<Coord> {
+        let mut occupied = true;
         let mut coord: Coord = Default::default();
 
-        while !found {
-            coord = self.random_coord();
-            found = self.has_actor(coord);
+        while occupied {
+            coord = match self.random_coord() {
+                Some(t) => t,
+                None => return None,
+            };
+            occupied = self.has_actor(coord);
         }
 
-        coord
+        Some(coord)
     }
 
     /// Runs the main game loop by iterating over the actor priority queue
-    pub fn run_loop(&mut self, game: &Game, console: &mut GameConsole) -> GameLoopResult {
+    pub fn run_loop(&mut self, console: &mut Console) -> GameLoopOutcome {
         loop {
-            // Get the coordinate of the next actor to move
+            // Get the coordinate of the next actor to move.
             let mut coordt = match self.actor_queue.pop() {
                 Some(coordt) => coordt,
-                None => return GameLoopResult::NoActors, // bad!
+                None => return GameLoopOutcome::NoActors, // bad!
             };
 
             // If there is no actor at the coordinates or the id doesn't match,
@@ -264,19 +293,16 @@ impl Dungeon {
             };
 
             // Update the global game turn.
-            game.set_turn(a.turn());
+            self.game_data().set_turn(a.turn());
 
             // Let the actor do its thing.
-            let result = match a.behavior() {
-                Behavior::Player => player::player_act(&mut a, game, self, console),
-                _ => a.act(game, self),
-            };
-            a.update_turn();
-
-            match result {
-                ActResult::WindowClosed => return GameLoopResult::WindowClosed,
+            match a.act(self, console) {
+                ActResult::WindowClosed => return GameLoopOutcome::WindowClosed,
+                ActResult::QuitGame => return GameLoopOutcome::QuitGame,
                 ActResult::None => {}
             };
+
+            a.update_turn();
 
             // Push the actor's associated CoordTurn back on the queue.
             coordt.coord = a.coord();
@@ -286,7 +312,7 @@ impl Dungeon {
     }
 }
 
-/// Makes the dungeon indexable like an array
+/// Makes the dungeon indexable like an array.
 impl Index<usize> for Dungeon {
     type Output = Vec<Tile>;
 
@@ -297,5 +323,55 @@ impl Index<usize> for Dungeon {
 impl IndexMut<usize> for Dungeon {
     fn index_mut(&mut self, index: usize) -> &mut Vec<Tile> {
         &mut self.tile_grid[index]
+    }
+}
+
+/// List of dungeons.
+pub struct DungeonList {
+    dungeon_list: Vec<Dungeon>,
+}
+
+impl DungeonList {
+    /// Creates a new `DungeonList` with `n` dungeons.
+    pub fn new(num_dungeons: usize, game_data: GameData) -> DungeonList {
+        let mut dungeon_list = DungeonList { dungeon_list: Vec::new() };
+
+        let game_data = game_data;
+
+        for n in 0..num_dungeons {
+            dungeon_list.push(Dungeon::new(n, game_data.clone()));
+        }
+
+        dungeon_list
+    }
+
+    /// Returns a reference to the game data.
+    pub fn game_data(&self) -> &GameData {
+        &self.dungeon_list[0].game_data()
+    }
+
+    /// Returns a mutable reference to the game data.
+    pub fn mut_game_data(&mut self) -> &mut GameData {
+        self.dungeon_list[0].mut_game_data()
+    }
+
+    /// Returns a mutable reference to the current dungeon.
+    pub fn current_dungeon(&mut self) -> &mut Dungeon {
+        let index = self.game_data().player_depth();
+        &mut self.dungeon_list[index]
+    }
+}
+
+impl Deref for DungeonList {
+    type Target = Vec<Dungeon>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.dungeon_list
+    }
+}
+
+impl DerefMut for DungeonList {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.dungeon_list
     }
 }

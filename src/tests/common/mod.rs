@@ -1,10 +1,14 @@
 use dungeon::Dungeon;
-use game::Game;
+use game_data::GameData;
 use std::io;
 
-pub fn setup_game_test() -> io::Result<(Game, Dungeon)> {
-    let game = Game::new()?;
-    let dungeon = Dungeon::new(0);
+pub fn setup_dungeon() -> io::Result<Dungeon> {
+    let game_data = setup_game_data()?;
+    let dungeon = Dungeon::new(0, game_data);
 
-    Ok((game, dungeon))
+    Ok(dungeon)
+}
+
+pub fn setup_game_data() -> io::Result<GameData> {
+    unimplemented!()
 }

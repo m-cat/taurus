@@ -1,0 +1,25 @@
+@colors: <Obj "colors.over">
+
+# Default attributes, can be overriden per-tile
+@default: {
+}
+
+# Used in tests only
+test: {
+}
+
+@floor: {
+    ^: @default
+    passable: true
+    transparent: true
+}
+
+stone_floor: {
+    ^: @floor
+    name: "stone floor"
+}
+
+grass_floor: {
+    ^: @floor
+    name: "grass floor"
+}
