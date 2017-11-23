@@ -15,10 +15,10 @@ pub type int = i32;
 pub type uint = u32;
 
 /// Rational to store current turn.
-pub type TurnRatio = Ratio<u32>;
+pub type GameRatio = Ratio<u32>;
 
-/// Convert a `BigRational` into a `TurnRatio`.
-pub fn to_turnratio(value: BigRational) -> GameResult<TurnRatio> {
+/// Convert a `BigRational` into a `GameRatio`.
+pub fn to_gameratio(value: BigRational) -> GameResult<GameRatio> {
     let numer = match value.numer().to_u32() {
         Some(n) => n,
         None => return err_convert(value, "Numerator too big"),
@@ -33,6 +33,13 @@ pub fn to_turnratio(value: BigRational) -> GameResult<TurnRatio> {
 
 pub fn big_to_u32(value: BigInt) -> GameResult<u32> {
     match value.to_u32() {
+        Some(n) => Ok(n),
+        None => err_convert(value, "Value is too large"),
+    }
+}
+
+pub fn big_to_usize(value: BigInt) -> GameResult<usize> {
+    match value.to_usize() {
         Some(n) => Ok(n),
         None => err_convert(value, "Value is too large"),
     }

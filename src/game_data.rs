@@ -4,7 +4,7 @@ use GameResult;
 use constants;
 use coord::Coord;
 use database::{self, Database};
-use defs::{TurnRatio, uint};
+use defs::{GameRatio, uint};
 use num_traits::identities::Zero;
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
@@ -41,7 +41,7 @@ struct GameDataInner {
     player_coord: Option<Coord>,
 
     /// Current global game turn.
-    turn: TurnRatio,
+    turn: GameRatio,
     /// Number of actors created, used for assigning unique id's.
     num_actors: uint,
 
@@ -69,7 +69,7 @@ impl GameData {
                 player_depth: None,
                 player_coord: None,
 
-                turn: TurnRatio::zero(),
+                turn: GameRatio::zero(),
                 num_actors: 0,
 
                 tile_info_map: HashMap::new(),
@@ -112,12 +112,12 @@ impl GameData {
     }
 
     /// Gets the current game turn.
-    pub fn turn(&self) -> TurnRatio {
+    pub fn turn(&self) -> GameRatio {
         self.inner.borrow().turn
     }
 
     /// Sets the game turn.
-    pub fn set_turn(&self, value: TurnRatio) {
+    pub fn set_turn(&self, value: GameRatio) {
         self.inner.borrow_mut().turn = value;
     }
 
@@ -131,9 +131,7 @@ impl GameData {
 
     /// Returns a reference to the `TileInfo` object with `name`.
     pub fn tile_info(&self, name: &str) -> Option<Rc<TileInfo>> {
-        self.inner.borrow().tile_info_map.get(name).map(
-            |val| val.clone(),
-        )
+        self.inner.borrow().tile_info_map.get(name).cloned()
     }
 
     /// Adds `tile_info` to the list and returns a reference to it.
@@ -141,7 +139,7 @@ impl GameData {
         let info_ref = Rc::new(tile_info);
         match self.inner.borrow_mut().tile_info_map.insert(
             name,
-            info_ref.clone(),
+            Rc::clone(&info_ref),
         ) {
             Some(_) => panic!("logic error"),
             None => info_ref,

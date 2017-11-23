@@ -9,7 +9,7 @@ use object::Object;
 use util::direction::CardinalDirection;
 use util::direction::CardinalDirection::*;
 use util::math::{min_max, overlaps};
-use util::rand::{Choose, dice, rand_range};
+use util::rand::{Choose, dice, rand_int};
 
 /// Generates the entire dungeon.
 pub fn gen_game(dungeon_list: &mut DungeonList) -> GameResult<()> {
@@ -138,18 +138,18 @@ fn gen_room_adjacent(
     match direction {
         N => {
             top = room.top - height - 1;
-            left = rand_range(room.left - width + 1, room.right);
+            left = rand_int(room.left - width + 1, room.right);
         }
         E => {
-            top = rand_range(room.top - height + 1, room.bottom);
+            top = rand_int(room.top - height + 1, room.bottom);
             left = room.right + 2;
         }
         S => {
             top = room.bottom + 2;
-            left = rand_range(room.left - width + 1, room.right);
+            left = rand_int(room.left - width + 1, room.right);
         }
         W => {
-            top = rand_range(room.top - height + 1, room.bottom);
+            top = rand_int(room.top - height + 1, room.bottom);
             left = room.left - width - 1;
         }
     };
@@ -176,20 +176,20 @@ fn gen_room_adjacent_door(
 
     match direction {
         N => {
-            x = rand_range(max!(room.left, other.left), min!(room.right, other.right));
+            x = rand_int(max!(room.left, other.left), min!(room.right, other.right));
             y = room.top - 1;
         }
         E => {
             x = room.right + 1;
-            y = rand_range(max!(room.top, other.top), min!(room.bottom, other.bottom));
+            y = rand_int(max!(room.top, other.top), min!(room.bottom, other.bottom));
         }
         S => {
-            x = rand_range(max!(room.left, other.left), min!(room.right, other.right));
+            x = rand_int(max!(room.left, other.left), min!(room.right, other.right));
             y = room.bottom + 1;
         }
         W => {
             x = room.left - 1;
-            y = rand_range(max!(room.top, other.top), min!(room.bottom, other.bottom));
+            y = rand_int(max!(room.top, other.top), min!(room.bottom, other.bottom));
         }
     }
 
@@ -214,12 +214,12 @@ fn gen_num_rooms(index: usize) -> usize {
 
 /// Generates a random width for a `Room` based on the dungeon level specified by `index`.
 fn gen_room_width(index: usize) -> usize {
-    rand_range(2, 5) // TODO
+    rand_int(2, 5) // TODO
 }
 
 /// Generates a random height for a `Room` based on the dungeon level specified by `index`.
 fn gen_room_height(index: usize) -> usize {
-    rand_range(2, 5) // TODO
+    rand_int(2, 5) // TODO
 }
 
 /// A struct for storing data for a single `Room`, used in dungeon generation.

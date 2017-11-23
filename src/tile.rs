@@ -38,7 +38,7 @@ impl Tile {
         )?);
 
         Ok(Tile {
-            info: info.clone(),
+            info: Rc::clone(&info),
             height: 0,
         })
     }

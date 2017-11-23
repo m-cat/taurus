@@ -10,6 +10,9 @@ pub enum GameError {
     ConversionError { val: String, msg: &'static str },
 }
 
+// #[derive(Copy, Clone, Eq, PartialEq, Debug, Fail)]
+// pub struct MyErrorKind {
+
 pub fn err_convert<T, R>(val: T, msg: &'static str) -> GameResult<R>
 where
     T: Display,

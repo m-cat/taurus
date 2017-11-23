@@ -31,7 +31,7 @@ pub mod error;
 pub mod game_data;
 pub mod generate;
 pub mod item;
-pub mod lang;
+pub mod name_gen;
 pub mod object;
 pub mod player;
 pub mod tile;
@@ -51,16 +51,25 @@ pub type GameResult<T> = Result<T, failure::Error>;
 
 /// Runs the main game loop.
 pub fn run_game() -> GameResult<()> {
+    let game_data = GameData::new()?;
+    let profile_data = game_data.database().get_obj("name_profiles")?.get_obj(
+        "default",
+    )?;
+    let name_profile = name_gen::NameProfile::new(&profile_data)?;
+
     // Display random names. TODO: remove this
     for _ in 1..100 {
-        println!("{}", lang::name_gen(3, 4)); //constants::MAX_NAME_LEN));
+        println!(
+            "{}",
+            name_gen::name_gen(&name_profile, constants::MAX_NAME_LEN)
+        );
     }
 
-    // Initialize a brand new game
-    let (mut console, mut dungeon_list) = init_new_game()?;
+    // Initialize a brand new game.
+    let (mut console, mut dungeon_list) = init_new_game(game_data)?;
 
     loop {
-        // Get the current dungeon from the list
+        // Get the current dungeon from the list.
         let dungeon = dungeon_list.current_dungeon();
 
         // Main game loop
@@ -87,7 +96,7 @@ pub fn run_game() -> GameResult<()> {
     }
 }
 
-fn init_new_game() -> GameResult<(Console, DungeonList)> {
+fn init_new_game(game_data: GameData) -> GameResult<(Console, DungeonList)> {
     // Initialize the console.
     let console = Console::init(
         constants::SCR_WIDTH,
@@ -96,7 +105,6 @@ fn init_new_game() -> GameResult<(Console, DungeonList)> {
         constants::FONT_DEFAULT,
         constants::FPS,
     );
-    let game_data = GameData::new()?;
 
     let mut dungeon_list = DungeonList::new(constants::NUM_DUNGEONS, game_data);
 

@@ -3,7 +3,7 @@
 use {GameError, GameResult};
 use console::{Color, Console};
 use coord::Coord;
-use defs::{TurnRatio, big_to_u32, to_turnratio};
+use defs::{GameRatio, big_to_u32, to_gameratio};
 use defs::{int, uint};
 use dungeon::Dungeon;
 use game_data::GameData;
@@ -31,12 +31,12 @@ pub struct Actor {
     // Coordinate location in level.
     coord: Coord,
     // Current turn.
-    turn: TurnRatio,
+    turn: GameRatio,
 
     // STATS
     hp_cur: int, // int, because this value can be negative!
     hp_max: uint,
-    speed: TurnRatio,
+    speed: GameRatio,
 
     // COMBAT STATE
 
@@ -60,7 +60,7 @@ impl Actor {
         let hp = big_to_u32(data.get_int("hp")?)?;
         let hp_cur = hp as int;
         let hp_max = hp as uint;
-        let speed = to_turnratio(data.get_frac("speed")?)?;
+        let speed = to_gameratio(data.get_frac("speed")?)?;
 
         let behavior = Behavior::from_str(&data.get_str("behavior")?)?;
 
@@ -121,7 +121,7 @@ impl Actor {
     }
 
     /// Returns this actor's base speed.
-    pub fn speed(&self) -> TurnRatio {
+    pub fn speed(&self) -> GameRatio {
         self.speed
     }
 
@@ -136,12 +136,12 @@ impl Actor {
     }
 
     /// Returns this actor's next turn value.
-    pub fn turn(&self) -> TurnRatio {
+    pub fn turn(&self) -> GameRatio {
         self.turn
     }
 
     /// Sets this actor's turn to a new value.
-    pub fn set_turn(&mut self, turn: TurnRatio) {
+    pub fn set_turn(&mut self, turn: GameRatio) {
         self.turn = turn;
     }
 
@@ -170,7 +170,7 @@ impl Actor {
         dungeon: &mut Dungeon,
         dir: CompassDirection,
     ) -> (ActResult, bool) {
-        let coord = self.coord().coord_in_dir(dir, 1);
+        let coord = self.coord().coord_in_dir(&dir, 1);
         self.try_move_to(dungeon, coord)
     }
 
@@ -241,7 +241,7 @@ pub enum ActResult {
 /// the actor map, keyed by Coord.
 pub struct CoordTurn {
     pub coord: Coord,
-    pub turn: TurnRatio,
+    pub turn: GameRatio,
     /// The id of the actor.
     pub id: uint,
 }

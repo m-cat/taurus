@@ -100,7 +100,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use util::rand::rand_range;
+    use util::rand::rand_int;
 
     #[test]
     fn test_max() {
@@ -154,12 +154,12 @@ mod tests {
     }
 
     #[test]
-    fn test_rand_range() {
+    fn test_rand_int() {
         for _ in 1..100 {
-            let a = rand_range(0, 100);
-            let b = rand_range(0, 100);
-            assert!(between(rand_range(a, b), a, b));
+            let a = rand_int(0, 100);
+            let b = rand_int(0, 100);
+            assert!(between(rand_int(a, b), a, b));
         }
-        assert_eq!(rand_range(0, 0), 0);
+        assert_eq!(rand_int(0, 0), 0);
     }
 }

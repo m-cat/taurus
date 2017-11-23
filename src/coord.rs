@@ -22,7 +22,7 @@ impl Coord {
     }
 
     /// Gets the `Coord` `n` steps in direction `dir`.
-    pub fn coord_in_dir<D>(&self, dir: D, n: int) -> Coord
+    pub fn coord_in_dir<D>(&self, dir: &D, n: int) -> Coord
     where
         D: Direction,
     {
@@ -63,16 +63,16 @@ mod tests {
     fn coord_in_dir() {
         let coord = Coord::new(0, 0);
 
-        assert_eq!(coord.coord_in_dir(Dir::N, 1), Coord::new(0, -1));
-        assert_eq!(coord.coord_in_dir(Dir::E, 1), Coord::new(1, 0));
-        assert_eq!(coord.coord_in_dir(Dir::S, 1), Coord::new(0, 1));
-        assert_eq!(coord.coord_in_dir(Dir::W, 1), Coord::new(-1, 0));
-        assert_eq!(coord.coord_in_dir(Dir::NE, 1), Coord::new(1, -1));
-        assert_eq!(coord.coord_in_dir(Dir::SE, 1), Coord::new(1, 1));
-        assert_eq!(coord.coord_in_dir(Dir::NW, 1), Coord::new(-1, -1));
-        assert_eq!(coord.coord_in_dir(Dir::SW, 1), Coord::new(-1, 1));
+        assert_eq!(coord.coord_in_dir(&Dir::N, 1), Coord::new(0, -1));
+        assert_eq!(coord.coord_in_dir(&Dir::E, 1), Coord::new(1, 0));
+        assert_eq!(coord.coord_in_dir(&Dir::S, 1), Coord::new(0, 1));
+        assert_eq!(coord.coord_in_dir(&Dir::W, 1), Coord::new(-1, 0));
+        assert_eq!(coord.coord_in_dir(&Dir::NE, 1), Coord::new(1, -1));
+        assert_eq!(coord.coord_in_dir(&Dir::SE, 1), Coord::new(1, 1));
+        assert_eq!(coord.coord_in_dir(&Dir::NW, 1), Coord::new(-1, -1));
+        assert_eq!(coord.coord_in_dir(&Dir::SW, 1), Coord::new(-1, 1));
 
-        assert_eq!(coord.coord_in_dir(Dir::N, -2), Coord::new(0, 2));
-        assert_eq!(coord.coord_in_dir(Dir::SW, -2), Coord::new(2, -2));
+        assert_eq!(coord.coord_in_dir(&Dir::N, -2), Coord::new(0, 2));
+        assert_eq!(coord.coord_in_dir(&Dir::SW, -2), Coord::new(2, -2));
     }
 }

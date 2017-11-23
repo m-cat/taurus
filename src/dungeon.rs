@@ -4,7 +4,7 @@ use GameLoopOutcome;
 use actor::*;
 use console::Console;
 use coord::Coord;
-use defs::TurnRatio;
+use defs::GameRatio;
 use defs::int;
 use game_data::GameData;
 use item::{Item, ItemStack};
@@ -150,7 +150,7 @@ impl Dungeon {
     ///
     /// # Panics
     /// If the actor could not be found at the given coordinates.
-    pub fn set_actor_turn(&mut self, coord: Coord, new_turn: TurnRatio) {
+    pub fn set_actor_turn(&mut self, coord: Coord, new_turn: GameRatio) {
         let (mut actor_list, option) = self.unroll_queue_get_actor(coord);
         let mut actor = option.unwrap();
 
@@ -347,7 +347,7 @@ impl DungeonList {
 
     /// Returns a reference to the game data.
     pub fn game_data(&self) -> &GameData {
-        &self.dungeon_list[0].game_data()
+        self.dungeon_list[0].game_data()
     }
 
     /// Returns a mutable reference to the game data.

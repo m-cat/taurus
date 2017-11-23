@@ -1,4 +1,4 @@
 //! Color constants.
 
-pub const C_BLACK: &'static str = "#000000";
-pub const C_WHITE: &'static str = "#FFFFFF";
+pub const C_BLACK: &str = "#000000";
+pub const C_WHITE: &str = "#FFFFFF";

@@ -1,0 +1,61 @@
+human: {
+    min_seqs: 3
+    max_seqs: 6
+
+    start_consonants: ("bdfghjklmnprsstvwz" .4)
+    start_dconsonants: ("br"+"ch"+"cl"+"tr"+"th"+"dr"+"sl"+"ph"+"bl"+"cr"+"fr"+"gr"+"st"+"vr"+"wh"+"wr" .4)
+    start_tconsonants: ("chr"+"str"+"thr" .2)
+    mid_consonants: ("bdfgklmnprsstvx" .6)
+    mid_dconsonants: ("br"+"ch"+"ct"+"tr"+"th"+"gh"+"dr"+"mm"+"tt"+"ll"+"st"+"qu" .3)
+    mid_tconsonants: (start_tconsonants.0 .1)
+    end_consonants: ("bdfghklnprsstx" .6)
+    end_dconsonants: ("ch"+"gh"+"rm"+"st"+"th" .4)
+
+    start_vowels: ("aaeeiioouy" 1)
+    mid_vowels: (start_vowels.0 .85)
+    mid_dvowels: ("ia"+"io" .15)
+    end_vowels: ("aou" .9)
+    end_dvowels: ("ia" .1)
+}
+
+elf: {
+    min_seqs: 4
+    max_seqs: 8
+
+    start_consonants: ("bdfghjklmnprsstvz" .4)
+    start_dconsonants: ("br"+"ch"+"cl"+"tr"+"th"+"dr"+"sl"+"ph"+"bl"+"cr"+"fr"+"gr"+"st"+"vr"+"wh"+"wr" .4)
+    start_tconsonants: ("chr"+"str"+"thr" .2)
+    mid_consonants: ("bdflmnrsstvx" .8)
+    mid_dconsonants: ("br"+"ch"+"ct"+"tr"+"th"+"dr"+"mm"+"tt"+"ll"+"st" .15)
+    mid_tconsonants: (start_tconsonants.0 .05)
+    end_consonants: ("lnrss" .8)
+    end_dconsonants: ("rm"+"st" .2)
+
+    start_vowels: ("aaeeiiooy" 1)
+    mid_vowels: (start_vowels.0 .85)
+    mid_dvowels: ("ia"+"io" .15)
+    end_vowels: ("aei" .9)
+    end_dvowels: ("ia" .1)
+}
+
+dwarf: {
+    min_seqs: 3
+    max_seqs: 5
+
+    start_consonants: ("bdfgghklmnprsstvwz" .4)
+    start_dconsonants: ("kr"+"br"+"ch"+"cl"+"tr"+"th"+"dr"+"sl"+"ph"+"bl"+"cr"+"fr"+"gr"+"st"+"qu"+"vr"+"wh"+"wr" .4)
+    start_tconsonants: ("chr"+"str"+"thr" .2)
+    mid_consonants: ("bdfgklmnprsstv" .5)
+    mid_dconsonants: ("br"+"ch"+"kt"+"tr"+"th"+"dr"+"mm"+"tt"+"ll"+"st"+"qu" .3)
+    mid_tconsonants: (start_tconsonants.0 .2)
+    end_consonants: ("bdffggklnprsst" .6)
+    end_dconsonants: ("ch"+"gh"+"rm"+"st"+"th" .4)
+
+    start_vowels: ("aaeeiioouy" 1)
+    mid_vowels: ("aeio" .85)
+    mid_dvowels: ("io"+"ou" .15)
+    end_vowels: ("iou" .9)
+    end_dvowels: ("oh" .1)
+}
+
+default: human

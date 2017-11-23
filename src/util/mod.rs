@@ -3,12 +3,14 @@
 // Allow dead code for utility functions.
 #![allow(dead_code, unused_macros)]
 
+#[macro_use]
+pub mod math;
+
 pub mod convert;
 pub mod direction;
 pub mod file;
-#[macro_use]
-pub mod math;
 pub mod rand;
+pub mod string;
 
 macro_rules! map {
     { } => {

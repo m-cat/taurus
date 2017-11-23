@@ -3,6 +3,7 @@
 #![allow(unknown_lints)]
 
 use num::Integer;
+use num::rational::Ratio;
 use rand;
 use rand::Rng;
 use rand::distributions::range::SampleRange;
@@ -27,7 +28,7 @@ impl<T> Choose<T> for Vec<T> {
 
     fn choose_index(&self) -> Option<usize> {
         if !self.is_empty() {
-            Some(rand_range(0, self.len() - 1))
+            Some(rand_int(0, self.len() - 1))
         } else {
             None
         }
@@ -43,7 +44,7 @@ impl<T> Choose<T> for Vec<T> {
 }
 
 /// Returns a random Integer in the range `[x, y]` inclusive.
-pub fn rand_range<T>(x: T, y: T) -> T
+pub fn rand_int<T>(x: T, y: T) -> T
 where
     T: Integer + SampleRange,
 {
@@ -54,6 +55,17 @@ where
     }
 }
 
+/// Returns a random Ratio in the inclusive range `[x, y]` with the given denominator.
+///
+/// # Panics
+/// This function can result in an overflow - use only for known inputs.
+pub fn rand_ratio<T>(x: T, y: T, d: T) -> Ratio<T>
+where
+    T: Clone + Copy + Integer + SampleRange,
+{
+    Ratio::new(rand_int(x * d, y * d), d)
+}
+
 /// Returns true with `x` in `y` chance.
 #[allow(needless_pass_by_value)]
 pub fn dice<T>(x: T, y: T) -> bool
@@ -61,17 +73,17 @@ where
     T: Integer + SampleRange + Display,
 {
     debug_assert!(x <= y, format!("Assert failed: dice({}, {})", x, y));
-    rand_range(T::one(), y) <= x
+    rand_int(T::one(), y) <= x
 }
 
 #[cfg(test)]
 mod tests {
-    use util::rand::{dice, rand_range};
+    use util::rand::{dice, rand_int};
 
     #[test]
     fn test_dice() {
         for _ in 1..100 {
-            assert!(!dice(0, rand_range(1, 100)));
+            assert!(!dice(0, rand_int(1, 100)));
         }
     }
 }

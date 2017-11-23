@@ -4,6 +4,7 @@ use {GameError, GameResult};
 use console::Color;
 use coord::Coord;
 use dungeon::Dungeon;
+use failure::ResultExt;
 use game_data::GameData;
 use std::str::FromStr;
 use ui::Draw;
@@ -26,7 +27,11 @@ pub struct Object {
 impl Object {
     /// Creates a new `Object` at the given coordinates.
     pub fn new(game_data: &GameData, coord: Coord, name: &str, active: bool) -> GameResult<Object> {
-        let data = game_data.database().get_obj("objects")?.get_obj(name)?;
+        let data = game_data
+            .database()
+            .get_obj("objects")
+            .context("Missing database field \"objects\"")?
+            .get_obj(name)?;
 
         // Load all data from the database.
 

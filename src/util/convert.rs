@@ -10,7 +10,7 @@ pub fn hex_char_to_int(ch: char) -> Option<u8> {
 pub fn hex_str_to_int(s: &str) -> Option<u32> {
     let mut chars = s.chars();
 
-    let mut res = match chars.next() {
+    let res = match chars.next() {
         Some('#') => {
             match chars.next() {
                 Some(ch) => hex_char_to_int(ch)?,
@@ -19,7 +19,8 @@ pub fn hex_str_to_int(s: &str) -> Option<u32> {
         }
         Some(ch) => hex_char_to_int(ch)?,
         _ => return None,
-    } as u32;
+    };
+    let mut res = u32::from(res);
     let mut c = 1;
 
     loop {
@@ -29,7 +30,7 @@ pub fn hex_str_to_int(s: &str) -> Option<u32> {
 
         res = res * 16 +
             match chars.next() {
-                Some(ch) => hex_char_to_int(ch)? as u32,
+                Some(ch) => u32::from(hex_char_to_int(ch)?),
                 None => return Some(res),
             };
         c += 1;
@@ -78,7 +79,7 @@ pub fn color_code_to_rgb(s: &str) -> Option<(u8, u8, u8)> {
             _ => return None,
         };
 
-    if let Some(_) = chars.next() {
+    if chars.next().is_some() {
         return None;
     }
 
