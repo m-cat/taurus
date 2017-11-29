@@ -3,9 +3,11 @@
 use GameResult;
 use actor::Actor;
 use coord::Coord;
-use defs::int;
 use dungeon::{Dungeon, DungeonList};
+use error::{GameError, err_unexpected};
+use failure::{Fail, ResultExt};
 use object::Object;
+use std::rc::Rc;
 use util::direction::CardinalDirection;
 use util::direction::CardinalDirection::*;
 use util::math::{min_max, overlaps};
@@ -23,7 +25,11 @@ pub fn gen_game(dungeon_list: &mut DungeonList) -> GameResult<()> {
         gen_pits(dungeon_list, n);
     }
 
-    gen_player(&mut dungeon_list[0])
+    let mut dungeon = &mut dungeon_list[0];
+    let player = gen_player(&mut dungeon)?;
+    dungeon.add_actor(player);
+
+    Ok(())
 }
 
 /// Generates a single depth of the dungeon.
@@ -45,7 +51,7 @@ fn gen_pits(dungeon_list: &mut DungeonList, index: usize) {
 }
 
 /// Creates an actor of type `name` and places it in a random open location in `dungeon`.
-fn gen_actor_random_coord(dungeon: &mut Dungeon, name: &str) -> GameResult<()> {
+fn gen_actor_random_coord(dungeon: &mut Dungeon, name: &str) -> GameResult<Actor> {
     let coord = dungeon.random_open_coord_actor();
 
     debug_assert!(coord.is_some());
@@ -53,25 +59,24 @@ fn gen_actor_random_coord(dungeon: &mut Dungeon, name: &str) -> GameResult<()> {
     // If we're out of squares, don't add the actor.
     let coord = match coord {
         Some(coord) => coord,
-        None => return Ok(()),
+        None => return err_unexpected("Ran out of tiles for new actors"),
     };
 
     let a = Actor::new(dungeon.mut_game_data(), coord, name)?;
-    dungeon.add_actor(a);
 
-    Ok(())
+    Ok(a)
 }
 
 /// Creates the player and places him in a random location of the dungeon.
 // TODO: Check if the actor was added successfully. This should never fail.
-fn gen_player(dungeon: &mut Dungeon) -> GameResult<()> {
+fn gen_player(dungeon: &mut Dungeon) -> GameResult<Actor> {
     gen_actor_random_coord(dungeon, "player")
 }
 
 /// Generates a dungeon level using the "room method".
-fn gen_dungeon_room_method(dungeon: &mut Dungeon, index: usize) -> GameResult<()> {
+pub fn gen_dungeon_room_method(dungeon: &mut Dungeon, index: usize) -> GameResult<()> {
     let mut room_list: Vec<Room> = Vec::new();
-    let mut object_list: Vec<Object> = Vec::new();
+    let mut object_list: Vec<Box<Object>> = Vec::new();
     let direction_list = vec![N, E, S, W];
     let goal_num_rooms = gen_num_rooms(index);
 
@@ -113,6 +118,8 @@ fn gen_dungeon_room_method(dungeon: &mut Dungeon, index: usize) -> GameResult<()
 
     // Convert the list of rooms into a tile grid representation
 
+    // Update coordinates for actors, objects, and items
+
     // Add doors
     for object in object_list {
         dungeon.add_object(object);
@@ -127,13 +134,13 @@ fn gen_room_adjacent(
     room: &Room,
     direction: CardinalDirection,
     room_list: &[Room],
-    object_list: &mut Vec<Object>,
+    object_list: &mut Vec<Box<Object>>,
     index: usize,
 ) -> GameResult<Option<Room>> {
-    let top: int;
-    let left: int;
-    let width = gen_room_width(index) as int;
-    let height = gen_room_height(index) as int;
+    let top: i32;
+    let left: i32;
+    let width = gen_room_width(index) as i32;
+    let height = gen_room_height(index) as i32;
 
     match direction {
         N => {
@@ -170,9 +177,9 @@ fn gen_room_adjacent_door(
     room: &Room,
     other: &Room,
     direction: CardinalDirection,
-) -> GameResult<Object> {
-    let x: int;
-    let y: int;
+) -> GameResult<Box<Object>> {
+    let x;
+    let y;
 
     match direction {
         N => {
@@ -227,16 +234,16 @@ fn gen_room_height(index: usize) -> usize {
 /// and do not include its walls.
 #[derive(Clone, Eq, PartialEq, Debug)]
 struct Room {
-    left: int,
-    top: int,
-    right: int,
-    bottom: int,
+    left: i32,
+    top: i32,
+    right: i32,
+    bottom: i32,
 }
 
 impl Room {
     /// Returns a new `Room` with given bounding boxes.
     #[allow(dead_code)]
-    pub fn new(left: int, top: int, right: int, bottom: int) -> Room {
+    pub fn new(left: i32, top: i32, right: i32, bottom: i32) -> Room {
         let (left, right) = min_max(left, right);
         let (top, bottom) = min_max(top, bottom);
 
@@ -249,14 +256,14 @@ impl Room {
     }
 
     /// Returns a new `Room` created from given `width` and `height`.
-    pub fn from_dimensions(left: int, top: int, width: usize, height: usize) -> Room {
+    pub fn from_dimensions(left: i32, top: i32, width: usize, height: usize) -> Room {
         debug_assert!(width > 0 && height > 0);
 
         Room {
             left: left,
             top: top,
-            right: left + width as int - 1,
-            bottom: top + height as int - 1,
+            right: left + width as i32 - 1,
+            bottom: top + height as i32 - 1,
         }
     }
 

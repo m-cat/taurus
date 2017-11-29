@@ -6,13 +6,28 @@
 pub use tcod::input::{Key, KeyCode};
 
 use GameError;
-use defs::int;
+use constants;
+use std::cell::RefCell;
+use std::fmt;
+use std::rc::Rc;
 use std::str::FromStr;
+use std::sync::Mutex;
 use tcod;
 use tcod::Color as TcodColor;
 use tcod::Console as TcodConsole;
 use tcod::console::*;
 use util::convert::color_code_to_rgb;
+
+lazy_static! {
+    // Initialize the console.
+    pub static ref CONSOLE: Mutex<Console> = Mutex::new(Console::init(
+        constants::SCR_WIDTH,
+        constants::SCR_HEIGHT,
+        constants::TITLE,
+        constants::FONT_DEFAULT,
+        constants::FPS,
+    ));
+}
 
 /// Color struct.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -75,13 +90,9 @@ impl Console {
     }
 
     /// Puts given char `c` to coordinates at `x` and `y` with `color`.
-    pub fn put_char(&mut self, x: int, y: int, c: char, color: Color) {
-        self.root.set_char(x as i32, y as i32, c);
-        self.root.set_char_foreground(
-            x as i32,
-            y as i32,
-            color.to_tcod(),
-        );
+    pub fn put_char(&mut self, x: i32, y: i32, c: char, color: Color) {
+        self.root.set_char(x, y, c);
+        self.root.set_char_foreground(x, y, color.to_tcod());
     }
 
     /// This function will wait for a keypress event from the user, returning the `KeyState` that
@@ -98,5 +109,11 @@ impl Console {
         T: AsRef<str>,
     {
         self.root.set_window_title(title);
+    }
+}
+
+impl fmt::Debug for Console {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Console")
     }
 }

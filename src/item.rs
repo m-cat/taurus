@@ -1,6 +1,9 @@
+//! Module containing Item structs.
+
+#[derive(Debug)]
 pub struct Item {}
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct ItemStack {
     items: Vec<Item>,
 }

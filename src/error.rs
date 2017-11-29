@@ -8,10 +8,9 @@ use std::fmt::Display;
 pub enum GameError {
     #[fail(display = "conversion error: {}. {}", val, msg)]
     ConversionError { val: String, msg: &'static str },
+    #[fail(display = "unexpected error: {}", msg)]
+    UnexpectedError { msg: &'static str },
 }
-
-// #[derive(Copy, Clone, Eq, PartialEq, Debug, Fail)]
-// pub struct MyErrorKind {
 
 pub fn err_convert<T, R>(val: T, msg: &'static str) -> GameResult<R>
 where
@@ -23,4 +22,8 @@ where
             msg,
         }.into(),
     )
+}
+
+pub fn err_unexpected<R>(msg: &'static str) -> GameResult<R> {
+    Err(GameError::UnexpectedError { msg }.into())
 }

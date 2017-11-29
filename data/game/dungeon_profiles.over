@@ -1,0 +1,7 @@
+@objects: <Obj "objects.over">
+
+normal: {
+    doors: [
+        (@objects.wooden_door 1)
+    ]
+}

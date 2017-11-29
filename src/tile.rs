@@ -1,10 +1,12 @@
 //! Game tiles.
 
 use GameResult;
+use actor::Actor;
 use console::Color;
 use database::Database;
-use defs::int;
 use game_data::GameData;
+use item::ItemStack;
+use object::Object;
 use std::rc::Rc;
 use std::str::FromStr;
 use ui::Draw;
@@ -20,8 +22,12 @@ pub struct Tile {
     /// A reference to the `TileInfo`.
     info: Rc<TileInfo>,
 
-    /// Elevation of this tile in the heightmap. 0 is ground level.
-    height: int,
+    pub actor: Option<Actor>,
+    pub object: Option<Box<Object>>,
+    pub stack: Option<Box<ItemStack>>,
+
+    /// Elevation of this tile in the heightmap. 0 is ground level, <0 is below ground.
+    pub height: i32,
 }
 
 impl Tile {
@@ -39,6 +45,11 @@ impl Tile {
 
         Ok(Tile {
             info: Rc::clone(&info),
+
+            actor: None,
+            object: None,
+            stack: None,
+
             height: 0,
         })
     }
@@ -63,6 +74,16 @@ impl Tile {
         };
 
         Ok(game_data.add_tile_info(tile_info, name))
+    }
+}
+
+impl Tile {
+    pub fn passable(&self) -> bool {
+        self.info.passable
+    }
+
+    pub fn transparent(&self) -> bool {
+        self.info.transparent
     }
 }
 

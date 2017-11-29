@@ -4,12 +4,14 @@
 // #![deny(missing_docs)]
 
 // TODO: Get to the point where we can remove this without it causing an avalanche of warnings.
-#![allow(dead_code, unused_variables)]
+#![allow(unknown_lints)]
+#![allow(dead_code, doc_markdown, unused_imports, unused_variables)]
 
 extern crate failure;
 #[macro_use]
 extern crate failure_derive;
-
+#[macro_use]
+extern crate lazy_static;
 extern crate num;
 extern crate num_traits;
 extern crate over;
@@ -66,14 +68,14 @@ pub fn run_game() -> GameResult<()> {
     }
 
     // Initialize a brand new game.
-    let (mut console, mut dungeon_list) = init_new_game(game_data)?;
+    let mut dungeon_list = init_new_game(game_data)?;
 
     loop {
         // Get the current dungeon from the list.
         let dungeon = dungeon_list.current_dungeon();
 
         // Main game loop
-        match dungeon.run_loop(&mut console) {
+        match dungeon.run_loop() {
             GameLoopOutcome::DepthChanged => {
                 unimplemented!(); // TODO
             }
@@ -96,21 +98,14 @@ pub fn run_game() -> GameResult<()> {
     }
 }
 
-fn init_new_game(game_data: GameData) -> GameResult<(Console, DungeonList)> {
-    // Initialize the console.
-    let console = Console::init(
-        constants::SCR_WIDTH,
-        constants::SCR_HEIGHT,
-        constants::TITLE,
-        constants::FONT_DEFAULT,
-        constants::FPS,
-    );
+fn init_new_game(game_data: GameData) -> GameResult<DungeonList> {
+    lazy_static::initialize(&console::CONSOLE);
 
     let mut dungeon_list = DungeonList::new(constants::NUM_DUNGEONS, game_data);
 
     // Generate game
-    generate::gen_game(&mut dungeon_list)?; // TODO: add piecemeal generation
+    generate::gen_game(&mut dungeon_list)?;
     let depth = dungeon_list.game_data().player_depth();
 
-    Ok((console, dungeon_list))
+    Ok(dungeon_list)
 }

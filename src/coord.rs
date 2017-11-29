@@ -1,18 +1,18 @@
 //! Coordinate utility.
 
-use defs::int;
+use std::fmt;
 use util::direction::Direction;
 use util::math::in_one;
 
 /// Simple coordinate struct.
-#[derive(PartialEq, Eq, Debug, Hash, Clone, Copy, Default)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub struct Coord {
-    pub x: int,
-    pub y: int,
+    pub x: i32,
+    pub y: i32,
 }
 
 impl Coord {
-    pub fn new(x: int, y: int) -> Coord {
+    pub fn new(x: i32, y: i32) -> Coord {
         Coord { x, y }
     }
 
@@ -22,13 +22,19 @@ impl Coord {
     }
 
     /// Gets the `Coord` `n` steps in direction `dir`.
-    pub fn coord_in_dir<D>(&self, dir: &D, n: int) -> Coord
+    pub fn coord_in_dir<D>(&self, dir: &D, n: i32) -> Coord
     where
         D: Direction,
     {
         let (dx, dy) = dir.unit_vec();
 
         Coord::new(self.x + dx * n, self.y + dy * n)
+    }
+}
+
+impl fmt::Display for Coord {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({}, {})", self.x, self.y)
     }
 }
 

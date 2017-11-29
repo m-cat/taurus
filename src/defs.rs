@@ -6,14 +6,6 @@ use num::bigint::BigInt;
 use num::rational::{BigRational, Ratio};
 use num_traits::ToPrimitive;
 
-/// Default type for signed ints.
-#[allow(non_camel_case_types)]
-pub type int = i32;
-
-/// Default type for unsigned ints.
-#[allow(non_camel_case_types)]
-pub type uint = u32;
-
 /// Rational to store current turn.
 pub type GameRatio = Ratio<u32>;
 

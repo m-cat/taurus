@@ -9,6 +9,6 @@ pub trait Draw {
     fn draw_color(&self) -> Color;
 }
 
-pub fn game_draw(dungeon: &Dungeon, console: &Console) {
+pub fn game_draw(dungeon: &Dungeon) {
     unimplemented!();
 }

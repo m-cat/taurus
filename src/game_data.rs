@@ -1,10 +1,11 @@
 //! Module for game-wide data.
 
 use GameResult;
+use actor::Actor;
 use constants;
 use coord::Coord;
 use database::{self, Database};
-use defs::{GameRatio, uint};
+use defs::GameRatio;
 use num_traits::identities::Zero;
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
@@ -35,15 +36,15 @@ struct GameDataInner {
     /// Message deque storing a fixed number of messages.
     message_deque: VecDeque<String>,
 
+    /// Reference to the player.
+    player: Option<Actor>,
     /// Current depth of the player, indexed starting at 1.
     player_depth: Option<usize>,
-    /// Current coordinates of the player.
-    player_coord: Option<Coord>,
 
     /// Current global game turn.
     turn: GameRatio,
     /// Number of actors created, used for assigning unique id's.
-    num_actors: uint,
+    num_actors: u32,
 
     /// Map of tile names to tile info structs.
     tile_info_map: HashMap<String, Rc<TileInfo>>,
@@ -66,8 +67,8 @@ impl GameData {
 
                 message_deque: VecDeque::with_capacity(constants::MESSAGE_DEQUE_SIZE),
 
+                player: None,
                 player_depth: None,
-                player_coord: None,
 
                 turn: GameRatio::zero(),
                 num_actors: 0,
@@ -98,17 +99,17 @@ impl GameData {
         self.inner.borrow_mut().player_depth = Some(value);
     }
 
-    /// Gets the current coordinates of the player.
+    /// Gets a reference to the player.
     ///
     /// # Panics
     /// If the player doesn't exist.
-    pub fn player_coord(&self) -> Coord {
-        self.inner.borrow().player_coord.unwrap()
+    pub fn player(&self) -> Actor {
+        let inner = self.inner.borrow();
+        inner.player.clone().unwrap()
     }
 
-    /// Sets the player coordinates.
-    pub fn set_player_coord(&mut self, value: Coord) {
-        self.inner.borrow_mut().player_coord = Some(value);
+    pub fn set_player(&mut self, player: Actor) {
+        self.inner.borrow_mut().player = Some(player)
     }
 
     /// Gets the current game turn.
@@ -122,7 +123,7 @@ impl GameData {
     }
 
     /// Generates a new unique actor id.
-    pub fn actor_id(&mut self) -> uint {
+    pub fn actor_id(&mut self) -> u32 {
         let mut inner = self.inner.borrow_mut();
         let id = inner.num_actors;
         inner.num_actors += 1;

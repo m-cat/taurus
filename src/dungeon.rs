@@ -5,13 +5,13 @@ use actor::*;
 use console::Console;
 use coord::Coord;
 use defs::GameRatio;
-use defs::int;
 use game_data::GameData;
 use item::{Item, ItemStack};
 use object::Object;
-use std::collections::{BinaryHeap, HashMap};
-use std::ops::{Deref, DerefMut};
-use std::ops::{Index, IndexMut};
+use std::cell::RefCell;
+use std::collections::BinaryHeap;
+use std::ops::{Deref, DerefMut, Index, IndexMut};
+use std::rc::Rc;
 use tile::Tile;
 use util::rand::Choose;
 
@@ -22,11 +22,10 @@ pub struct Dungeon {
     game_data: GameData,
 
     tile_grid: Vec<Vec<Tile>>, // indexed x,y
+    width: usize,
+    height: usize,
 
-    actor_map: HashMap<Coord, Actor>,
-    actor_queue: BinaryHeap<CoordTurn>,
-    object_map: HashMap<Coord, Object>,
-    stack_map: HashMap<Coord, ItemStack>,
+    actor_queue: BinaryHeap<Actor>,
 }
 
 impl Dungeon {
@@ -35,12 +34,11 @@ impl Dungeon {
             depth: depth,
             game_data: game_data,
 
-            tile_grid: Vec::new(),
+            tile_grid: Vec::with_capacity(0),
+            width: 0,
+            height: 0,
 
-            actor_map: HashMap::new(),
             actor_queue: BinaryHeap::new(),
-            object_map: HashMap::new(),
-            stack_map: HashMap::new(),
         }
     }
 
@@ -61,180 +59,69 @@ impl Dungeon {
 
     /// Returns the width of the tile grid.
     pub fn width(&self) -> usize {
-        self.tile_grid.len()
+        self.width
     }
 
     /// Returns the height of the tile grid.
     pub fn height(&self) -> usize {
-        let column_list = &self.tile_grid;
-        if !column_list.is_empty() {
-            column_list[0].len()
-        } else {
-            0
-        }
+        self.height
     }
-
-    // /// Initializes the tile grid, should only be called in generation functions.
-    // fn create_grid(&mut self, width: usize, height: usize) {
-    //     self.tile_grid = Vec::with_capacity(width);
-
-    //     for _ in 0..width {
-    //         let mut column: Vec<Tile> = Vec::with_capacity(height);
-
-    //         for _ in 0..height {
-    //             column.push(Default::default());
-    //         }
-    //         self.tile_grid.push(column);
-    //     }
-    // }
 
     /// Returns the number of actors in the dungeon.
     pub fn num_actors(&self) -> usize {
-        debug_assert_eq!(self.actor_queue.len(), self.actor_map.len());
-
         self.actor_queue.len()
     }
 
-    /// Adds actor to both the coordinate map and the priority queue.
+    /// Adds actor to both the tile grid and the priority queue.
     pub fn add_actor(&mut self, a: Actor) {
         let coord = a.coord();
-        debug_assert!(!self.actor_map.contains_key(&coord)); // Actors can't share tiles.
+        debug_assert!(self[coord].actor.is_none()); // Actors can't share tiles.
 
-        let turn = a.turn();
-        let id = a.id();
-
-        self.actor_map.insert(coord, a); // Add actor to map.
-
-        let coordt = CoordTurn {
-            coord: coord,
-            turn: turn,
-            id: id,
-        };
-        self.actor_queue.push(coordt); // Add actor to queue.
+        self.actor_queue.push(a.clone()); // Add actor to queue.
+        self[coord].actor = Some(a); // Add actor to grid.
     }
 
-    /// Returns true if there is an actor at `coord`.
-    pub fn has_actor(&self, coord: Coord) -> bool {
-        self.actor_map.contains_key(&coord)
-    }
-
-    /// Gets a reference to an actor.
-    pub fn actor(&self, coord: Coord) -> Option<&Actor> {
-        self.actor_map.get(&coord)
-    }
-
-    /// Gets a mutable reference to an actor.
-    pub fn mut_actor(&mut self, coord: Coord) -> Option<&mut Actor> {
-        self.actor_map.get_mut(&coord)
-    }
-
-    /// Moves the actor at coordinates `coord` to coordinates `new_coord`.
-    /// Note that this is rather inefficient due to the need to rebuild the priority queue.
-    ///
-    /// # Panics
-    /// If the actor could not be found at the given coordinates.
-    pub fn set_actor_coord(&mut self, coord: Coord, new_coord: Coord) {
-        debug_assert!(!self.actor_map.contains_key(&new_coord));
-
-        let (mut actor_list, option) = self.unroll_queue_get_actor(coord);
-        let mut actor = option.unwrap();
-
+    pub fn move_actor(&mut self, old_coord: Coord, new_coord: Coord) {
+        let mut actor = self[old_coord].actor.take().unwrap();
         actor.set_coord(new_coord);
-        actor_list.push(actor);
-
-        self.rebuild_queue(actor_list);
+        assert!(self[new_coord].actor.is_none());
+        self[new_coord].actor = Some(actor);
     }
 
-    /// Sets an actor's turn.
-    /// Note that this is rather inefficient due to the need to rebuild the priority queue.
-    ///
-    /// # Panics
-    /// If the actor could not be found at the given coordinates.
-    pub fn set_actor_turn(&mut self, coord: Coord, new_turn: GameRatio) {
-        let (mut actor_list, option) = self.unroll_queue_get_actor(coord);
-        let mut actor = option.unwrap();
-
-        actor.set_turn(new_turn);
-        actor_list.push(actor);
-
-        self.rebuild_queue(actor_list);
-    }
-
-    /// Unrolls the actor queue looking for a specific actor.
-    fn unroll_queue_get_actor(&mut self, coord: Coord) -> (Vec<Actor>, Option<Actor>) {
-        let mut coordt_list: Vec<CoordTurn> = Vec::new();
-        let mut actor_list: Vec<Actor> = Vec::new();
-        let mut option = None;
-
-        for coordt in self.actor_queue.drain() {
-            coordt_list.push(coordt);
-        }
-
-        for coordt in coordt_list {
-            let actor_temp = self.remove_actor(coordt.coord);
-
-            if actor_temp.coord() == coord {
-                option = Some(actor_temp);
-            } else {
-                actor_list.push(actor_temp);
-            }
-        }
-
-        (actor_list, option)
-    }
-
-    /// Builds the actor queue from a list of actors.
-    fn rebuild_queue(&mut self, actor_list: Vec<Actor>) {
-        for actor in actor_list {
-            self.add_actor(actor);
-        }
-    }
-
-    /// Effectively removes an actor by taking it out of the actor map.
-    /// The priority queue will know it's gone when it gets to it.
-    /// Passes in the actor's coordinates to find it.
+    /// Removes an actor by taking it out of the tile grid and priority queue.
     pub fn remove_actor(&mut self, coord: Coord) -> Actor {
-        self.actor_map.remove(&coord).unwrap()
+        let mut actor_list = Vec::new();
+
+        while let Some(a) = self.actor_queue.pop() {
+            if a.coord() == coord {
+                break;
+            }
+            actor_list.push(a);
+        }
+        for actor in actor_list {
+            self.actor_queue.push(actor);
+        }
+
+        self[coord].actor.take().unwrap()
     }
 
-    /// Inserts an object into the object hash map.
-    pub fn add_object(&mut self, o: Object) {
-        let coord = o.coord();
-        debug_assert!(!self.object_map.contains_key(&coord));
+    /// Inserts an object into the tile grid.
+    pub fn add_object(&mut self, object: Box<Object>) {
+        let coord = object.coord();
+        debug_assert!(self[coord].object.is_none());
 
-        self.object_map.insert(coord, o);
+        self[coord].object = Some(object);
     }
 
-    /// Removes an object from the map
-    pub fn remove_object(&mut self, coord: Coord) -> Object {
-        self.object_map.remove(&coord).unwrap()
+    /// Removes an object from the tile grid.
+    pub fn remove_object(&mut self, coord: Coord) -> Option<Box<Object>> {
+        self[coord].object.take()
     }
 
-    /// Inserts an item into the stack hash map.
-    pub fn add_item(&mut self, coord: Coord, i: Item) {
-        let mut stack = match self.stack_map.remove(&coord) {
-            Some(s) => s,
-            None => ItemStack::new(), // Create new stack if one doesn't exist.
-        };
-
-        stack.add(i);
-        self.stack_map.insert(coord, stack);
-    }
-
-    /// Removes an item with given index from the stack.
-    ///
-    /// # Panics
-    /// If the passed in index is invalid.
-    pub fn remove_item(&mut self, coord: Coord, index: usize) -> Item {
-        let stack = self.stack_map.get_mut(&coord).unwrap();
-
-        stack.remove(index)
-    }
-
-    /// Returns the amount of items in a stack.
+    /// Returns the amount of stashes in a stack.
     pub fn stack_size(&self, coord: Coord) -> usize {
-        match self.stack_map.get(&coord) {
-            Some(s) => s.len(),
+        match self[coord].stack {
+            Some(ref s) => s.len(),
             None => 0,
         }
     }
@@ -250,7 +137,7 @@ impl Dungeon {
             Some(t) => t,
             None => return None,
         };
-        Some(Coord::new(x as int, y as int))
+        Some(Coord::new(x as i32, y as i32))
     }
 
     /// Returns a random available coordinate, not currently occupied by any actors.
@@ -264,51 +151,49 @@ impl Dungeon {
                 Some(t) => t,
                 None => return None,
             };
-            occupied = self.has_actor(coord);
+            occupied = self[coord].actor.is_some();
         }
 
         Some(coord)
     }
 
     /// Runs the main game loop by iterating over the actor priority queue
-    pub fn run_loop(&mut self, console: &mut Console) -> GameLoopOutcome {
+    pub fn run_loop(&mut self) -> GameLoopOutcome {
         loop {
-            // Get the coordinate of the next actor to move.
-            let mut coordt = match self.actor_queue.pop() {
-                Some(coordt) => coordt,
-                None => return GameLoopOutcome::NoActors, // bad!
-            };
+            if let Some(outcome) = self.step_turn() {
+                return outcome;
+            }
+        }
+    }
 
-            // If there is no actor at the coordinates or the id doesn't match,
-            // this actor has been removed and we simply continue without reinserting
-            // it into the queue.
-            let mut a = match self.actor_map.remove(&coordt.coord) {
-                Some(a) => {
-                    if a.id() != coordt.id {
-                        continue;
-                    }
-                    a
-                }
-                None => continue,
-            };
+    pub fn step_turn(&mut self) -> Option<GameLoopOutcome> {
+        // Get the coordinate of the next actor to move.
+        let mut a = match self.actor_queue.pop() {
+            Some(a) => a,
+            None => return Some(GameLoopOutcome::NoActors), // bad!
+        };
 
-            // Update the global game turn.
-            self.game_data().set_turn(a.turn());
+        // Update the global game turn.
+        self.game_data().set_turn(a.turn());
 
-            // Let the actor do its thing.
-            match a.act(self, console) {
-                ActResult::WindowClosed => return GameLoopOutcome::WindowClosed,
-                ActResult::QuitGame => return GameLoopOutcome::QuitGame,
+        {
+            match a.act(self) {
+                ActResult::WindowClosed => return Some(GameLoopOutcome::WindowClosed),
+                ActResult::QuitGame => return Some(GameLoopOutcome::QuitGame),
                 ActResult::None => {}
             };
 
             a.update_turn();
-
-            // Push the actor's associated CoordTurn back on the queue.
-            coordt.coord = a.coord();
-            coordt.turn = a.turn();
-            self.actor_queue.push(coordt);
         }
+
+        // Push the actor back on the queue.
+        self.actor_queue.push(a);
+
+        None
+    }
+
+    pub fn next_actor(&self) -> Actor {
+        self.actor_queue.peek().unwrap().clone()
     }
 }
 
@@ -323,6 +208,20 @@ impl Index<usize> for Dungeon {
 impl IndexMut<usize> for Dungeon {
     fn index_mut(&mut self, index: usize) -> &mut Vec<Tile> {
         &mut self.tile_grid[index]
+    }
+}
+
+/// Makes the dungeon indexable by coord.
+impl Index<Coord> for Dungeon {
+    type Output = Tile;
+
+    fn index(&self, coord: Coord) -> &Tile {
+        &self[coord.x as usize][coord.y as usize]
+    }
+}
+impl IndexMut<Coord> for Dungeon {
+    fn index_mut(&mut self, coord: Coord) -> &mut Tile {
+        &mut self[coord.x as usize][coord.y as usize]
     }
 }
 

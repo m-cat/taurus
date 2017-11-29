@@ -13,6 +13,7 @@ use ui::Draw;
 ///
 /// A data structure for things like doors and traps which can be interacted with. For more about
 /// the differences between `Object`s and `Actor`s, see module `actor`.
+#[derive(Debug)]
 pub struct Object {
     c: char,
     color: Color,
@@ -26,7 +27,12 @@ pub struct Object {
 
 impl Object {
     /// Creates a new `Object` at the given coordinates.
-    pub fn new(game_data: &GameData, coord: Coord, name: &str, active: bool) -> GameResult<Object> {
+    pub fn new(
+        game_data: &GameData,
+        coord: Coord,
+        name: &str,
+        active: bool,
+    ) -> GameResult<Box<Object>> {
         let data = game_data
             .database()
             .get_obj("objects")
@@ -41,7 +47,7 @@ impl Object {
         let class = ObjectClass::from_str(&data.get_str("class")?)?;
         let material = Material::from_str(&data.get_str("material")?)?;
 
-        Ok(Object {
+        Ok(Box::new(Object {
             c,
             color,
             coord,
@@ -49,12 +55,7 @@ impl Object {
             class,
             material,
             active,
-        })
-    }
-
-    /// Inserts the object into the given dungeon.
-    pub fn insert(object: Object, dungeon: &mut Dungeon) {
-        dungeon.add_object(object);
+        }))
     }
 
     /// Returns this object's coordinates.
@@ -83,6 +84,7 @@ impl Draw for Object {
 }
 
 /// Enum listing possible object classes.
+#[derive(Debug)]
 pub enum ObjectClass {
     Door,
     Trap,
@@ -106,6 +108,7 @@ impl FromStr for ObjectClass {
 }
 
 /// Enum listing possible object materials.
+#[derive(Debug)]
 pub enum Material {
     Wood,
     Iron,

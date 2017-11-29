@@ -1,19 +1,25 @@
 @colors: <Obj "colors.over">
 
-@beh: {
-    hostile: "Hostile"
+@behaviors: {
+    hostile: "hostile"
 }
 
 # Default attributes, can be overriden per-actor.
 @default: {
+    color: @colors.white
     speed: 1/1
-    behavior: @beh.hostile
+    behavior: @behaviors.hostile
 }
 
 # Used in tests only
 test: {
+    ^: @default
     hp: 0
     c: '?'
+}
+test_slow: {
+    ^: super.test
+    speed: 3.5
 }
 
 # Main player
