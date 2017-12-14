@@ -2,7 +2,7 @@
 
 dungeons: [
     # Dungeon 1
-    [(@profiles.normal 1)]
+    [(@profiles.normal 1.0)]
 
     # Dungeon 2
     [

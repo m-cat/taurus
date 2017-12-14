@@ -1,0 +1,26 @@
+@colors: <Obj "colors.over">
+
+@classes: {
+    door: "door"
+    trap: "trap"
+}
+
+@materials: {
+    wood: "wood"
+    iron: "iron"
+}
+
+@default: {
+}
+
+@door: {
+    ^: @default
+    c: '+'
+    color: @colors.white
+    class: @classes.door
+}
+
+wooden_door: {
+    ^: @door
+    material: @materials.wood
+}

@@ -1,17 +1,26 @@
 //! Module containing dungeon generation algorithms.
 
+mod util;
+
 use GameResult;
 use actor::Actor;
+use console::CONSOLE;
 use coord::Coord;
+use database::Database;
+use defs::{GameRatio, to_gameratio};
 use dungeon::{Dungeon, DungeonList};
 use error::{GameError, err_unexpected};
 use failure::{Fail, ResultExt};
+use generate::util::*;
 use object::Object;
+use std::{fmt, thread, time};
 use std::rc::Rc;
+use tile::Tile;
+use ui::draw_game;
 use util::direction::CardinalDirection;
 use util::direction::CardinalDirection::*;
 use util::math::{min_max, overlaps};
-use util::rand::{Choose, dice, rand_int};
+use util::rand::{Choose, dice, rand_int, rand_ratio};
 
 /// Generates the entire dungeon.
 pub fn gen_game(dungeon_list: &mut DungeonList) -> GameResult<()> {
@@ -26,7 +35,7 @@ pub fn gen_game(dungeon_list: &mut DungeonList) -> GameResult<()> {
     }
 
     let mut dungeon = &mut dungeon_list[0];
-    let player = gen_player(&mut dungeon)?;
+    let player = gen_player(&mut dungeon, 0)?;
     dungeon.add_actor(player);
 
     Ok(())
@@ -35,8 +44,9 @@ pub fn gen_game(dungeon_list: &mut DungeonList) -> GameResult<()> {
 /// Generates a single depth of the dungeon.
 fn gen_depth(dungeon_list: &mut DungeonList, index: usize) -> GameResult<()> {
     let mut dungeon = &mut dungeon_list[index];
+    let profile = get_dungeon_profile(dungeon, index)?;
 
-    gen_dungeon_room_method(&mut dungeon, index)?;
+    gen_dungeon_room_method(&mut dungeon, index, &profile)?;
     // let a = Actor::new(game);
     // add_actor_random_coord(dungeon, a);
 
@@ -51,7 +61,7 @@ fn gen_pits(dungeon_list: &mut DungeonList, index: usize) {
 }
 
 /// Creates an actor of type `name` and places it in a random open location in `dungeon`.
-fn gen_actor_random_coord(dungeon: &mut Dungeon, name: &str) -> GameResult<Actor> {
+fn gen_actor_random_coord(dungeon: &mut Dungeon, actor_data: &Database) -> GameResult<Actor> {
     let coord = dungeon.random_open_coord_actor();
 
     debug_assert!(coord.is_some());
@@ -62,25 +72,56 @@ fn gen_actor_random_coord(dungeon: &mut Dungeon, name: &str) -> GameResult<Actor
         None => return err_unexpected("Ran out of tiles for new actors"),
     };
 
-    let a = Actor::new(dungeon.mut_game_data(), coord, name)?;
+    let a = Actor::new(dungeon.mut_game_data(), coord, actor_data)
+        .context(format!("Could not load actor:\n{}", actor_data))?;
 
     Ok(a)
 }
 
 /// Creates the player and places him in a random location of the dungeon.
-// TODO: Check if the actor was added successfully. This should never fail.
-fn gen_player(dungeon: &mut Dungeon) -> GameResult<Actor> {
-    gen_actor_random_coord(dungeon, "player")
+fn gen_player(dungeon: &mut Dungeon, depth: usize) -> GameResult<Actor> {
+    let player_data = dungeon.game_data().database().get_obj("player")?;
+
+    let player = gen_actor_random_coord(dungeon, &player_data)?;
+
+    let game_data = dungeon.mut_game_data();
+    game_data.set_player(player.clone());
+    game_data.set_player_depth(depth);
+
+    Ok(player)
+}
+
+fn get_dungeon_profile(dungeon: &Dungeon, index: usize) -> GameResult<Database> {
+    let dungeons_file = "dungeons.over";
+
+    let arr = dungeon
+        .game_data()
+        .database()
+        .get_obj("dungeons")
+        .context("Parsing main.dungeons")?
+        .get_arr("dungeons")
+        .context("Parsing main.dungeons.dungeons")?
+        .get(index)?
+        .get_arr()?;
+
+    Ok(pick_obj_from_tup_arr(&arr).context(format!(
+        "Parsing \"dungeons\" Arr in \"{}\"",
+        dungeons_file
+    ))?)
 }
 
 /// Generates a dungeon level using the "room method".
-pub fn gen_dungeon_room_method(dungeon: &mut Dungeon, index: usize) -> GameResult<()> {
+pub fn gen_dungeon_room_method(
+    dungeon: &mut Dungeon,
+    index: usize,
+    profile: &Database,
+) -> GameResult<()> {
     let mut room_list: Vec<Room> = Vec::new();
     let mut object_list: Vec<Box<Object>> = Vec::new();
     let direction_list = vec![N, E, S, W];
     let goal_num_rooms = gen_num_rooms(index);
 
-    // Generate the initial room
+    // Generate the initial room.
     room_list.push(Room::from_dimensions(
         0,
         0,
@@ -88,7 +129,7 @@ pub fn gen_dungeon_room_method(dungeon: &mut Dungeon, index: usize) -> GameResul
         gen_room_height(index),
     ));
 
-    // Generate rooms by looking for free space next to existing rooms
+    // Generate rooms by looking for free space next to existing rooms.
     for _ in 0..goal_num_rooms - 1 {
         loop {
             let room = room_list.choose().unwrap().clone();
@@ -99,10 +140,11 @@ pub fn gen_dungeon_room_method(dungeon: &mut Dungeon, index: usize) -> GameResul
                 gen_room_adjacent(
                     dungeon,
                     &room,
-                    *direction,
+                    direction,
                     &room_list,
                     &mut object_list,
                     index,
+                    profile,
                 )?,
                 3
             )
@@ -113,15 +155,16 @@ pub fn gen_dungeon_room_method(dungeon: &mut Dungeon, index: usize) -> GameResul
         }
     }
 
-    // Initialize the dungeon tile grid
-    init_dungeon_from_rooms(dungeon, &room_list);
-
-    // Convert the list of rooms into a tile grid representation
+    // Initialize the dungeon tile grid and convert the list of rooms into a tile grid
+    // representation.
+    let (dx, dy) = init_dungeon_from_rooms(dungeon, &room_list, profile)?;
 
     // Update coordinates for actors, objects, and items
 
     // Add doors
-    for object in object_list {
+    for mut object in object_list {
+        let new_coord = object.coord() + Coord::new(dx, dy);
+        object.set_coord(new_coord);
         dungeon.add_object(object);
     }
 
@@ -132,76 +175,96 @@ pub fn gen_dungeon_room_method(dungeon: &mut Dungeon, index: usize) -> GameResul
 fn gen_room_adjacent(
     dungeon: &mut Dungeon,
     room: &Room,
-    direction: CardinalDirection,
+    direction: &CardinalDirection,
     room_list: &[Room],
     object_list: &mut Vec<Box<Object>>,
     index: usize,
+    profile: &Database,
 ) -> GameResult<Option<Room>> {
     let top: i32;
     let left: i32;
+
     let width = gen_room_width(index) as i32;
     let height = gen_room_height(index) as i32;
 
-    match direction {
+    match *direction {
+        W => {
+            left = room.left - width - 1;
+            top = rand_int(room.top - height + 1, room.bottom);
+        }
         N => {
-            top = room.top - height - 1;
             left = rand_int(room.left - width + 1, room.right);
+            top = room.top - height - 1;
         }
         E => {
-            top = rand_int(room.top - height + 1, room.bottom);
             left = room.right + 2;
+            top = rand_int(room.top - height + 1, room.bottom);
         }
         S => {
-            top = room.bottom + 2;
             left = rand_int(room.left - width + 1, room.right);
-        }
-        W => {
-            top = rand_int(room.top - height + 1, room.bottom);
-            left = room.left - width - 1;
+            top = room.bottom + 2;
         }
     };
-    let new_room = Room::from_dimensions(top, left, width as usize, height as usize);
+    let new_room = Room::from_dimensions(left, top, width as usize, height as usize);
 
-    Ok(if check_room_free(&new_room, room_list) {
-        let door = gen_room_adjacent_door(dungeon, room, &new_room, direction)?;
+    if check_room_free(&new_room, room_list) {
+        let door = gen_room_adjacent_door(dungeon, room, &new_room, direction, profile)?;
         object_list.push(door);
-        Some(new_room)
+        Ok(Some(new_room))
     } else {
-        None
-    })
+        Ok(None)
+    }
 }
 
 /// Generates a door between two adjacent `Room`s in given `Direction`.
 fn gen_room_adjacent_door(
     dungeon: &mut Dungeon,
     room: &Room,
-    other: &Room,
-    direction: CardinalDirection,
+    new_room: &Room,
+    direction: &CardinalDirection,
+    profile: &Database,
 ) -> GameResult<Box<Object>> {
     let x;
     let y;
 
-    match direction {
+    match *direction {
+        W => {
+            x = room.left - 1;
+            y = rand_int(
+                max!(room.top, new_room.top),
+                min!(room.bottom, new_room.bottom),
+            );
+        }
         N => {
-            x = rand_int(max!(room.left, other.left), min!(room.right, other.right));
+            x = rand_int(
+                max!(room.left, new_room.left),
+                min!(room.right, new_room.right),
+            );
             y = room.top - 1;
         }
         E => {
             x = room.right + 1;
-            y = rand_int(max!(room.top, other.top), min!(room.bottom, other.bottom));
+            y = rand_int(
+                max!(room.top, new_room.top),
+                min!(room.bottom, new_room.bottom),
+            );
         }
         S => {
-            x = rand_int(max!(room.left, other.left), min!(room.right, other.right));
+            x = rand_int(
+                max!(room.left, new_room.left),
+                min!(room.right, new_room.right),
+            );
             y = room.bottom + 1;
-        }
-        W => {
-            x = room.left - 1;
-            y = rand_int(max!(room.top, other.top), min!(room.bottom, other.bottom));
         }
     }
 
     let coord = Coord::new(x, y);
-    Object::new(dungeon.game_data(), coord, "wooden door", dice(8, 10))
+    let door = pick_obj_from_tup_arr(&profile.get_arr("doors")?).context(
+        "Parsing \"doors\" Arr in \"dungeon_profiles.over\"",
+    )?;
+
+    Ok(Object::new(dungeon.game_data(), coord, &door, dice(8, 10))
+        .context(format!("Could not load object:\n{}", door))?)
 }
 
 /// Checks if `room` does not collide with any `Room`s in `room_list`.
@@ -210,8 +273,56 @@ fn check_room_free(room: &Room, room_list: &[Room]) -> bool {
 }
 
 /// Initializes `dungeon`'s dungeon grid based on the `Room`s in `room_list`.
-fn init_dungeon_from_rooms(dungeon: &mut Dungeon, room_list: &[Room]) {
-    // todo
+fn init_dungeon_from_rooms(
+    dungeon: &mut Dungeon,
+    room_list: &[Room],
+    profile: &Database,
+) -> GameResult<(i32, i32)> {
+    let (mut min_left, mut min_top, mut max_right, mut max_bottom) = (0, 0, 0, 0);
+
+    for room in room_list {
+        if room.left < min_left {
+            min_left = room.left;
+        }
+        if room.top < min_top {
+            min_top = room.top;
+        }
+        if room.right > max_right {
+            max_right = room.right;
+        }
+        if room.bottom > max_bottom {
+            max_bottom = room.bottom;
+        }
+    }
+
+    debug_assert!(min_left <= 0 && min_top <= 0);
+
+    let width = (max_right + min_left.abs() + 1) as usize;
+    let height = (max_bottom + min_top.abs() + 1) as usize;
+
+    dungeon.init_grid(
+        width,
+        height,
+        &profile.get_obj("wall_tile")?,
+    )?;
+
+    let dx = min_left.abs();
+    let dy = min_top.abs();
+
+    let floor = profile.get_obj("floor_tile")?;
+    for room in room_list {
+        for x in room.left..room.right + 1 {
+            for y in room.top..room.bottom + 1 {
+                dungeon[(x + dx) as usize][(y + dy) as usize] =
+                    Tile::new(dungeon.mut_game_data(), &floor).context(format!(
+                        "Could not load tile:\n{}",
+                        floor
+                    ))?;
+            }
+        }
+    }
+
+    Ok((dx, dy))
 }
 
 /// Generates the number of `Room`s for the dungeon level specified by `index`.
@@ -242,7 +353,6 @@ struct Room {
 
 impl Room {
     /// Returns a new `Room` with given bounding boxes.
-    #[allow(dead_code)]
     pub fn new(left: i32, top: i32, right: i32, bottom: i32) -> Room {
         let (left, right) = min_max(left, right);
         let (top, bottom) = min_max(top, bottom);
@@ -260,8 +370,8 @@ impl Room {
         debug_assert!(width > 0 && height > 0);
 
         Room {
-            left: left,
-            top: top,
+            left,
+            top,
             right: left + width as i32 - 1,
             bottom: top + height as i32 - 1,
         }
@@ -273,6 +383,19 @@ impl Room {
     pub fn overlaps(&self, other: &Self) -> bool {
         overlaps(self.left - 1, self.right, other.left - 1, other.right) &&
             overlaps(self.top - 1, self.bottom, other.top - 1, other.bottom)
+    }
+}
+
+impl fmt::Display for Room {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "({}, {}), ({}, {})",
+            self.left,
+            self.top,
+            self.right,
+            self.bottom
+        )
     }
 }
 

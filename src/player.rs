@@ -2,7 +2,7 @@
 
 use GameResult;
 use actor::{ActResult, Actor, Behavior};
-use console::{self, Console, Key};
+use console::{self, CONSOLE, DrawConsole, Key};
 use console::KeyCode::*;
 use coord::Coord;
 use dungeon::Dungeon;
@@ -11,43 +11,36 @@ use std::rc::Rc;
 use ui;
 use util::direction::CompassDirection;
 
-/// Creates and returns the player actor.
-pub fn player_create(game_data: &mut GameData, coord: Coord, depth: usize) -> GameResult<Actor> {
-    let player = Actor::new(game_data, coord, "player")?;
-
-    game_data.set_player(player.clone());
-    game_data.set_player_depth(depth);
-
-    Ok(player)
-}
-
 /// Acts out the player's turn.
 pub fn player_act(player: &mut Actor, dungeon: &mut Dungeon) -> ActResult {
-    let console = &console::CONSOLE;
     let mut end_turn = false;
 
     // While user input is not a game action...
     while !end_turn {
         // Check if the window was closed by the user.
-        if console.lock().unwrap().window_closed() {
+        if CONSOLE.lock().unwrap().window_closed() {
             return ActResult::WindowClosed;
         } // TODO: how does window_closed work?
 
-        // Draw the game to the screen.
-        ui::game_draw(dungeon);
+        // Draw the game and UI to the screen.
+        ui::draw_all(dungeon);
 
         // Wait for user input.
-        let key = console.lock().unwrap().wait_for_keypress(true);
+        let key = CONSOLE.lock().unwrap().wait_for_keypress(true);
 
         // Respond to user input.
-        let (_result, end) = player_process_key(player, dungeon, key);
+        let (result, end) = player_process_key(player, dungeon, key);
+        if result != ActResult::None {
+            return result;
+        }
+
         end_turn = end;
     }
 
     ActResult::None
 }
 
-// Processes input key. Returns true if the actor has used up turn.
+// Processes input key. Returns true if the player uses up a turn.
 pub fn player_process_key(
     player: &mut Actor,
     dungeon: &mut Dungeon,
@@ -55,12 +48,17 @@ pub fn player_process_key(
 ) -> (ActResult, bool) {
     if key.code != NoKey {
         match key.code {
+            Left => return player.try_move_dir(dungeon, CompassDirection::W),
             Up => return player.try_move_dir(dungeon, CompassDirection::N),
+            Right => return player.try_move_dir(dungeon, CompassDirection::E),
+            Down => return player.try_move_dir(dungeon, CompassDirection::S),
+
+            Escape => return (ActResult::QuitGame, false),
+
             _ => (),
         }
     } else {
         match key.printable {
-            'q' => return (ActResult::QuitGame, false),
             _ => (),
         }
     }

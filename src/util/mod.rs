@@ -48,3 +48,7 @@ macro_rules! try_some {
         }
     }
 }
+
+pub fn debug() -> bool {
+    cfg!(debug_assertions)
+}

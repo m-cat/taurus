@@ -6,25 +6,23 @@
 
 # Default attributes, can be overriden per-actor.
 @default: {
-    color: @colors.white
     speed: 1/1
-    behavior: @behaviors.hostile
 }
 
 # Used in tests only
-test: {
+@test: {
     ^: @default
-    hp: 0
+    name: "test"
     c: '?'
-}
-test_slow: {
-    ^: super.test
-    speed: 3.5
+    color: @colors.white
+    hp: 0
+    behavior: @behaviors.hostile
 }
 
-# Main player
-player: {
-    ^: @default
-    hp: 10
-    c: '@'
+test: @test
+
+test_slow: {
+    ^: @test
+    name: "test_slow"
+    speed: 3.5
 }

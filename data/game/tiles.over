@@ -8,8 +8,22 @@
 test: {
 }
 
+@wall: {
+    ^: @default
+    c: '#'
+    passable: false
+    transparent: false
+}
+
+stone_wall: {
+    ^: @wall
+    name: "stone wall"
+    color: @colors.white
+}
+
 @floor: {
     ^: @default
+    c: '.'
     passable: true
     transparent: true
 }
@@ -17,9 +31,11 @@ test: {
 stone_floor: {
     ^: @floor
     name: "stone floor"
+    color: @colors.white
 }
 
 grass_floor: {
     ^: @floor
     name: "grass floor"
+    color: @colors.green
 }

@@ -1,6 +1,7 @@
 //! Coordinate utility.
 
 use std::fmt;
+use std::ops::Add;
 use util::direction::Direction;
 use util::math::in_one;
 
@@ -35,6 +36,17 @@ impl Coord {
 impl fmt::Display for Coord {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "({}, {})", self.x, self.y)
+    }
+}
+
+impl Add for Coord {
+    type Output = Coord;
+
+    fn add(self, other: Self) -> Self::Output {
+        Coord {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
     }
 }
 

@@ -37,11 +37,10 @@ impl Tile {
 
         // If this tile was already loaded, grab the existing `TileInfo`.
         // Otherwise, create a new one for this tile and set the id.
-        let info = game_data.tile_info(&name).unwrap_or(Self::new_tile_info(
-            game_data,
-            tile_data,
-            name,
-        )?);
+        let info = match game_data.tile_info(&name) {
+            Some(info) => info,
+            None => Self::new_tile_info(game_data, tile_data, name)?,
+        };
 
         Ok(Tile {
             info: Rc::clone(&info),

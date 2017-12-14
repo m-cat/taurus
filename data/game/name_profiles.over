@@ -4,17 +4,17 @@ human: {
 
     start_consonants: ("bdfghjklmnprsstvwz" .4)
     start_dconsonants: ("br"+"ch"+"cl"+"tr"+"th"+"dr"+"sl"+"ph"+"bl"+"cr"+"fr"+"gr"+"st"+"vr"+"wh"+"wr" .4)
-    start_tconsonants: ("chr"+"str"+"thr" .2)
+    start_tconsonants: ("str"+"thr" .12)
     mid_consonants: ("bdfgklmnprsstvx" .6)
     mid_dconsonants: ("br"+"ch"+"ct"+"tr"+"th"+"gh"+"dr"+"mm"+"tt"+"ll"+"st"+"qu" .3)
     mid_tconsonants: (start_tconsonants.0 .1)
     end_consonants: ("bdfghklnprsstx" .6)
-    end_dconsonants: ("ch"+"gh"+"rm"+"st"+"th" .4)
+    end_dconsonants: ("ch"+"gh"+"rn"+"st"+"th" .4)
 
-    start_vowels: ("aaeeiioouy" 1)
+    start_vowels: ("aaeeiioou" 1)
     mid_vowels: (start_vowels.0 .85)
     mid_dvowels: ("ia"+"io" .15)
-    end_vowels: ("aou" .9)
+    end_vowels: ("ao" .9)
     end_dvowels: ("ia" .1)
 }
 

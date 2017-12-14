@@ -7,7 +7,7 @@ pub const SCR_WIDTH: usize = 80;
 pub const SCR_HEIGHT: usize = 50;
 pub const FPS: usize = 60;
 
-pub const NUM_DUNGEONS: usize = 27;
+pub const NUM_DUNGEONS: usize = 1;
 
 pub const MESSAGE_DEQUE_SIZE: usize = 1000;
 

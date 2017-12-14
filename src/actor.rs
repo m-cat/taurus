@@ -1,10 +1,12 @@
 //! Game actors.
 
 use {GameError, GameResult};
-use console::{Color, Console};
+use console::{Color, DrawConsole};
 use coord::Coord;
+use database::Database;
 use defs::{GameRatio, big_to_u32, to_gameratio};
 use dungeon::Dungeon;
+use failure::ResultExt;
 use game_data::GameData;
 use player;
 use std::cell::RefCell;
@@ -53,15 +55,14 @@ pub struct Actor {
 
 impl Actor {
     /// Creates a new actor at the given coordinates.
-    pub fn new(game_data: &mut GameData, coord: Coord, name: &str) -> GameResult<Actor> {
-        let data = game_data.database().get_obj("actors")?.get_obj(name)?;
+    pub fn new(game_data: &mut GameData, coord: Coord, data: &Database) -> GameResult<Actor> {
 
         // Load all data from the database.
 
-        let name = String::from(name);
+        let name = data.get_str("name")?;
         let id = game_data.actor_id();
         let c = data.get_char("c")?;
-        let color = Color::from_str(&data.get_str("color")?)?;
+        let color = Color::from_str(data.get_str("color")?.as_str())?;
         let turn = game_data.turn();
 
         let hp = big_to_u32(data.get_int("hp")?)?;
@@ -69,7 +70,9 @@ impl Actor {
         let hp_max = hp;
         let speed = to_gameratio(data.get_frac("speed")?)?;
 
-        let behavior = Behavior::from_str(&data.get_str("behavior")?)?;
+        let behavior = Behavior::from_str(data.get_str("behavior")?.as_str())?;
+
+        // Create the actor instance.
 
         let mut actor = Actor {
             inner: Rc::new(RefCell::new(ActorInner {
@@ -79,7 +82,7 @@ impl Actor {
                 color,
 
                 coord,
-                turn, // We update this later in this function.
+                turn, // We update this after creating the actor.
 
                 hp_cur,
                 hp_max,
@@ -93,8 +96,13 @@ impl Actor {
         Ok(actor)
     }
 
-    pub fn insert_new(dungeon: &mut Dungeon, coord: Coord, name: &str) -> GameResult<()> {
-        let a = Self::new(dungeon.mut_game_data(), coord, name)?;
+    pub fn insert_new(
+        dungeon: &mut Dungeon,
+        coord: Coord,
+        actor_data: &Database,
+    ) -> GameResult<()> {
+        let a = Self::new(dungeon.mut_game_data(), coord, actor_data)
+            .context(format!("Could not load actor:\n{}", actor_data))?;
         dungeon.add_actor(a);
         Ok(())
     }
@@ -183,9 +191,30 @@ impl Actor {
         self.try_move_to(dungeon, coord)
     }
 
-    // Tries to move to the specified coordinate.
+    // Tries to move to the specified coordinate. Returns true if the actor uses up a turn.
     fn try_move_to(&mut self, dungeon: &mut Dungeon, coord: Coord) -> (ActResult, bool) {
-        unimplemented!()
+        let passable = {
+            let tile = &dungeon[coord];
+
+            if let Some(ref _actor) = tile.actor {
+                false
+            } else if let Some(ref object) = tile.object {
+                if !object.passable() {
+                    false
+                } else {
+                    tile.passable()
+                }
+            } else {
+                tile.passable()
+            }
+        };
+
+        if passable {
+            self.move_to(dungeon, coord);
+            (ActResult::None, false)
+        } else {
+            (ActResult::None, false)
+        }
     }
 
     // Moves to the specified coordinate unconditionally.
@@ -243,22 +272,12 @@ impl FromStr for Behavior {
 }
 
 /// Enum of possible results of an actor action.
+#[derive(Debug, PartialEq)]
 pub enum ActResult {
     WindowClosed,
     QuitGame,
     None,
 }
-
-// /// A struct that combines Coord + turn.
-// /// Why? So we can use coords instead of actors in the priority queue and sort the queue by turn.
-// /// This allows the actor map to fully own the actors. We always get actors from one place,
-// /// the actor map, keyed by Coord.
-// pub struct CoordTurn {
-//     pub coord: Coord,
-//     pub turn: GameRatio,
-//     /// The id of the actor.
-//     pub id: u32,
-// }
 
 // Traits for priority queue
 

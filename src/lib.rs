@@ -7,9 +7,8 @@
 #![allow(unknown_lints)]
 #![allow(dead_code, doc_markdown, unused_imports, unused_variables)]
 
-extern crate failure;
 #[macro_use]
-extern crate failure_derive;
+extern crate failure;
 #[macro_use]
 extern crate lazy_static;
 extern crate num;
@@ -43,8 +42,8 @@ mod constants;
 #[cfg(test)]
 mod tests;
 
-use console::Console;
-use dungeon::DungeonList;
+use console::DrawConsole;
+use dungeon::{Dungeon, DungeonList};
 use error::GameError;
 use game_data::{GameData, GameLoopOutcome};
 
@@ -54,6 +53,7 @@ pub type GameResult<T> = Result<T, failure::Error>;
 /// Runs the main game loop.
 pub fn run_game() -> GameResult<()> {
     let game_data = GameData::new()?;
+
     let profile_data = game_data.database().get_obj("name_profiles")?.get_obj(
         "default",
     )?;
@@ -74,19 +74,21 @@ pub fn run_game() -> GameResult<()> {
         // Get the current dungeon from the list.
         let dungeon = dungeon_list.current_dungeon();
 
-        // Main game loop
+        // Main game loop.
         match dungeon.run_loop() {
             GameLoopOutcome::DepthChanged => {
                 unimplemented!(); // TODO
             }
             GameLoopOutcome::WindowClosed => {
-                unimplemented!(); // TODO
+                println!("Window closed. Goodbye!");
+                return Ok(());
             }
             GameLoopOutcome::PlayerDead => {
                 unimplemented!(); // TODO
             }
             GameLoopOutcome::QuitGame => {
-                unimplemented!();
+                println!("Quitting. Goodbye!");
+                return Ok(());
             }
             GameLoopOutcome::NoActors => {
                 unreachable!();

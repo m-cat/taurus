@@ -11,6 +11,7 @@ use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
 use std::rc::Rc;
 use tile::TileInfo;
+use ui::UiSettings;
 
 /// Result of the main game loop.
 pub enum GameLoopOutcome {
@@ -32,6 +33,9 @@ pub enum GameLoopOutcome {
 struct GameDataInner {
     /// A reference to the main game database containing monster info, tile info, etc.
     database: Database,
+
+    /// A struct containing UI parameters.
+    ui_settings: UiSettings,
 
     /// Message deque storing a fixed number of messages.
     message_deque: VecDeque<String>,
@@ -60,10 +64,13 @@ impl GameData {
     /// Creates a new `GameData` object.
     pub fn new() -> GameResult<GameData> {
         let database = database::load_data()?;
+        let ui_settings = UiSettings::new(&database.get_obj("settings")?)?;
 
         Ok(GameData {
             inner: Rc::new(RefCell::new(GameDataInner {
-                database: database,
+                database,
+
+                ui_settings,
 
                 message_deque: VecDeque::with_capacity(constants::MESSAGE_DEQUE_SIZE),
 
@@ -81,6 +88,11 @@ impl GameData {
     /// Returns a clone of the database.
     pub fn database(&self) -> Database {
         self.inner.borrow().database.clone()
+    }
+
+    /// Returns a clone of the database.
+    pub fn ui_settings(&self) -> UiSettings {
+        self.inner.borrow().ui_settings
     }
 
     /// Adds a string to the message deque.
@@ -142,7 +154,7 @@ impl GameData {
             name,
             Rc::clone(&info_ref),
         ) {
-            Some(_) => panic!("logic error"),
+            Some(_) => panic!("logical error when adding tile info"),
             None => info_ref,
         }
     }

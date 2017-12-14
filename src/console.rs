@@ -13,14 +13,13 @@ use std::rc::Rc;
 use std::str::FromStr;
 use std::sync::Mutex;
 use tcod;
+use tcod::{Console, FontLayout, FontType, Renderer, RootConsole};
 use tcod::Color as TcodColor;
-use tcod::Console as TcodConsole;
-use tcod::console::*;
 use util::convert::color_code_to_rgb;
 
 lazy_static! {
     // Initialize the console.
-    pub static ref CONSOLE: Mutex<Console> = Mutex::new(Console::init(
+    pub static ref CONSOLE: Mutex<DrawConsole> = Mutex::new(DrawConsole::init(
         constants::SCR_WIDTH,
         constants::SCR_HEIGHT,
         constants::TITLE,
@@ -64,24 +63,38 @@ impl FromStr for Color {
     }
 }
 
-/// Console object responsible for display and input.
-pub struct Console {
-    root: Root,
+impl fmt::Display for Color {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({}, {}, {})", self.r, self.g, self.b)
+    }
 }
 
-impl Console {
+/// Console object responsible for display and input.
+pub struct DrawConsole {
+    root: RootConsole,
+}
+
+impl DrawConsole {
     /// Initialize a console.
-    pub fn init(width: usize, height: usize, title: &str, font: &str, fps: usize) -> Console {
+    pub fn init(width: usize, height: usize, title: &str, font: &str, fps: usize) -> DrawConsole {
         tcod::system::set_fps(fps as i32);
 
-        Console {
-            root: Root::initializer()
-                .font(font, FontLayout::Tcod)
-                .font_type(FontType::Greyscale)
+        let mut console = DrawConsole {
+            root: RootConsole::initializer()
                 .size(width as i32, height as i32)
                 .title(title)
+                .font(font, FontLayout::Tcod)
+                .font_type(FontType::Greyscale)
+                .renderer(Renderer::OpenGL)
                 .init(),
-        }
+        };
+        console.set_default_background(Color::from_str("#000000").unwrap());
+
+        console
+    }
+
+    pub fn set_default_background(&mut self, color: Color) {
+        self.root.set_default_background(color.to_tcod());
     }
 
     /// Returns true if the Root console has been closed.
@@ -89,10 +102,18 @@ impl Console {
         self.root.window_closed()
     }
 
-    /// Puts given char `c` to coordinates at `x` and `y` with `color`.
-    pub fn put_char(&mut self, x: i32, y: i32, c: char, color: Color) {
+    /// Puts given char `c` to tile at `x` and `y` with `color`.
+    pub fn draw_char(&mut self, x: i32, y: i32, c: char, color: Color) {
         self.root.set_char(x, y, c);
         self.root.set_char_foreground(x, y, color.to_tcod());
+    }
+
+    // TODO: Stop printing if edge of console is hit
+    // TODO: Add version of this with max x and y and with wrapping
+    pub fn put_str(&mut self, x: i32, y: i32, s: &str, color: Color) {
+        for (j, c) in s.chars().enumerate() {
+            self.draw_char(j as i32, y, c, color);
+        }
     }
 
     /// This function will wait for a keypress event from the user, returning the `KeyState` that
@@ -110,9 +131,21 @@ impl Console {
     {
         self.root.set_window_title(title);
     }
+
+    pub fn flush(&mut self) {
+        self.root.flush();
+    }
+
+    pub fn clear(&mut self) {
+        self.root.clear();
+    }
+
+    pub fn get_fps(&self) -> i32 {
+        tcod::system::get_fps()
+    }
 }
 
-impl fmt::Debug for Console {
+impl fmt::Debug for DrawConsole {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Console")
     }

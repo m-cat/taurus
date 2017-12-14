@@ -1,10 +1,12 @@
 //! Dungeon object.
 
-use GameLoopOutcome;
+use {GameLoopOutcome, GameResult};
 use actor::*;
-use console::Console;
+use console::DrawConsole;
 use coord::Coord;
+use database::Database;
 use defs::GameRatio;
+use failure::ResultExt;
 use game_data::GameData;
 use item::{Item, ItemStack};
 use object::Object;
@@ -40,6 +42,33 @@ impl Dungeon {
 
             actor_queue: BinaryHeap::new(),
         }
+    }
+
+    pub fn init_grid(
+        &mut self,
+        width: usize,
+        height: usize,
+        tile_data: &Database,
+    ) -> GameResult<()> {
+        self.width = width;
+        self.height = height;
+        self.tile_grid = Vec::with_capacity(width);
+
+        for _ in 0..width {
+            let mut column = Vec::with_capacity(height);
+
+            for _ in 0..height {
+                // TODO: make below more efficient
+                column.push(Tile::new(self.mut_game_data(), tile_data).context(format!(
+                    "Could not load tile:\n{}",
+                    tile_data
+                ))?);
+            }
+
+            self.tile_grid.push(column);
+        }
+
+        Ok(())
     }
 
     /// Returns the depth of the dungeon.
@@ -141,17 +170,21 @@ impl Dungeon {
     }
 
     /// Returns a random available coordinate, not currently occupied by any actors.
-    // TODO: Check for impassable tiles and avoid picking staircases.
+    // TODO: Avoid picking staircases.
+    // TODO: Fail after some number of tries.
     pub fn random_open_coord_actor(&self) -> Option<Coord> {
-        let mut occupied = true;
+        let mut available = false;
         let mut coord: Coord = Default::default();
 
-        while occupied {
+        while !available {
             coord = match self.random_coord() {
                 Some(t) => t,
                 None => return None,
             };
-            occupied = self[coord].actor.is_some();
+            let tile = &self[coord];
+            // Don't put any actors on top of objects.
+            // Should use some other function for that.
+            available = tile.actor.is_none() && tile.object.is_none() && tile.passable();
         }
 
         Some(coord)
@@ -167,7 +200,7 @@ impl Dungeon {
     }
 
     pub fn step_turn(&mut self) -> Option<GameLoopOutcome> {
-        // Get the coordinate of the next actor to move.
+        // Get the next actor.
         let mut a = match self.actor_queue.pop() {
             Some(a) => a,
             None => return Some(GameLoopOutcome::NoActors), // bad!
@@ -176,15 +209,13 @@ impl Dungeon {
         // Update the global game turn.
         self.game_data().set_turn(a.turn());
 
-        {
-            match a.act(self) {
-                ActResult::WindowClosed => return Some(GameLoopOutcome::WindowClosed),
-                ActResult::QuitGame => return Some(GameLoopOutcome::QuitGame),
-                ActResult::None => {}
-            };
+        match a.act(self) {
+            ActResult::WindowClosed => return Some(GameLoopOutcome::WindowClosed),
+            ActResult::QuitGame => return Some(GameLoopOutcome::QuitGame),
+            ActResult::None => {}
+        };
 
-            a.update_turn();
-        }
+        a.update_turn();
 
         // Push the actor back on the queue.
         self.actor_queue.push(a);
@@ -192,7 +223,7 @@ impl Dungeon {
         None
     }
 
-    pub fn next_actor(&self) -> Actor {
+    pub fn peek_actor(&self) -> Actor {
         self.actor_queue.peek().unwrap().clone()
     }
 }

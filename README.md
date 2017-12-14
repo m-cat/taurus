@@ -14,10 +14,6 @@ Taurus is not yet playable.
 
 * Get a playable demo working.
 
-## Dependencies
-
-![taurus dependencies](deps.png)
-
 ## Disclaimer
 
 I'm not responsible for anything.

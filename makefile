@@ -13,7 +13,6 @@ test:
 check:
 	cargo check
 
-#TODO: Upgrade clippy version
 clippy:
 	cargo clippy --profile=test
 
@@ -23,10 +22,6 @@ doc:
 # Display module structure
 modules:
 	cargo modules --orphans
-
-# Generate dependency graph
-graph:
-	cargo graph | dot -Tpng > deps.png
 
 # Run fuzz
 fuzz:

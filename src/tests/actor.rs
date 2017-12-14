@@ -2,25 +2,32 @@
 
 use actor::Actor;
 use coord::Coord;
+use defs::GameRatio;
 use std::rc::Rc;
 use tests::common;
 
 #[test]
 fn actor_queue() {
     let mut dungeon = common::setup_dungeon().unwrap();
+    let data = dungeon.game_data().database().get_obj("actors").unwrap();
 
-    let coord = Coord::new(0, 0);
+    let coord1 = Coord::new(0, 0);
+    let coord2 = Coord::new(1, 1);
 
-    Actor::insert_new(&mut dungeon, coord, "test").unwrap();
-    Actor::insert_new(&mut dungeon, coord, "test_slow").unwrap();
+    Actor::insert_new(&mut dungeon, coord1, &data.get_obj("test").unwrap()).unwrap();
+    Actor::insert_new(&mut dungeon, coord2, &data.get_obj("test_slow").unwrap()).unwrap();
 
-    assert_eq!(dungeon.next_actor().name(), "test");
+    assert_eq!(dungeon.peek_actor().turn(), GameRatio::new(1, 1));
+    assert_eq!(dungeon.peek_actor().name(), "test");
     let _ = dungeon.step_turn();
-    assert_eq!(dungeon.next_actor().name(), "test");
+    assert_eq!(dungeon.peek_actor().turn(), GameRatio::new(2, 1));
+    assert_eq!(dungeon.peek_actor().name(), "test");
     let _ = dungeon.step_turn();
-    assert_eq!(dungeon.next_actor().name(), "test");
+    assert_eq!(dungeon.peek_actor().turn(), GameRatio::new(3, 1));
+    assert_eq!(dungeon.peek_actor().name(), "test");
     let _ = dungeon.step_turn();
-    assert_eq!(dungeon.next_actor().name(), "test_slow");
+    assert_eq!(dungeon.peek_actor().turn(), GameRatio::new(7, 2));
+    assert_eq!(dungeon.peek_actor().name(), "test_slow");
 }
 
 // Test `set_actor_coord`.
@@ -28,6 +35,8 @@ fn actor_queue() {
 #[test]
 fn set_actor_coord() {
     let mut dungeon = common::setup_dungeon().unwrap();
+    let data = dungeon.game_data().database().get_obj("actors").unwrap();
+    let test = data.get_obj("test").unwrap();
 
     let coord1 = Coord::new(0, 0);
     let coord2 = Coord::new(1, 1);
@@ -35,8 +44,8 @@ fn set_actor_coord() {
     let coord4 = Coord::new(3, 3);
     let coord5 = Coord::new(4, 4);
 
-    Actor::insert_new(&mut dungeon, coord1, "test").unwrap();
-    Actor::insert_new(&mut dungeon, coord5, "test").unwrap();
+    Actor::insert_new(&mut dungeon, coord1, &test).unwrap();
+    Actor::insert_new(&mut dungeon, coord5, &test).unwrap();
     assert_eq!(dungeon.num_actors(), 2);
 
     dungeon.move_actor(coord1, coord2);
@@ -58,12 +67,14 @@ fn set_actor_coord() {
 #[should_panic]
 fn set_actor_coord_panic() {
     let mut dungeon = common::setup_dungeon().unwrap();
+    let data = dungeon.game_data().database().get_obj("actors").unwrap();
+    let test = data.get_obj("test").unwrap();
 
     let coord1 = Coord::new(0, 0);
     let coord2 = Coord::new(1, 1);
 
-    Actor::insert_new(&mut dungeon, coord1, "test").unwrap();
-    Actor::insert_new(&mut dungeon, coord2, "test").unwrap();
+    Actor::insert_new(&mut dungeon, coord1, &test).unwrap();
+    Actor::insert_new(&mut dungeon, coord2, &test).unwrap();
 
     // Try setting to an occupied coordinate, inducing a panic.
     dungeon.move_actor(coord1, coord2);

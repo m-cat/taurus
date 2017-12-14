@@ -3,6 +3,7 @@
 use {GameError, GameResult};
 use console::Color;
 use coord::Coord;
+use database::Database;
 use dungeon::Dungeon;
 use failure::ResultExt;
 use game_data::GameData;
@@ -30,22 +31,16 @@ impl Object {
     pub fn new(
         game_data: &GameData,
         coord: Coord,
-        name: &str,
+        data: &Database,
         active: bool,
     ) -> GameResult<Box<Object>> {
-        let data = game_data
-            .database()
-            .get_obj("objects")
-            .context("Missing database field \"objects\"")?
-            .get_obj(name)?;
-
         // Load all data from the database.
 
         let c = data.get_char("c")?;
-        let color = Color::from_str(&data.get_str("color")?)?;
+        let color = Color::from_str(data.get_str("color")?.as_str())?;
 
-        let class = ObjectClass::from_str(&data.get_str("class")?)?;
-        let material = Material::from_str(&data.get_str("material")?)?;
+        let class = ObjectClass::from_str(data.get_str("class")?.as_str())?;
+        let material = Material::from_str(data.get_str("material")?.as_str())?;
 
         Ok(Box::new(Object {
             c,
@@ -63,6 +58,10 @@ impl Object {
         self.coord
     }
 
+    pub fn set_coord(&mut self, coord: Coord) {
+        self.coord = coord
+    }
+
     /// Returns the character this object is drawn with.
     pub fn draw_c(&self) -> char {
         self.c
@@ -71,6 +70,13 @@ impl Object {
     /// Returns the color this object is drawn with.
     pub fn draw_color(&self) -> Color {
         self.color
+    }
+
+    pub fn passable(&self) -> bool {
+        match self.class {
+            ObjectClass::Door => self.active, // For doors, active means open
+            ObjectClass::Trap => true,
+        }
     }
 }
 

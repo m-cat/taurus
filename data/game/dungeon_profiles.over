@@ -1,6 +1,23 @@
 @objects: <Obj "objects.over">
+@tiles: <Obj "tiles.over">
 
-normal: {
+@normal: {
+    wall_tile: @tiles.stone_wall
+    floor_tile: @tiles.grass_floor
+
+    doors: [
+        (@objects.wooden_door 1)
+    ]
+}
+
+normal: @normal
+
+test: @normal
+
+special: {
+    wall_tile: @tiles.stone_wall
+    floor_tile: @tiles.stone_floor
+
     doors: [
         (@objects.wooden_door 1)
     ]

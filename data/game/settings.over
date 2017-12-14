@@ -1,0 +1,5 @@
+# Default settings for various game parameters.
+
+# UI Settings
+game_width: 40
+game_height: 40

@@ -1,0 +1,8 @@
+@colors: <Obj "colors.over">
+
+name: "player"
+hp: 0
+c: '@'
+color: @colors.white
+speed: 1/1
+behavior: "player"
