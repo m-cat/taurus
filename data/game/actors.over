@@ -1,4 +1,4 @@
-@colors: <Obj "colors.over">
+@colors: <"colors.over">
 
 @behaviors: {
     hostile: "hostile"
@@ -6,10 +6,12 @@
 
 # Default attributes, can be overriden per-actor.
 @default: {
-    speed: 1/1
+    speed: 1.0
+    visible: true
 }
 
 # Used in tests only
+
 @test: {
     ^: @default
     name: "test"

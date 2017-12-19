@@ -9,7 +9,12 @@ use num_traits::ToPrimitive;
 /// Rational to store current turn.
 pub type GameRatio = Ratio<u32>;
 
-/// Convert a `BigRational` into a `GameRatio`.
+/// Returns maximum GameRatio.
+pub fn gameratio_max() -> GameRatio {
+    Ratio::new(u32::max_value(), 1)
+}
+
+/// Converts a `BigRational` into a `GameRatio`.
 pub fn to_gameratio(value: BigRational) -> GameResult<GameRatio> {
     let numer = match value.numer().to_u32() {
         Some(n) => n,

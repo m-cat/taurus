@@ -83,17 +83,37 @@ pub fn draw_game(dungeon: &Dungeon) {
             let draw_x = x - view_left;
             let draw_y = y - view_top;
 
-            let draw_c;
-            let draw_color;
+            // Common case is that we draw a tile, so initialize with tile's values.
+            let mut draw_c = tile.draw_c();
+            let mut draw_color = tile.draw_color();
+
+            let mut foreground_drawn = false;
+
+            // Draw actor.
             if let Some(ref actor) = tile.actor {
-                draw_c = actor.draw_c();
-                draw_color = actor.draw_color();
-            } else if let Some(ref object) = tile.object {
-                draw_c = object.draw_c();
-                draw_color = object.draw_color();
-            } else {
-                draw_c = tile.draw_c();
-                draw_color = tile.draw_color();
+                if actor.visible() {
+                    draw_c = actor.draw_c();
+                    draw_color = actor.draw_color();
+                    foreground_drawn = true;
+                }
+            }
+
+            // Draw item stash.
+            if let Some(ref stash) = tile.stash {
+                if !foreground_drawn {
+                    draw_c = stash.draw_c();
+                    draw_color = stash.draw_color();
+                    foreground_drawn = true;
+                }
+            }
+
+            // Draw object.
+            if let Some(ref object) = tile.object {
+                let object = object.inner.borrow();
+                if !foreground_drawn && object.visible() {
+                    draw_c = object.draw_c();
+                    draw_color = object.draw_color();
+                }
             }
 
             console.draw_char(draw_x, draw_y, draw_c, draw_color);

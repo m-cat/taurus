@@ -1,3 +1,8 @@
-white: "#FFFFFF"
-green: "#00FF00"
-blue: "#0000FF"
+white: "#bdbdb3"
+light_gray: "#858585"
+gray: "#757575"
+brown: "#987654"
+
+blue: "#0000ff"
+green: "#00ff00"
+orange: "#df9522"

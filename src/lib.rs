@@ -52,18 +52,18 @@ pub type GameResult<T> = Result<T, failure::Error>;
 
 /// Runs the main game loop.
 pub fn run_game() -> GameResult<()> {
-    let game_data = GameData::new()?;
+    // Load all game data.
+    let game_data = time_if_verbose!(GameData::new()?, "Loading game data...");
 
-    let profile_data = game_data.database().get_obj("name_profiles")?.get_obj(
+    let name_profile = game_data.database().get_obj("name_profiles")?.get_obj(
         "default",
     )?;
-    let name_profile = name_gen::NameProfile::new(&profile_data)?;
 
     // Display random names. TODO: remove this
-    for _ in 1..100 {
+    for _ in 1..10 {
         println!(
             "{}",
-            name_gen::name_gen(&name_profile, constants::MAX_NAME_LEN)
+            name_gen::name_gen(&name_profile, constants::MAX_NAME_LEN)?
         );
     }
 
@@ -73,6 +73,7 @@ pub fn run_game() -> GameResult<()> {
     loop {
         // Get the current dungeon from the list.
         let dungeon = dungeon_list.current_dungeon();
+        debug_assert!(dungeon.num_actors() > 0);
 
         // Main game loop.
         match dungeon.run_loop() {
@@ -103,11 +104,11 @@ pub fn run_game() -> GameResult<()> {
 fn init_new_game(game_data: GameData) -> GameResult<DungeonList> {
     lazy_static::initialize(&console::CONSOLE);
 
-    let mut dungeon_list = DungeonList::new(constants::NUM_DUNGEONS, game_data);
-
-    // Generate game
-    generate::gen_game(&mut dungeon_list)?;
-    let depth = dungeon_list.game_data().player_depth();
+    // Generate game.
+    let mut dungeon_list = time_if_verbose!(
+        DungeonList::new(constants::NUM_DUNGEONS, game_data)?,
+        "Generating game world..."
+    );
 
     Ok(dungeon_list)
 }

@@ -2,7 +2,7 @@
 
 #![allow(unknown_lints)]
 
-use num::Integer;
+use num::{Bounded, Integer};
 use num::rational::Ratio;
 use rand;
 use rand::Rng;
@@ -48,7 +48,7 @@ pub fn rand_int<T>(x: T, y: T) -> T
 where
     T: Integer + SampleRange,
 {
-    if y > x {
+    if x < y {
         rand::thread_rng().gen_range(x, y + T::one())
     } else {
         rand::thread_rng().gen_range(y, x + T::one())
@@ -74,6 +74,15 @@ where
 {
     debug_assert!(x <= y, format!("Assert failed: dice({}, {})", x, y));
     rand_int(T::one(), y) <= x
+}
+
+/// Returns true with `x` chance, where 0 <= `x` <= 1.
+pub fn chance<T>(x: Ratio<T>) -> bool
+where
+    T: Bounded + Clone + Copy + Integer + SampleRange,
+{
+    let max = T::max_value() - T::one();
+    Ratio::new(rand_int(T::min_value(), max), max) <= x
 }
 
 #[cfg(test)]

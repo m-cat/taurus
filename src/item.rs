@@ -1,18 +1,46 @@
 //! Module containing Item structs.
 
-#[derive(Debug)]
-pub struct Item {}
+use console::Color;
+use ui::Draw;
 
-#[derive(Debug, Default)]
-pub struct ItemStack {
-    items: Vec<Item>,
+#[derive(Debug)]
+pub struct Item {
+    c: char,
+    color: Color,
 }
 
-impl ItemStack {
-    pub fn new() -> ItemStack {
-        ItemStack { items: Vec::new() }
+impl Draw for Item {
+    fn draw_c(&self) -> char {
+        self.c
     }
 
+    fn draw_color(&self) -> Color {
+        self.color
+    }
+}
+
+#[derive(Debug)]
+pub struct ItemStack {
+    item: Item,
+    amount: usize,
+}
+
+impl Draw for ItemStack {
+    fn draw_c(&self) -> char {
+        self.item.draw_c()
+    }
+
+    fn draw_color(&self) -> Color {
+        self.item.draw_color()
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct ItemStash {
+    items: Vec<ItemStack>,
+}
+
+impl ItemStash {
     pub fn len(&self) -> usize {
         self.items.len()
     }
@@ -21,11 +49,25 @@ impl ItemStack {
         self.len() == 0
     }
 
-    pub fn add(&mut self, i: Item) {
+    pub fn add(&mut self, i: ItemStack) {
         self.items.push(i);
     }
 
-    pub fn remove(&mut self, index: usize) -> Item {
+    pub fn remove(&mut self, index: usize) -> ItemStack {
         self.items.remove(index)
+    }
+
+    pub fn top(&self) -> &ItemStack {
+        &self.items[self.items.len() - 1]
+    }
+}
+
+impl Draw for ItemStash {
+    fn draw_c(&self) -> char {
+        self.top().draw_c()
+    }
+
+    fn draw_color(&self) -> Color {
+        self.top().draw_color()
     }
 }

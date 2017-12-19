@@ -5,9 +5,10 @@ use console::{Color, DrawConsole};
 use coord::Coord;
 use database::Database;
 use defs::{GameRatio, big_to_u32, to_gameratio};
-use dungeon::Dungeon;
+use dungeon::{ActResult, Dungeon};
 use failure::ResultExt;
 use game_data::GameData;
+use object::ObjectType;
 use player;
 use std::cell::RefCell;
 use std::cmp::Ordering;
@@ -17,27 +18,23 @@ use ui::Draw;
 use util::direction::CompassDirection;
 
 #[derive(Debug)]
-struct ActorInner {
-    // Generic name.
-    name: String,
-    // Unique id for this instance.
-    id: u32,
-    // Character to draw to the console with.
+pub struct ActorInner {
+    name: String, // Generic name.
+
+    id: usize, // Unique id for this instance.
     c: char,
-    // Color to draw with.
     color: Color,
 
-    // Coordinate location in level.
-    coord: Coord,
-    // Current turn.
+    coord: Coord, // Coordinate location in level.
     turn: GameRatio,
-
-    // STATS
-    hp_cur: i32, // i32 because this value can be negative!
-    hp_max: u32,
     speed: GameRatio,
 
+    // STATS
+    hp_cur: i32, // Current health. This value can be negative!
+    hp_max: u32,
+
     // COMBAT STATE
+    visible: bool,
 
     // AI ATTRIBUTES
     behavior: Behavior,
@@ -45,17 +42,18 @@ struct ActorInner {
 
 /// Actor object.
 ///
-/// An `Actor` is any entity which could conceivably "act", that is, have a turn. Only one `Actor`
-/// can occupy a tile at a time. For things like doors and traps, we have a separate struct named
-/// `Object`. An `Object` can share a tile with an `Actor`.
+/// The `Actor` struct is similar to the `Object` struct, with some key differences. Both can act;
+/// for example, a door can close by itself. However, `Object`s do not have all the extra combat
+/// attributes that `Actor`s do. Also, only one `Actor` can occupy a tile at a time, but an `Actor`
+/// can coexist with an `Object` and will always be drawn on top of it.
 #[derive(Clone, Debug)]
 pub struct Actor {
-    inner: Rc<RefCell<ActorInner>>,
+    pub inner: Rc<RefCell<ActorInner>>,
 }
 
 impl Actor {
     /// Creates a new actor at the given coordinates.
-    pub fn new(game_data: &mut GameData, coord: Coord, data: &Database) -> GameResult<Actor> {
+    pub fn new(game_data: &GameData, coord: Coord, data: &Database) -> GameResult<Actor> {
 
         // Load all data from the database.
 
@@ -63,12 +61,14 @@ impl Actor {
         let id = game_data.actor_id();
         let c = data.get_char("c")?;
         let color = Color::from_str(data.get_str("color")?.as_str())?;
-        let turn = game_data.turn();
+
+        let speed = to_gameratio(data.get_frac("speed")?)?;
 
         let hp = big_to_u32(data.get_int("hp")?)?;
         let hp_cur = hp as i32;
         let hp_max = hp;
-        let speed = to_gameratio(data.get_frac("speed")?)?;
+
+        let visible = data.get_bool("visible")?;
 
         let behavior = Behavior::from_str(data.get_str("behavior")?.as_str())?;
 
@@ -82,11 +82,13 @@ impl Actor {
                 color,
 
                 coord,
-                turn, // We update this after creating the actor.
+                turn: game_data.turn(), // We update this after creating the actor.
+                speed,
 
                 hp_cur,
                 hp_max,
-                speed,
+
+                visible,
 
                 behavior,
             })),
@@ -101,25 +103,19 @@ impl Actor {
         coord: Coord,
         actor_data: &Database,
     ) -> GameResult<()> {
-        let a = Self::new(dungeon.mut_game_data(), coord, actor_data)
-            .context(format!("Could not load actor:\n{}", actor_data))?;
+        let a = Self::new(dungeon.game_data(), coord, actor_data).context(
+            format!(
+                "Could not load actor:\n{}",
+                actor_data
+            ),
+        )?;
         dungeon.add_actor(a);
         Ok(())
     }
 
     /// Returns the actor id for this actor.
-    pub fn id(&self) -> u32 {
+    pub fn id(&self) -> usize {
         self.inner.borrow().id
-    }
-
-    /// Returns the character this actor is drawn with.
-    pub fn c(&self) -> char {
-        self.inner.borrow().c
-    }
-
-    /// Returns the color this actor is drawn with.
-    pub fn color(&self) -> Color {
-        self.inner.borrow().color
     }
 
     /// Returns the name associated with this actor.
@@ -131,11 +127,6 @@ impl Actor {
     pub fn description(&self) -> String {
         // TODO
         "test".to_string()
-    }
-
-    /// Returns this actor's base speed.
-    pub fn speed(&self) -> GameRatio {
-        self.inner.borrow().speed
     }
 
     /// Returns this actor's coordinates.
@@ -153,14 +144,20 @@ impl Actor {
         self.inner.borrow().turn
     }
 
-    /// Sets this actor's turn to a new value.
-    pub fn set_turn(&mut self, turn: GameRatio) {
-        self.inner.borrow_mut().turn = turn;
+    /// Updates this actor's turn based on its speed.
+    pub fn update_turn(&mut self) {
+        let mut inner = self.inner.borrow_mut();
+        let (turn, speed) = (inner.turn, inner.speed);
+        inner.turn = turn + speed;
     }
 
-    /// Updates this actor's turn.
-    pub fn update_turn(&mut self) {
-        self.inner.borrow_mut().turn = self.turn() + self.speed();
+    /// Returns this actor's base speed.
+    pub fn speed(&self) -> GameRatio {
+        self.inner.borrow().speed
+    }
+
+    pub fn visible(&self) -> bool {
+        self.inner.borrow().visible
     }
 
     /// Returns this actor's behavior value.
@@ -194,47 +191,80 @@ impl Actor {
     // Tries to move to the specified coordinate. Returns true if the actor uses up a turn.
     fn try_move_to(&mut self, dungeon: &mut Dungeon, coord: Coord) -> (ActResult, bool) {
         let passable = {
-            let tile = &dungeon[coord];
+            let tile = &mut dungeon[coord];
+            let passable = tile.passable();
 
             if let Some(ref _actor) = tile.actor {
                 false
-            } else if let Some(ref object) = tile.object {
-                if !object.passable() {
-                    false
-                } else {
-                    tile.passable()
+            } else if let Some(ref mut object) = tile.object {
+                let mut object = object.inner.borrow_mut();
+                match object.object_type() {
+                    ObjectType::Door => {
+                        if object.active() {
+                            // Open door.
+                            object.set_active(false);
+                            false
+                        } else {
+                            true
+                        }
+                    }
+                    _ => passable,
                 }
             } else {
-                tile.passable()
+                passable
             }
         };
 
         if passable {
             self.move_to(dungeon, coord);
-            (ActResult::None, false)
+            (ActResult::None, true)
         } else {
             (ActResult::None, false)
         }
     }
 
     // Moves to the specified coordinate unconditionally.
-    pub fn move_to(&mut self, dungeon: &mut Dungeon, coord: Coord) {
-        if dungeon[coord].actor.is_some() {
-            panic!("Moving to an occupied tile");
-        }
+    pub fn move_to(&mut self, dungeon: &mut Dungeon, new_coord: Coord) {
+        assert!(
+            dungeon[new_coord].actor.is_none(),
+            format!("Moving to an occupied tile at {}", new_coord)
+        );
 
-        let mut a = dungeon[self.coord()].actor.take().unwrap();
-        a.set_coord(coord);
-        dungeon[coord].actor = Some(a);
+        dungeon.move_actor(self.coord(), new_coord);
     }
 }
 
 impl Draw for Actor {
     fn draw_c(&self) -> char {
-        self.c()
+        self.inner.borrow().c
     }
     fn draw_color(&self) -> Color {
-        self.color()
+        self.inner.borrow().color
+    }
+}
+
+// Traits for priority queue
+
+impl Eq for Actor {}
+impl PartialEq for Actor {
+    /// Returns a1 == a2 iff their `turn` values are equal.
+    fn eq(&self, other: &Self) -> bool {
+        self.turn() == other.turn()
+    }
+}
+
+impl Ord for Actor {
+    /// Compares actors by turn.
+    /// Note that the ordering is flipped so the priority queue becomes a min-heap.
+    fn cmp(&self, other: &Self) -> Ordering {
+        // Since we're comparing floating values here, we have to use partial_cmp.
+        // We should never do an invalid comparison here, so this is okay.
+        other.turn().partial_cmp(&self.turn()).unwrap()
+    }
+}
+impl PartialOrd for Actor {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 
@@ -254,52 +284,21 @@ impl FromStr for Behavior {
     type Err = GameError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        use self::Behavior::*;
+
         Ok(match s {
-            "player" => Behavior::Player,
-            "friendly" => Behavior::Friendly,
-            "wary" => Behavior::Wary,
-            "defensive" => Behavior::Defensive,
-            "hostile" => Behavior::Hostile,
-            "hunting" => Behavior::Hunting,
+            "player" => Player,
+            "friendly" => Friendly,
+            "wary" => Wary,
+            "defensive" => Defensive,
+            "hostile" => Hostile,
+            "hunting" => Hunting,
             _ => {
                 return Err(GameError::ConversionError {
                     val: s.into(),
-                    msg: "Invalid actor behavior",
+                    msg: "Invalid behavior value",
                 })
             }
         })
-    }
-}
-
-/// Enum of possible results of an actor action.
-#[derive(Debug, PartialEq)]
-pub enum ActResult {
-    WindowClosed,
-    QuitGame,
-    None,
-}
-
-// Traits for priority queue
-
-impl Eq for Actor {}
-impl PartialEq for Actor {
-    /// Returns a1 == a2 iff their `turn` values are equal.
-    fn eq(&self, other: &Self) -> bool {
-        self.turn() == other.turn()
-    }
-}
-
-impl Ord for Actor {
-    /// Compares CoordTurns (and actors by proxy) by turn.
-    /// Note that the ordering is flipped so the priority queue becomes a min-heap.
-    fn cmp(&self, other: &Self) -> Ordering {
-        // Since we're comparing floating values here, we have to use partial_cmp.
-        // We should never do an invalid comparison here, so this is okay
-        other.turn().partial_cmp(&self.turn()).unwrap()
-    }
-}
-impl PartialOrd for Actor {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
     }
 }

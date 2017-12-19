@@ -3,7 +3,7 @@
 //! This module is designed so that it can be replaced with a different console
 //! implementation if necessary - it is an abstraction over tcod.
 
-pub use tcod::input::{Key, KeyCode};
+pub use tcod::input::{self, Event, EventFlags, Key, KeyCode};
 
 use GameError;
 use constants;
@@ -14,6 +14,7 @@ use std::str::FromStr;
 use std::sync::Mutex;
 use tcod;
 use tcod::{Console, FontLayout, FontType, Renderer, RootConsole};
+use tcod::input::check_for_event;
 use tcod::Color as TcodColor;
 use util::convert::color_code_to_rgb;
 
@@ -122,6 +123,10 @@ impl DrawConsole {
     /// If `flush` is false, it returns the first element from it.
     pub fn wait_for_keypress(&mut self, flush: bool) -> Key {
         self.root.wait_for_keypress(flush)
+    }
+
+    pub fn check_for_event(&self, event_mask: EventFlags) -> Option<(EventFlags, Event)> {
+        check_for_event(event_mask)
     }
 
     /// Sets the main window's title to `title`.

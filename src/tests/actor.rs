@@ -6,30 +6,6 @@ use defs::GameRatio;
 use std::rc::Rc;
 use tests::common;
 
-#[test]
-fn actor_queue() {
-    let mut dungeon = common::setup_dungeon().unwrap();
-    let data = dungeon.game_data().database().get_obj("actors").unwrap();
-
-    let coord1 = Coord::new(0, 0);
-    let coord2 = Coord::new(1, 1);
-
-    Actor::insert_new(&mut dungeon, coord1, &data.get_obj("test").unwrap()).unwrap();
-    Actor::insert_new(&mut dungeon, coord2, &data.get_obj("test_slow").unwrap()).unwrap();
-
-    assert_eq!(dungeon.peek_actor().turn(), GameRatio::new(1, 1));
-    assert_eq!(dungeon.peek_actor().name(), "test");
-    let _ = dungeon.step_turn();
-    assert_eq!(dungeon.peek_actor().turn(), GameRatio::new(2, 1));
-    assert_eq!(dungeon.peek_actor().name(), "test");
-    let _ = dungeon.step_turn();
-    assert_eq!(dungeon.peek_actor().turn(), GameRatio::new(3, 1));
-    assert_eq!(dungeon.peek_actor().name(), "test");
-    let _ = dungeon.step_turn();
-    assert_eq!(dungeon.peek_actor().turn(), GameRatio::new(7, 2));
-    assert_eq!(dungeon.peek_actor().name(), "test_slow");
-}
-
 // Test `set_actor_coord`.
 // TODO: Implement the "test" actor, un-ignore this test
 #[test]
@@ -67,6 +43,7 @@ fn set_actor_coord() {
 #[should_panic]
 fn set_actor_coord_panic() {
     let mut dungeon = common::setup_dungeon().unwrap();
+
     let data = dungeon.game_data().database().get_obj("actors").unwrap();
     let test = data.get_obj("test").unwrap();
 

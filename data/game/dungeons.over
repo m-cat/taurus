@@ -1,4 +1,4 @@
-@profiles: <Obj "dungeon_profiles.over">
+@profiles: <"dungeon_profiles.over">
 
 dungeons: [
     # Dungeon 1

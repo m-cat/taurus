@@ -1,6 +1,6 @@
-@colors: <Obj "colors.over">
+@colors: <"colors.over">
 
-@classes: {
+@types: {
     door: "door"
     trap: "trap"
 }
@@ -11,16 +11,43 @@
 }
 
 @default: {
+    # Most objects do not act at this time.
+    speed: 999_999
 }
 
 @door: {
     ^: @default
+    type: @types.door
+
     c: '+'
     color: @colors.white
-    class: @classes.door
+
+    speed: 1.0
 }
 
 wooden_door: {
     ^: @door
+    name: "wooden door"
     material: @materials.wood
+}
+
+# Used in tests only
+
+@test: {
+    ^: @default
+    name: "test"
+
+    type: @types.door
+    material: @materials.wood
+
+    c: '?'
+    color: @colors.white
+}
+
+test: @test
+
+test_slow: {
+    ^: @test
+    name: "test_slow"
+    speed: 3.7
 }

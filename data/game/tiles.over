@@ -1,7 +1,8 @@
-@colors: <Obj "colors.over">
+@colors: <"colors.over">
 
 # Default attributes, can be overriden per-tile
 @default: {
+    staircase: "none"
 }
 
 # Used in tests only
@@ -18,7 +19,7 @@ test: {
 stone_wall: {
     ^: @wall
     name: "stone wall"
-    color: @colors.white
+    color: @colors.gray
 }
 
 @floor: {
@@ -31,11 +32,17 @@ stone_wall: {
 stone_floor: {
     ^: @floor
     name: "stone floor"
-    color: @colors.white
+    color: @colors.light_gray
 }
 
 grass_floor: {
     ^: @floor
     name: "grass floor"
     color: @colors.green
+}
+
+dirt_floor: {
+    ^: @floor
+    name: "dirt floor"
+    color: @colors.brown
 }

@@ -5,43 +5,64 @@ use actor::*;
 use console::DrawConsole;
 use coord::Coord;
 use database::Database;
-use defs::GameRatio;
+use defs::{GameRatio, gameratio_max};
+use error::GameError;
 use failure::ResultExt;
 use game_data::GameData;
+use generate::{gen_dungeon, gen_dungeon_list};
 use item::{Item, ItemStack};
 use object::Object;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
+use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 use std::rc::Rc;
+use std::str::FromStr;
 use tile::Tile;
 use util::rand::Choose;
 
 /// Struct containing a single depth of the dungeon.
 /// This struct is also responsible for running the actor priority queue.
 pub struct Dungeon {
-    depth: usize,
     game_data: GameData,
+
+    pub danger_level: u32,
+    pub dungeon_type: DungeonType,
 
     tile_grid: Vec<Vec<Tile>>, // indexed x,y
     width: usize,
     height: usize,
 
+    // Not serialized.
     actor_queue: BinaryHeap<Actor>,
+    object_queue: BinaryHeap<Object>,
 }
 
 impl Dungeon {
-    pub fn new(depth: usize, game_data: GameData) -> Dungeon {
-        Dungeon {
-            depth: depth,
-            game_data: game_data,
+    pub fn new(
+        game_data: &GameData,
+        danger_level: u32,
+        profile_data: &Database,
+    ) -> GameResult<Dungeon> {
+        let dungeon_type = DungeonType::from_str(&profile_data.get_str("type")?)?;
+
+        let mut dungeon = Dungeon {
+            game_data: game_data.clone(),
+
+            danger_level,
+            dungeon_type,
 
             tile_grid: Vec::with_capacity(0),
             width: 0,
             height: 0,
 
             actor_queue: BinaryHeap::new(),
-        }
+            object_queue: BinaryHeap::new(),
+        };
+
+        gen_dungeon(&mut dungeon, &profile_data)?;
+
+        Ok(dungeon)
     }
 
     pub fn init_grid(
@@ -59,7 +80,7 @@ impl Dungeon {
 
             for _ in 0..height {
                 // TODO: make below more efficient
-                column.push(Tile::new(self.mut_game_data(), tile_data).context(format!(
+                column.push(Tile::new(self.game_data(), tile_data).context(format!(
                     "Could not load tile:\n{}",
                     tile_data
                 ))?);
@@ -71,19 +92,9 @@ impl Dungeon {
         Ok(())
     }
 
-    /// Returns the depth of the dungeon.
-    pub fn depth(&self) -> usize {
-        self.depth
-    }
-
     /// Returns a reference to the game data.
     pub fn game_data(&self) -> &GameData {
         &self.game_data
-    }
-
-    /// Returns a mutable reference to the game data.
-    pub fn mut_game_data(&mut self) -> &mut GameData {
-        &mut self.game_data
     }
 
     /// Returns the width of the tile grid.
@@ -102,17 +113,18 @@ impl Dungeon {
     }
 
     /// Adds actor to both the tile grid and the priority queue.
-    pub fn add_actor(&mut self, a: Actor) {
-        let coord = a.coord();
+    pub fn add_actor(&mut self, actor: Actor) {
+        let coord = actor.coord();
         debug_assert!(self[coord].actor.is_none()); // Actors can't share tiles.
 
-        self.actor_queue.push(a.clone()); // Add actor to queue.
-        self[coord].actor = Some(a); // Add actor to grid.
+        self.actor_queue.push(actor.clone()); // Add actor to queue.
+        self[coord].actor = Some(actor); // Add actor to grid.
     }
 
     pub fn move_actor(&mut self, old_coord: Coord, new_coord: Coord) {
         let mut actor = self[old_coord].actor.take().unwrap();
         actor.set_coord(new_coord);
+
         assert!(self[new_coord].actor.is_none());
         self[new_coord].actor = Some(actor);
     }
@@ -135,21 +147,30 @@ impl Dungeon {
     }
 
     /// Inserts an object into the tile grid.
-    pub fn add_object(&mut self, object: Box<Object>) {
+    pub fn add_object(&mut self, object: Object) {
         let coord = object.coord();
-        debug_assert!(self[coord].object.is_none());
+        debug_assert!(self[coord].object.is_none()); // Objects can't share tiles.
 
+        self.object_queue.push(object.clone());
         self[coord].object = Some(object);
     }
 
-    /// Removes an object from the tile grid.
-    pub fn remove_object(&mut self, coord: Coord) -> Option<Box<Object>> {
-        self[coord].object.take()
+    pub fn move_object(&mut self, old_coord: Coord, new_coord: Coord) {
+        let mut object = self[old_coord].object.take().unwrap();
+        object.set_coord(new_coord);
+
+        assert!(self[new_coord].object.is_none());
+        self[new_coord].object = Some(object);
     }
 
-    /// Returns the amount of stashes in a stack.
-    pub fn stack_size(&self, coord: Coord) -> usize {
-        match self[coord].stack {
+    /// Removes an object from the tile grid.
+    pub fn remove_object(&mut self, coord: Coord) -> Object {
+        self[coord].object.take().unwrap()
+    }
+
+    /// Returns the amount of stacks in a stash.
+    pub fn stash_size(&self, coord: Coord) -> usize {
+        match self[coord].stash {
             Some(ref s) => s.len(),
             None => 0,
         }
@@ -190,41 +211,95 @@ impl Dungeon {
         Some(coord)
     }
 
-    /// Runs the main game loop by iterating over the actor priority queue
+    /// Runs the main game loop by iterating over the actor/object priority queues.
     pub fn run_loop(&mut self) -> GameLoopOutcome {
+        let mut actor_turn = None;
+        let mut object_turn = None;
+
         loop {
-            if let Some(outcome) = self.step_turn() {
-                return outcome;
+            match self.step_turn(&mut actor_turn, &mut object_turn) {
+                GameLoopOutcome::None => (), // Continue game loop.
+                outcome => return outcome,
             }
         }
     }
 
-    pub fn step_turn(&mut self) -> Option<GameLoopOutcome> {
-        // Get the next actor.
-        let mut a = match self.actor_queue.pop() {
-            Some(a) => a,
-            None => return Some(GameLoopOutcome::NoActors), // bad!
-        };
+    /// Do a single iteration over either the actor or the object priority queue.
+    pub fn step_turn(
+        &mut self,
+        actor_turn: &mut Option<GameRatio>,
+        object_turn: &mut Option<GameRatio>,
+    ) -> GameLoopOutcome {
+        // Determine whether an actor or an object is about to move.
+        if actor_turn.is_none() {
+            *actor_turn = Some(match self.actor_queue.peek() {
+                Some(ref actor) => actor.turn(),
+                None => return GameLoopOutcome::NoActors,
+            })
+        }
+        if object_turn.is_none() {
+            *object_turn = Some(match self.object_queue.peek() {
+                Some(ref object) => {
+                    object.turn()
+                }
+                None => gameratio_max(),
+            })
+        }
 
-        // Update the global game turn.
-        self.game_data().set_turn(a.turn());
+        if actor_turn.unwrap() <= object_turn.unwrap() {
+            // Actor acting.
 
-        match a.act(self) {
-            ActResult::WindowClosed => return Some(GameLoopOutcome::WindowClosed),
-            ActResult::QuitGame => return Some(GameLoopOutcome::QuitGame),
-            ActResult::None => {}
-        };
+            // Get the next actor.
+            let mut actor = match self.actor_queue.pop() {
+                Some(a) => a,
+                None => return GameLoopOutcome::NoActors,
+            };
 
-        a.update_turn();
+            // Update the global game turn.
+            self.game_data().set_turn(actor_turn.unwrap());
 
-        // Push the actor back on the queue.
-        self.actor_queue.push(a);
+            match actor.act(self) {
+                ActResult::WindowClosed => return GameLoopOutcome::WindowClosed,
+                ActResult::QuitGame => return GameLoopOutcome::QuitGame,
+                ActResult::None => (),
+            };
 
-        None
+            actor.update_turn();
+            *actor_turn = None;
+
+            // Push the actor back on the queue.
+            self.actor_queue.push(actor);
+        } else {
+            // Object acting.
+
+            let mut object = match self.object_queue.pop() {
+                Some(o) => o,
+                None => panic!("Logic error"), // No objects, yet this branch was selected.
+            };
+
+            // Update the global game turn.
+            self.game_data().set_turn(object_turn.unwrap());
+
+            match object.act(self) {
+                _ => (),
+            };
+
+            object.update_turn();
+            *object_turn = None;
+
+            // Push the object back on the queue.
+            self.object_queue.push(object);
+        }
+
+        GameLoopOutcome::None
     }
 
     pub fn peek_actor(&self) -> Actor {
         self.actor_queue.peek().unwrap().clone()
+    }
+
+    pub fn peek_object(&self) -> Object {
+        self.object_queue.peek().unwrap().clone()
     }
 }
 
@@ -250,8 +325,22 @@ impl Index<Coord> for Dungeon {
         &self[coord.x as usize][coord.y as usize]
     }
 }
+impl<'a> Index<&'a Coord> for Dungeon {
+    type Output = Tile;
+
+    fn index(&self, coord: &Coord) -> &Tile {
+        &self[coord.x as usize][coord.y as usize]
+    }
+}
+
 impl IndexMut<Coord> for Dungeon {
     fn index_mut(&mut self, coord: Coord) -> &mut Tile {
+        &mut self[coord.x as usize][coord.y as usize]
+    }
+}
+
+impl<'a> IndexMut<&'a Coord> for Dungeon {
+    fn index_mut(&mut self, coord: &Coord) -> &mut Tile {
         &mut self[coord.x as usize][coord.y as usize]
     }
 }
@@ -259,20 +348,20 @@ impl IndexMut<Coord> for Dungeon {
 /// List of dungeons.
 pub struct DungeonList {
     dungeon_list: Vec<Dungeon>,
+    pub current_depth: usize,
 }
 
 impl DungeonList {
     /// Creates a new `DungeonList` with `n` dungeons.
-    pub fn new(num_dungeons: usize, game_data: GameData) -> DungeonList {
-        let mut dungeon_list = DungeonList { dungeon_list: Vec::new() };
+    pub fn new(num_dungeons: usize, game_data: GameData) -> GameResult<DungeonList> {
+        let mut dungeon_list = DungeonList {
+            dungeon_list: Vec::with_capacity(num_dungeons),
+            current_depth: 0,
+        };
 
-        let game_data = game_data;
+        gen_dungeon_list(&mut dungeon_list, game_data, num_dungeons)?;
 
-        for n in 0..num_dungeons {
-            dungeon_list.push(Dungeon::new(n, game_data.clone()));
-        }
-
-        dungeon_list
+        Ok(dungeon_list)
     }
 
     /// Returns a reference to the game data.
@@ -280,14 +369,9 @@ impl DungeonList {
         self.dungeon_list[0].game_data()
     }
 
-    /// Returns a mutable reference to the game data.
-    pub fn mut_game_data(&mut self) -> &mut GameData {
-        self.dungeon_list[0].mut_game_data()
-    }
-
     /// Returns a mutable reference to the current dungeon.
     pub fn current_dungeon(&mut self) -> &mut Dungeon {
-        let index = self.game_data().player_depth();
+        let index = self.current_depth;
         &mut self.dungeon_list[index]
     }
 }
@@ -304,4 +388,37 @@ impl DerefMut for DungeonList {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.dungeon_list
     }
+}
+
+pub enum DungeonType {
+    Room,
+    /// Used in tests.
+    Empty,
+}
+
+impl FromStr for DungeonType {
+    type Err = GameError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        use self::DungeonType::*;
+
+        Ok(match s {
+            "room" => Room,
+            "empty" => Empty,
+            _ => {
+                return Err(GameError::ConversionError {
+                    val: s.into(),
+                    msg: "Invalid dungeon type",
+                })
+            }
+        })
+    }
+}
+
+/// Enum of possible results of an action.
+#[derive(Debug, PartialEq)]
+pub enum ActResult {
+    WindowClosed,
+    QuitGame,
+    None,
 }

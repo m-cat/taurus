@@ -2,9 +2,11 @@ human: {
     min_seqs: 3
     max_seqs: 6
 
-    start_consonants: ("bdfghjklmnprsstvwz" .4)
-    start_dconsonants: ("br"+"ch"+"cl"+"tr"+"th"+"dr"+"sl"+"ph"+"bl"+"cr"+"fr"+"gr"+"st"+"vr"+"wh"+"wr" .4)
-    start_tconsonants: ("str"+"thr" .12)
+    vowel_start: 1/3
+
+    start_consonants: ("bdfghjklmnprsstvwz" .5)
+    start_dconsonants: ("br"+"ch"+"cl"+"tr"+"th"+"dr"+"sl"+"ph"+"bl"+"cr"+"fr"+"gr"+"st"+"vr"+"wh"+"wr" .35)
+    start_tconsonants: ("str"+"thr" .15)
     mid_consonants: ("bdfgklmnprsstvx" .6)
     mid_dconsonants: ("br"+"ch"+"ct"+"tr"+"th"+"gh"+"dr"+"mm"+"tt"+"ll"+"st"+"qu" .3)
     mid_tconsonants: (start_tconsonants.0 .1)
@@ -21,6 +23,8 @@ human: {
 elf: {
     min_seqs: 4
     max_seqs: 8
+
+    vowel_start: 1/2
 
     start_consonants: ("bdfghjklmnprsstvz" .4)
     start_dconsonants: ("br"+"ch"+"cl"+"tr"+"th"+"dr"+"sl"+"ph"+"bl"+"cr"+"fr"+"gr"+"st"+"vr"+"wh"+"wr" .4)
@@ -41,6 +45,8 @@ elf: {
 dwarf: {
     min_seqs: 3
     max_seqs: 5
+
+    vowel_start: 1/4
 
     start_consonants: ("bdfgghklmnprsstvwz" .4)
     start_dconsonants: ("kr"+"br"+"ch"+"cl"+"tr"+"th"+"dr"+"sl"+"ph"+"bl"+"cr"+"fr"+"gr"+"st"+"qu"+"vr"+"wh"+"wr" .4)

@@ -1,20 +1,31 @@
-@objects: <Obj "objects.over">
-@tiles: <Obj "tiles.over">
+@objects: <"objects.over">
+@tiles: <"tiles.over">
 
-@normal: {
+@types: {
+    room: "room"
+    empty: "empty"
+}
+
+normal: {
+    type: @types.room
+
     wall_tile: @tiles.stone_wall
-    floor_tile: @tiles.grass_floor
+    floor_tile: @tiles.dirt_floor
 
     doors: [
         (@objects.wooden_door 1)
     ]
 }
 
-normal: @normal
+test: {
+    type: @types.empty
 
-test: @normal
+    wall_tile: @tiles.stone_wall
+}
 
 special: {
+    type: @types.room
+
     wall_tile: @tiles.stone_wall
     floor_tile: @tiles.stone_floor
 

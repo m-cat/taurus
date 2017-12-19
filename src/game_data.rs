@@ -42,13 +42,11 @@ struct GameDataInner {
 
     /// Reference to the player.
     player: Option<Actor>,
-    /// Current depth of the player, indexed starting at 1.
-    player_depth: Option<usize>,
 
     /// Current global game turn.
     turn: GameRatio,
     /// Number of actors created, used for assigning unique id's.
-    num_actors: u32,
+    num_actors: usize,
 
     /// Map of tile names to tile info structs.
     tile_info_map: HashMap<String, Rc<TileInfo>>,
@@ -75,7 +73,6 @@ impl GameData {
                 message_deque: VecDeque::with_capacity(constants::MESSAGE_DEQUE_SIZE),
 
                 player: None,
-                player_depth: None,
 
                 turn: GameRatio::zero(),
                 num_actors: 0,
@@ -98,19 +95,6 @@ impl GameData {
     /// Adds a string to the message deque.
     pub fn add_message(&self, message: &str) {} // TODO. Should pop_front when queue gets too big
 
-    /// Gets the current depth that the player is on.
-    ///
-    /// # Panics
-    /// If the player doesn't exist.
-    pub fn player_depth(&self) -> usize {
-        self.inner.borrow().player_depth.unwrap()
-    }
-
-    /// Sets the player depth.
-    pub fn set_player_depth(&mut self, value: usize) {
-        self.inner.borrow_mut().player_depth = Some(value);
-    }
-
     /// Gets a reference to the player.
     ///
     /// # Panics
@@ -120,7 +104,7 @@ impl GameData {
         inner.player.clone().unwrap()
     }
 
-    pub fn set_player(&mut self, player: Actor) {
+    pub fn set_player(&self, player: Actor) {
         self.inner.borrow_mut().player = Some(player)
     }
 
@@ -135,7 +119,7 @@ impl GameData {
     }
 
     /// Generates a new unique actor id.
-    pub fn actor_id(&mut self) -> u32 {
+    pub fn actor_id(&self) -> usize {
         let mut inner = self.inner.borrow_mut();
         let id = inner.num_actors;
         inner.num_actors += 1;
@@ -148,7 +132,7 @@ impl GameData {
     }
 
     /// Adds `tile_info` to the list and returns a reference to it.
-    pub fn add_tile_info(&mut self, tile_info: TileInfo, name: String) -> Rc<TileInfo> {
+    pub fn add_tile_info(&self, tile_info: TileInfo, name: String) -> Rc<TileInfo> {
         let info_ref = Rc::new(tile_info);
         match self.inner.borrow_mut().tile_info_map.insert(
             name,

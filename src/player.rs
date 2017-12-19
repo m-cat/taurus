@@ -1,11 +1,11 @@
 //! Module for player-specific logic.
 
 use GameResult;
-use actor::{ActResult, Actor, Behavior};
-use console::{self, CONSOLE, DrawConsole, Key};
+use actor::{Actor, Behavior};
+use console::*;
 use console::KeyCode::*;
 use coord::Coord;
-use dungeon::Dungeon;
+use dungeon::{ActResult, Dungeon};
 use game_data::GameData;
 use std::rc::Rc;
 use ui;
@@ -14,22 +14,31 @@ use util::direction::CompassDirection;
 /// Acts out the player's turn.
 pub fn player_act(player: &mut Actor, dungeon: &mut Dungeon) -> ActResult {
     let mut end_turn = false;
+    let mut input_flags = EventFlags::empty();
+    input_flags.insert(input::KEY);
+    input_flags.insert(input::MOUSE_PRESS);
 
     // While user input is not a game action...
     while !end_turn {
-        // Check if the window was closed by the user.
-        if CONSOLE.lock().unwrap().window_closed() {
-            return ActResult::WindowClosed;
-        } // TODO: how does window_closed work?
-
         // Draw the game and UI to the screen.
         ui::draw_all(dungeon);
 
         // Wait for user input.
-        let key = CONSOLE.lock().unwrap().wait_for_keypress(true);
+        let console = CONSOLE.lock().unwrap();
+        let (flags, event) = loop {
+            // Check if the window was closed by the user.
+            if console.window_closed() {
+                return ActResult::WindowClosed;
+            }
+
+            match console.check_for_event(input_flags) {
+                Some((flags, event)) => break (flags, event),
+                None => (),
+            }
+        };
 
         // Respond to user input.
-        let (result, end) = player_process_key(player, dungeon, key);
+        let (result, end) = player_process_event(player, dungeon, flags, event);
         if result != ActResult::None {
             return result;
         }
@@ -40,27 +49,33 @@ pub fn player_act(player: &mut Actor, dungeon: &mut Dungeon) -> ActResult {
     ActResult::None
 }
 
-// Processes input key. Returns true if the player uses up a turn.
-pub fn player_process_key(
+// Processes input event. Returns true if the player uses up a turn.
+pub fn player_process_event(
     player: &mut Actor,
     dungeon: &mut Dungeon,
-    key: Key,
+    flags: EventFlags,
+    event: Event,
 ) -> (ActResult, bool) {
-    if key.code != NoKey {
-        match key.code {
-            Left => return player.try_move_dir(dungeon, CompassDirection::W),
-            Up => return player.try_move_dir(dungeon, CompassDirection::N),
-            Right => return player.try_move_dir(dungeon, CompassDirection::E),
-            Down => return player.try_move_dir(dungeon, CompassDirection::S),
+    match event {
+        Event::Key(key) => {
+            if flags.contains(input::KEY_PRESS) {
+                match key.code {
+                    Left => return player.try_move_dir(dungeon, CompassDirection::W),
+                    Up => return player.try_move_dir(dungeon, CompassDirection::N),
+                    Right => return player.try_move_dir(dungeon, CompassDirection::E),
+                    Down => return player.try_move_dir(dungeon, CompassDirection::S),
 
-            Escape => return (ActResult::QuitGame, false),
+                    Escape => return (ActResult::QuitGame, false),
 
-            _ => (),
+                    _ => (),
+                }
+            } else {
+                match key.printable {
+                    _ => (),
+                }
+            }
         }
-    } else {
-        match key.printable {
-            _ => (),
-        }
+        Event::Mouse(_) => (),
     }
 
     (ActResult::None, false)
