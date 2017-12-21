@@ -1,6 +1,5 @@
 //! Module containing dungeon generation algorithms.
 
-mod room;
 mod util;
 
 use GameResult;
@@ -13,7 +12,6 @@ use dungeon::{Dungeon, DungeonList, DungeonType};
 use error::{GameError, err_unexpected};
 use failure::{Fail, ResultExt};
 use game_data::GameData;
-use generate::room::Room;
 use generate::util::*;
 use object::Object;
 use std::{fmt, thread, time};
@@ -25,6 +23,7 @@ use util::direction::CardinalDirection;
 use util::direction::CardinalDirection::*;
 use util::math::{min_max, overlaps};
 use util::rand::{Choose, dice, rand_int, rand_ratio};
+use util::rectangle::Rectangle;
 
 /// Generates a connected series of dungeons.
 pub fn gen_dungeon_list(
@@ -134,13 +133,13 @@ pub fn gen_dungeon_empty(dungeon: &mut Dungeon, profile: &Database) -> GameResul
 /// Generates a dungeon level using the "room method".
 pub fn gen_dungeon_room(dungeon: &mut Dungeon, profile: &Database) -> GameResult<()> {
     let game_data = dungeon.game_data().clone();
-    let mut room_list: Vec<Room> = Vec::new();
+    let mut room_list: Vec<Rectangle> = Vec::new();
     let mut object_list: Vec<Object> = Vec::new();
     let direction_list = vec![N, E, S, W];
     let goal_num_rooms = gen_num_rooms();
 
     // Generate the initial room.
-    room_list.push(Room::from_dimensions(
+    room_list.push(Rectangle::from_dimensions(
         0,
         0,
         gen_room_width(),
@@ -188,7 +187,7 @@ pub fn gen_dungeon_room(dungeon: &mut Dungeon, profile: &Database) -> GameResult
         };
         dungeon[coord].set_tile_info(
             &game_data,
-            &profile.get_obj("floor_tile")?,
+            &profile.get_obj("floor_tile")?, // TODO: only get this once
         )?;
         dungeon.add_object(object);
     }
@@ -199,12 +198,12 @@ pub fn gen_dungeon_room(dungeon: &mut Dungeon, profile: &Database) -> GameResult
 /// Generates a room adjacent to `room`, or returns `None`.
 fn gen_room_adjacent(
     dungeon: &mut Dungeon,
-    room: &Room,
+    room: &Rectangle,
     direction: &CardinalDirection,
-    room_list: &[Room],
+    room_list: &[Rectangle],
     object_list: &mut Vec<Object>,
     profile: &Database,
-) -> GameResult<Option<Room>> {
+) -> GameResult<Option<Rectangle>> {
     let top: i32;
     let left: i32;
 
@@ -229,7 +228,7 @@ fn gen_room_adjacent(
             top = room.bottom + 2;
         }
     };
-    let new_room = Room::from_dimensions(left, top, width as usize, height as usize);
+    let new_room = Rectangle::from_dimensions(left, top, width as usize, height as usize);
 
     if check_room_free(&new_room, room_list) {
         let door = gen_room_adjacent_door(dungeon, room, &new_room, direction, profile)?;
@@ -240,11 +239,11 @@ fn gen_room_adjacent(
     }
 }
 
-/// Generates a door between two adjacent `Room`s in given `Direction`.
+/// Generates a door between two adjacent rooms in given `Direction`.
 fn gen_room_adjacent_door(
     dungeon: &mut Dungeon,
-    room: &Room,
-    new_room: &Room,
+    room: &Rectangle,
+    new_room: &Rectangle,
     direction: &CardinalDirection,
     profile: &Database,
 ) -> GameResult<Object> {
@@ -291,15 +290,15 @@ fn gen_room_adjacent_door(
         .context(format!("Could not load object:\n{}", door))?)
 }
 
-/// Checks if `room` does not collide with any `Room`s in `room_list`.
-fn check_room_free(room: &Room, room_list: &[Room]) -> bool {
+/// Checks if `room` does not collide with any rooms in `room_list`.
+fn check_room_free(room: &Rectangle, room_list: &[Rectangle]) -> bool {
     !room_list.iter().any(|other| room.overlaps(other))
 }
 
-/// Initializes `dungeon`'s dungeon grid based on the `Room`s in `room_list`.
+/// Initializes `dungeon`'s dungeon grid based on the rooms in `room_list`.
 fn init_dungeon_from_rooms(
     dungeon: &mut Dungeon,
-    room_list: &[Room],
+    room_list: &[Rectangle],
     profile: &Database,
 ) -> GameResult<(i32, i32)> {
     let (mut min_left, mut min_top, mut max_right, mut max_bottom) = (0, 0, 0, 0);
@@ -349,17 +348,17 @@ fn init_dungeon_from_rooms(
     Ok((dx, dy))
 }
 
-/// Generates the number of `Room`s for the dungeon level specified by `index`.
+/// Generates the number of rooms for the dungeon level specified by `index`.
 fn gen_num_rooms() -> usize {
     20 // TODO
 }
 
-/// Generates a random width for a `Room` based on the dungeon level specified by `index`.
+/// Generates a random width for a room based on the dungeon level specified by `index`.
 fn gen_room_width() -> usize {
     rand_int(2, 5) // TODO
 }
 
-/// Generates a random height for a `Room` based on the dungeon level specified by `index`.
+/// Generates a random height for a room based on the dungeon level specified by `index`.
 fn gen_room_height() -> usize {
     rand_int(2, 5) // TODO
 }

@@ -14,6 +14,19 @@ pub fn gameratio_max() -> GameRatio {
     Ratio::new(u32::max_value(), 1)
 }
 
+pub fn to_f32(value: BigRational) -> GameResult<f32> {
+    let numer = match value.numer().to_f32() {
+        Some(n) => n,
+        None => return err_convert(value, "Numerator too big"),
+    };
+    let denom = match value.denom().to_f32() {
+        Some(n) => n,
+        None => return err_convert(value, "Denominator too big"),
+    };
+
+    Ok(numer / denom)
+}
+
 /// Converts a `BigRational` into a `GameRatio`.
 pub fn to_gameratio(value: BigRational) -> GameResult<GameRatio> {
     let numer = match value.numer().to_u32() {

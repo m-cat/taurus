@@ -2,9 +2,10 @@ settings: <"settings.over">
 
 name_profiles: <"name_profiles.over">
 
+materials: <"materials.over">
+tiles: <"tiles.over">
 actors: <"actors.over">
 objects: <"objects.over">
-tiles: <"tiles.over">
 
 dungeons: <"dungeons.over">
 dungeon_profiles: <"dungeon_profiles.over">

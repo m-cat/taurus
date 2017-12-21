@@ -4,8 +4,10 @@ use GameResult;
 use actor::Actor;
 use constants;
 use coord::Coord;
-use database::{self, Database};
+use database::{self, Database, Value};
 use defs::GameRatio;
+use failure::ResultExt;
+use material::MaterialInfo;
 use num_traits::identities::Zero;
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
@@ -15,17 +17,17 @@ use ui::UiSettings;
 
 /// Result of the main game loop.
 pub enum GameLoopOutcome {
-    /// The player has changed depth
+    /// The player has changed depth.
     DepthChanged,
-    /// Game window was closed by player
+    /// Game window was closed by player.
     WindowClosed,
     /// Game has been quit.
     QuitGame,
-    /// Player died and we need to return
+    /// Player died and we need to return.
     PlayerDead,
-    /// No actors remaining in queue
+    /// No actors remaining in queue.
     NoActors, // should never happen!
-    /// Nothing special happened
+    /// Nothing special happened.
     None,
 }
 
@@ -38,7 +40,7 @@ struct GameDataInner {
     ui_settings: UiSettings,
 
     /// Message deque storing a fixed number of messages.
-    message_deque: VecDeque<String>,
+    message_list: VecDeque<String>,
 
     /// Reference to the player.
     player: Option<Actor>,
@@ -48,8 +50,10 @@ struct GameDataInner {
     /// Number of actors created, used for assigning unique id's.
     num_actors: usize,
 
-    /// Map of tile names to tile info structs.
-    tile_info_map: HashMap<String, Rc<TileInfo>>,
+    /// Vector of tile info structs, indexed by id.
+    tile_info_list: Vec<Rc<TileInfo>>,
+    /// Vector of material structs, indexed by id.
+    material_info_list: Vec<Rc<MaterialInfo>>,
 }
 
 /// Struct containing game-wide data such as the database and the message list.
@@ -62,24 +66,32 @@ impl GameData {
     /// Creates a new `GameData` object.
     pub fn new() -> GameResult<GameData> {
         let database = database::load_data()?;
+
         let ui_settings = UiSettings::new(&database.get_obj("settings")?)?;
 
-        Ok(GameData {
+        let mut game_data = GameData {
             inner: Rc::new(RefCell::new(GameDataInner {
-                database,
+                database: database.clone(),
 
                 ui_settings,
 
-                message_deque: VecDeque::with_capacity(constants::MESSAGE_DEQUE_SIZE),
+                message_list: VecDeque::with_capacity(constants::MESSAGE_DEQUE_SIZE),
 
                 player: None,
 
                 turn: GameRatio::zero(),
                 num_actors: 0,
 
-                tile_info_map: HashMap::new(),
+                tile_info_list: Vec::new(),
+                material_info_list: Vec::new(),
             })),
-        })
+        };
+
+        // As tiles contain materials, initialize materials first.
+        let material_info_list = game_data.init_materials(&database)?;
+        let tile_info_list = game_data.init_tiles(&database)?;
+
+        Ok(game_data)
     }
 
     /// Returns a clone of the database.
@@ -126,20 +138,53 @@ impl GameData {
         id
     }
 
-    /// Returns a reference to the `TileInfo` object with `name`.
-    pub fn tile_info(&self, name: &str) -> Option<Rc<TileInfo>> {
-        self.inner.borrow().tile_info_map.get(name).cloned()
+    /// Returns a reference to the `TileInfo` object with `id`.
+    pub fn tile_info(&self, id: usize) -> Rc<TileInfo> {
+        self.inner.borrow().tile_info_list[id].clone()
     }
 
-    /// Adds `tile_info` to the list and returns a reference to it.
-    pub fn add_tile_info(&self, tile_info: TileInfo, name: String) -> Rc<TileInfo> {
-        let info_ref = Rc::new(tile_info);
-        match self.inner.borrow_mut().tile_info_map.insert(
-            name,
-            Rc::clone(&info_ref),
-        ) {
-            Some(_) => panic!("logical error when adding tile info"),
-            None => info_ref,
+    /// Returns a reference to the `MaterialInfo` object with `id`.
+    pub fn material_info(&self, id: usize) -> Rc<MaterialInfo> {
+        self.inner.borrow().material_info_list[id].clone()
+    }
+
+    fn init_tiles(&mut self, database: &Database) -> GameResult<()> {
+        let tiles = database.get_obj("tiles")?;
+        let len = tiles.len();
+        let mut vec_temp: Vec<Option<Rc<TileInfo>>> = vec![None; len];
+
+        for tile_val in tiles.values() {
+            if let Value::Obj(ref tile_data) = *tile_val {
+                let tile = Rc::new(TileInfo::new(self, tile_data).context(format!(
+                    "Could not load tile:\n{}",
+                    tile_data
+                ))?);
+                vec_temp[tile_data.id()] = Some(tile);
+            }
         }
+        let vec_final = vec_temp.into_iter().map(|opt| opt.unwrap()).collect();
+        self.inner.borrow_mut().tile_info_list = vec_final;
+
+        Ok(())
+    }
+
+    fn init_materials(&mut self, database: &Database) -> GameResult<()> {
+        let materials = database.get_obj("materials")?;
+        let len = materials.len();
+        let mut vec_temp: Vec<Option<Rc<MaterialInfo>>> = vec![None; len];
+
+        for material_val in materials.values() {
+            if let Value::Obj(ref material_data) = *material_val {
+                let material = Rc::new(MaterialInfo::new(material_data).context(format!(
+                    "Could not load material:\n{}",
+                    material_data
+                ))?);
+                vec_temp[material_data.id()] = Some(material);
+            }
+        }
+        let vec_final = vec_temp.into_iter().map(|opt| opt.unwrap()).collect();
+        self.inner.borrow_mut().material_info_list = vec_final;
+
+        Ok(())
     }
 }

@@ -1,0 +1,41 @@
+@colors: <"colors.over">
+
+dirt: {
+    name: "dirt"
+    adjective: name
+
+    color: @colors.brown
+    density: 2
+}
+
+grass: {
+    name: "grass"
+    adjective: name
+
+    color: @colors.green
+    density: 0.5
+}
+
+iron: {
+    name: "iron"
+    adjective: name
+
+    color: @colors.gray
+    density: 7
+}
+
+stone: {
+    name: "stone"
+    adjective: name
+
+    color: @colors.gray
+    density: 5
+}
+
+wood: {
+    name: "wood"
+    adjective: "wooden"
+
+    color: @colors.brown
+    density: 0.5
+}

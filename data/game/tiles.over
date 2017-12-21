@@ -1,12 +1,8 @@
-@colors: <"colors.over">
+@materials: <"materials.over">
 
 # Default attributes, can be overriden per-tile
 @default: {
     staircase: "none"
-}
-
-# Used in tests only
-test: {
 }
 
 @wall: {
@@ -19,7 +15,7 @@ test: {
 stone_wall: {
     ^: @wall
     name: "stone wall"
-    color: @colors.gray
+    material: @materials.stone
 }
 
 @floor: {
@@ -32,17 +28,29 @@ stone_wall: {
 stone_floor: {
     ^: @floor
     name: "stone floor"
-    color: @colors.light_gray
+    material: @materials.stone
 }
 
 grass_floor: {
     ^: @floor
     name: "grass floor"
-    color: @colors.green
+    material: @materials.grass
 }
 
 dirt_floor: {
     ^: @floor
     name: "dirt floor"
-    color: @colors.brown
+    material: @materials.dirt
+}
+
+# Used in tests only
+
+test: {
+    ^: @default
+    name: "test"
+    c: '?'
+
+    material: @materials.stone
+    passable: true
+    transparent: true
 }

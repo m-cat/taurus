@@ -8,6 +8,7 @@ use defs::{GameRatio, to_gameratio};
 use dungeon::{ActResult, Dungeon};
 use failure::ResultExt;
 use game_data::GameData;
+use material::MaterialInfo;
 use std::cell::Cell;
 use std::cell::RefCell;
 use std::cmp::Ordering;
@@ -19,12 +20,11 @@ use util::rand;
 #[derive(Debug)]
 pub struct ObjectInner {
     object_type: ObjectType,
-    material: Material,
+    material: Rc<MaterialInfo>,
     active: bool,
 
     name: String, // Generic name.
     c: char,
-    color: Color,
 
     coord: Coord,
     turn: GameRatio,
@@ -71,8 +71,9 @@ impl Draw for ObjectInner {
     fn draw_c(&self) -> char {
         self.c
     }
+
     fn draw_color(&self) -> Color {
-        self.color
+        self.material.color
     }
 }
 
@@ -96,11 +97,11 @@ impl Object {
         // Load all data from the database.
 
         let object_type = ObjectType::from_str(object_data.get_str("type")?.as_str())?;
-        let material = Material::from_str(object_data.get_str("material")?.as_str())?;
+        let material = object_data.get_obj("material")?;
+        let material = game_data.material_info(material.id());
 
         let name = object_data.get_str("name")?;
         let c = object_data.get_char("c")?;
-        let color = Color::from_str(object_data.get_str("color")?.as_str())?;
 
         let speed = to_gameratio(object_data.get_frac("speed")?)?;
 
@@ -114,7 +115,6 @@ impl Object {
 
                 name,
                 c,
-                color,
 
                 coord: coord,
                 turn: game_data.turn(),
@@ -240,30 +240,6 @@ impl FromStr for ObjectType {
                 return Err(GameError::ConversionError {
                     val: s.into(),
                     msg: "Invalid object type.",
-                })
-            }
-        })
-    }
-}
-
-/// Enum listing possible object materials.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Material {
-    Wood,
-    Iron,
-}
-
-impl FromStr for Material {
-    type Err = GameError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "wood" => Material::Wood,
-            "iron" => Material::Iron,
-            _ => {
-                return Err(GameError::ConversionError {
-                    val: s.into(),
-                    msg: "Invalid object material.",
                 })
             }
         })

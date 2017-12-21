@@ -14,8 +14,8 @@ use std::str::FromStr;
 use std::sync::Mutex;
 use tcod;
 use tcod::{Console, FontLayout, FontType, Renderer, RootConsole};
-use tcod::input::check_for_event;
 use tcod::Color as TcodColor;
+use tcod::input::check_for_event;
 use util::convert::color_code_to_rgb;
 
 lazy_static! {

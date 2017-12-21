@@ -3,7 +3,7 @@
 use console::Color;
 use ui::Draw;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Item {
     c: char,
     color: Color,
@@ -19,7 +19,7 @@ impl Draw for Item {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct ItemStack {
     item: Item,
     amount: usize,
@@ -35,7 +35,7 @@ impl Draw for ItemStack {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct ItemStash {
     items: Vec<ItemStack>,
 }

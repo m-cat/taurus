@@ -73,21 +73,16 @@ impl Dungeon {
     ) -> GameResult<()> {
         self.width = width;
         self.height = height;
-        self.tile_grid = Vec::with_capacity(width);
-
-        for _ in 0..width {
-            let mut column = Vec::with_capacity(height);
-
-            for _ in 0..height {
-                // TODO: make below more efficient
-                column.push(Tile::new(self.game_data(), tile_data).context(format!(
-                    "Could not load tile:\n{}",
-                    tile_data
-                ))?);
-            }
-
-            self.tile_grid.push(column);
-        }
+        self.tile_grid = vec![
+            vec![
+                Tile::new(self.game_data(), tile_data).context(format!(
+            "Could not load tile:\n{}",
+            tile_data
+        ))?;
+                height
+            ];
+            width
+        ];
 
         Ok(())
     }
@@ -105,6 +100,10 @@ impl Dungeon {
     /// Returns the height of the tile grid.
     pub fn height(&self) -> usize {
         self.height
+    }
+
+    pub fn in_bounds(&self, x: i32, y: i32) -> bool {
+        x >= 0 && y >= 0 && x < self.width() as i32 && y < self.height() as i32
     }
 
     /// Returns the number of actors in the dungeon.
@@ -170,7 +169,7 @@ impl Dungeon {
 
     /// Returns the amount of stacks in a stash.
     pub fn stash_size(&self, coord: Coord) -> usize {
-        match self[coord].stash {
+        match self[coord].item_stash {
             Some(ref s) => s.len(),
             None => 0,
         }
@@ -239,9 +238,7 @@ impl Dungeon {
         }
         if object_turn.is_none() {
             *object_turn = Some(match self.object_queue.peek() {
-                Some(ref object) => {
-                    object.turn()
-                }
+                Some(ref object) => object.turn(),
                 None => gameratio_max(),
             })
         }

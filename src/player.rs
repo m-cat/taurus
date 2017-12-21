@@ -9,6 +9,7 @@ use dungeon::{ActResult, Dungeon};
 use game_data::GameData;
 use std::rc::Rc;
 use ui;
+use util;
 use util::direction::CompassDirection;
 
 /// Acts out the player's turn.
@@ -75,7 +76,31 @@ pub fn player_process_event(
                 }
             }
         }
-        Event::Mouse(_) => (),
+        Event::Mouse(mouse) => {
+            if util::is_debug() {
+                let game_data = dungeon.game_data();
+                let view = ui::calc_game_view(&game_data);
+
+                let (mouse_x, mouse_y) = (mouse.cx, mouse.cy);
+                let (game_x, game_y) = (mouse_x as i32 + view.left, mouse_y as i32 + view.top);
+
+                if dungeon.in_bounds(game_x, game_y) {
+                    let tile = &dungeon[game_x as usize][game_y as usize];
+
+                    println!("\nTile at {}, {} contains:", game_x, game_y);
+                    if let Some(ref actor) = tile.actor {
+                        println!(" - Actor: {:?}", actor);
+                    }
+                    if let Some(ref object) = tile.object {
+                        println!(" - Object: {:?}", object);
+                    }
+                    if let Some(ref item_stash) = tile.item_stash {
+                        println!(" - Item stash: {:?}", item_stash);
+                    }
+                    println!(" - Tile info: {:?}", tile.info);
+                }
+            }
+        }
     }
 
     (ActResult::None, false)

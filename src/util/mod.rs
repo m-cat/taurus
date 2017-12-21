@@ -10,6 +10,7 @@ pub mod convert;
 pub mod direction;
 pub mod file;
 pub mod rand;
+pub mod rectangle;
 pub mod string;
 
 macro_rules! map {

@@ -32,6 +32,7 @@ pub mod error;
 pub mod game_data;
 pub mod generate;
 pub mod item;
+pub mod material;
 pub mod name_gen;
 pub mod object;
 pub mod player;

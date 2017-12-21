@@ -1,13 +1,8 @@
-@colors: <"colors.over">
+@materials: <"materials.over">
 
 @types: {
     door: "door"
     trap: "trap"
-}
-
-@materials: {
-    wood: "wood"
-    iron: "iron"
 }
 
 @default: {
@@ -18,16 +13,15 @@
 @door: {
     ^: @default
     type: @types.door
+    name: "door"
 
     c: '+'
-    color: @colors.white
 
     speed: 1.0
 }
 
 wooden_door: {
     ^: @door
-    name: "wooden door"
     material: @materials.wood
 }
 
@@ -41,7 +35,6 @@ wooden_door: {
     material: @materials.wood
 
     c: '?'
-    color: @colors.white
 }
 
 test: @test
