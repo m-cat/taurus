@@ -1,6 +1,6 @@
 //! Game tiles.
 
-use GameResult;
+use {GAMEDATA, GameResult};
 use actor::Actor;
 use console::Color;
 use database::Database;
@@ -10,14 +10,14 @@ use item::ItemStash;
 use material::MaterialInfo;
 use object::Object;
 use std::cell::RefCell;
-use std::rc::Rc;
 use std::str::FromStr;
+use std::sync::Arc;
 use ui::Draw;
 
 /// Struct containing the tile information for a class of tiles.
 #[derive(Debug)]
 pub struct TileInfo {
-    pub material: Rc<MaterialInfo>,
+    pub material: Arc<MaterialInfo>,
 
     pub name: String,
     pub c: char,
@@ -32,8 +32,10 @@ pub struct TileInfo {
 
 impl TileInfo {
     pub fn new(game_data: &GameData, tile_data: &Database) -> GameResult<TileInfo> {
-        let material = tile_data.get_obj("material")?;
-        let material = game_data.material_info(material.id());
+        let _material = tile_data.get_obj("material")?;
+        let mname = _material.get_str("name")?;
+        let id = _material.id();
+        let material = game_data.material_info(id);
 
         let name = tile_data.get_str("name")?;
         let c = tile_data.get_char("c")?;
@@ -77,10 +79,10 @@ impl TileInfo {
 #[derive(Clone, Debug)]
 pub struct Tile {
     /// A reference to the `TileInfo`.
-    pub info: Rc<TileInfo>,
+    pub info: Arc<TileInfo>,
 
     /// Last seen tile here. This also tells us whether this tile has been seen before.
-    pub last_seen: Option<Rc<TileInfo>>,
+    pub last_seen: Option<Arc<TileInfo>>,
 
     pub actor: Option<Actor>,
     pub object: Option<Object>,
@@ -92,9 +94,10 @@ pub struct Tile {
 
 impl Tile {
     /// Returns a new `Tile` object.
-    pub fn new(game_data: &GameData, tile_data: &Database) -> GameResult<Tile> {
+    #[cfg_attr(feature = "dev", flame)]
+    pub fn new(tile_data: &Database) -> GameResult<Tile> {
         let id = tile_data.id();
-        let info = game_data.tile_info(id);
+        let info = GAMEDATA.read().unwrap().tile_info(id);
 
         Ok(Tile {
             info,
@@ -109,10 +112,10 @@ impl Tile {
         })
     }
 
-    pub fn set_tile_info(&mut self, game_data: &GameData, tile_data: &Database) -> GameResult<()> {
+    pub fn set_tile_info(&mut self, tile_data: &Database) -> GameResult<()> {
         let id = tile_data.id();
 
-        self.info = game_data.tile_info(id);
+        self.info = GAMEDATA.read().unwrap().tile_info(id);
 
         Ok(())
     }

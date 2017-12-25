@@ -70,6 +70,11 @@ mod tests {
             Rectangle::new(1, 1, 2, 2),
             Rectangle::from_dimensions(1, 1, 2, 2)
         );
+
+        assert_eq!(
+            Rectangle::new(0, 0, 0, 0),
+            Rectangle::from_dimensions(0, 0, 1, 1)
+        );
     }
 
     #[test]

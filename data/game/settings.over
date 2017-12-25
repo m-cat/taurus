@@ -1,5 +1,19 @@
 # Default settings for various game parameters.
 
+@colors: <"colors.over">
+
+# Console Settings
+
+title: "Taurus"
+fps: 60
+console_width: 80
+console_height: 50
+default_font: "data/fonts/terminal10x16_gs_tc.png"
+background_color: @colors.black
+
 # UI Settings
+
 game_width: 40
 game_height: 40
+
+max_name_len: 20

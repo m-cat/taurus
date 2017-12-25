@@ -1,6 +1,6 @@
 //! Dungeon object.
 
-use {GameLoopOutcome, GameResult};
+use {DATABASE, GAMEDATA, GameLoopOutcome, GameResult};
 use actor::*;
 use console::DrawConsole;
 use coord::Coord;
@@ -19,17 +19,16 @@ use std::ops::{Deref, DerefMut, Index, IndexMut};
 use std::rc::Rc;
 use std::str::FromStr;
 use tile::Tile;
-use util::rand::Choose;
+use util::rand::rand_int;
 
 /// Struct containing a single depth of the dungeon.
 /// This struct is also responsible for running the actor priority queue.
+#[derive(Debug)]
 pub struct Dungeon {
-    game_data: GameData,
-
     pub danger_level: u32,
     pub dungeon_type: DungeonType,
 
-    tile_grid: Vec<Vec<Tile>>, // indexed x,y
+    tile_grid: Vec<Tile>,
     width: usize,
     height: usize,
 
@@ -39,16 +38,11 @@ pub struct Dungeon {
 }
 
 impl Dungeon {
-    pub fn new(
-        game_data: &GameData,
-        danger_level: u32,
-        profile_data: &Database,
-    ) -> GameResult<Dungeon> {
+    #[cfg_attr(feature = "dev", flame)]
+    pub fn new(danger_level: u32, profile_data: &Database) -> GameResult<Dungeon> {
         let dungeon_type = DungeonType::from_str(&profile_data.get_str("type")?)?;
 
         let mut dungeon = Dungeon {
-            game_data: game_data.clone(),
-
             danger_level,
             dungeon_type,
 
@@ -65,6 +59,7 @@ impl Dungeon {
         Ok(dungeon)
     }
 
+    #[cfg_attr(feature = "dev", flame)]
     pub fn init_grid(
         &mut self,
         width: usize,
@@ -74,22 +69,14 @@ impl Dungeon {
         self.width = width;
         self.height = height;
         self.tile_grid = vec![
-            vec![
-                Tile::new(self.game_data(), tile_data).context(format!(
+            Tile::new(tile_data).context(format!(
             "Could not load tile:\n{}",
             tile_data
         ))?;
-                height
-            ];
-            width
+            width * height
         ];
 
         Ok(())
-    }
-
-    /// Returns a reference to the game data.
-    pub fn game_data(&self) -> &GameData {
-        &self.game_data
     }
 
     /// Returns the width of the tile grid.
@@ -102,7 +89,8 @@ impl Dungeon {
         self.height
     }
 
-    pub fn in_bounds(&self, x: i32, y: i32) -> bool {
+    pub fn in_bounds(&self, coord: Coord) -> bool {
+        let Coord { x, y } = coord;
         x >= 0 && y >= 0 && x < self.width() as i32 && y < self.height() as i32
     }
 
@@ -112,6 +100,7 @@ impl Dungeon {
     }
 
     /// Adds actor to both the tile grid and the priority queue.
+    #[cfg_attr(feature = "dev", flame)]
     pub fn add_actor(&mut self, actor: Actor) {
         let coord = actor.coord();
         debug_assert!(self[coord].actor.is_none()); // Actors can't share tiles.
@@ -176,17 +165,11 @@ impl Dungeon {
     }
 
     /// Returns a random coordinate.
-    pub fn random_coord(&self) -> Option<Coord> {
-        let grid = &self.tile_grid;
-        let (x, column) = match grid.choose_enumerate() {
-            Some(t) => t,
-            None => return None,
-        };
-        let y = match column.choose_index() {
-            Some(t) => t,
-            None => return None,
-        };
-        Some(Coord::new(x as i32, y as i32))
+    pub fn random_coord(&self) -> Coord {
+        Coord::new(
+            rand_int(0, self.width - 1) as i32,
+            rand_int(0, self.height - 1) as i32,
+        )
     }
 
     /// Returns a random available coordinate, not currently occupied by any actors.
@@ -197,10 +180,7 @@ impl Dungeon {
         let mut coord: Coord = Default::default();
 
         while !available {
-            coord = match self.random_coord() {
-                Some(t) => t,
-                None => return None,
-            };
+            coord = self.random_coord();
             let tile = &self[coord];
             // Don't put any actors on top of objects.
             // Should use some other function for that.
@@ -253,7 +233,7 @@ impl Dungeon {
             };
 
             // Update the global game turn.
-            self.game_data().set_turn(actor_turn.unwrap());
+            GAMEDATA.write().unwrap().set_turn(actor_turn.unwrap());
 
             match actor.act(self) {
                 ActResult::WindowClosed => return GameLoopOutcome::WindowClosed,
@@ -275,7 +255,7 @@ impl Dungeon {
             };
 
             // Update the global game turn.
-            self.game_data().set_turn(object_turn.unwrap());
+            GAMEDATA.write().unwrap().set_turn(object_turn.unwrap());
 
             match object.act(self) {
                 _ => (),
@@ -300,49 +280,50 @@ impl Dungeon {
     }
 }
 
-/// Makes the dungeon indexable like an array.
-impl Index<usize> for Dungeon {
-    type Output = Vec<Tile>;
+// /// Makes the dungeon indexable like an array.
+// impl Index<usize> for Dungeon {
+//     type Output = Vec<Tile>;
 
-    fn index(&self, index: usize) -> &Vec<Tile> {
-        &self.tile_grid[index]
-    }
-}
-impl IndexMut<usize> for Dungeon {
-    fn index_mut(&mut self, index: usize) -> &mut Vec<Tile> {
-        &mut self.tile_grid[index]
-    }
-}
+//     fn index(&self, index: usize) -> &Vec<Tile> {
+//         &self.tile_grid[index]
+//     }
+// }
+// impl IndexMut<usize> for Dungeon {
+//     fn index_mut(&mut self, index: usize) -> &mut Vec<Tile> {
+//         &mut self.tile_grid[index]
+//     }
+// }
 
 /// Makes the dungeon indexable by coord.
 impl Index<Coord> for Dungeon {
     type Output = Tile;
 
     fn index(&self, coord: Coord) -> &Tile {
-        &self[coord.x as usize][coord.y as usize]
+        &self.tile_grid[coord.x as usize * self.height + coord.y as usize]
     }
 }
 impl<'a> Index<&'a Coord> for Dungeon {
     type Output = Tile;
 
     fn index(&self, coord: &Coord) -> &Tile {
-        &self[coord.x as usize][coord.y as usize]
+        &self.tile_grid[coord.x as usize * self.height + coord.y as usize]
     }
 }
 
 impl IndexMut<Coord> for Dungeon {
     fn index_mut(&mut self, coord: Coord) -> &mut Tile {
-        &mut self[coord.x as usize][coord.y as usize]
+        &mut self.tile_grid[coord.x as usize * self.height + coord.y as usize]
     }
 }
 
 impl<'a> IndexMut<&'a Coord> for Dungeon {
     fn index_mut(&mut self, coord: &Coord) -> &mut Tile {
-        &mut self[coord.x as usize][coord.y as usize]
+        &mut self.tile_grid[coord.x as usize * self.height + coord.y as usize]
     }
 }
 
 /// List of dungeons.
+#[derive(Debug)]
 pub struct DungeonList {
     dungeon_list: Vec<Dungeon>,
     pub current_depth: usize,
@@ -350,20 +331,25 @@ pub struct DungeonList {
 
 impl DungeonList {
     /// Creates a new `DungeonList` with `n` dungeons.
-    pub fn new(num_dungeons: usize, game_data: GameData) -> GameResult<DungeonList> {
-        let mut dungeon_list = DungeonList {
+    #[cfg_attr(feature = "dev", flame)]
+    pub fn new() -> GameResult<DungeonList> {
+        let dungeons = DATABASE
+            .read()
+            .unwrap()
+            .get_obj("dungeons")
+            .context("Parsing main.dungeons")?
+            .get_arr("dungeons")
+            .context("Parsing main.dungeons.dungeons")?;
+        let num_dungeons = dungeons.len();
+
+        let dungeon_list = DungeonList {
             dungeon_list: Vec::with_capacity(num_dungeons),
             current_depth: 0,
         };
 
-        gen_dungeon_list(&mut dungeon_list, game_data, num_dungeons)?;
+        let dungeon_list = gen_dungeon_list(dungeon_list, &dungeons, num_dungeons)?;
 
         Ok(dungeon_list)
-    }
-
-    /// Returns a reference to the game data.
-    pub fn game_data(&self) -> &GameData {
-        self.dungeon_list[0].game_data()
     }
 
     /// Returns a mutable reference to the current dungeon.
@@ -387,6 +373,7 @@ impl DerefMut for DungeonList {
     }
 }
 
+#[derive(Debug)]
 pub enum DungeonType {
     Room,
     /// Used in tests.

@@ -1,10 +1,10 @@
 //! Game actors.
 
-use {GameError, GameResult};
+use {GAMEDATA, GameError, GameResult};
 use console::{Color, DrawConsole};
 use coord::Coord;
 use database::Database;
-use defs::{GameRatio, big_to_u32, to_gameratio};
+use defs::*;
 use dungeon::{ActResult, Dungeon};
 use failure::ResultExt;
 use game_data::GameData;
@@ -12,8 +12,8 @@ use object::ObjectType;
 use player;
 use std::cell::RefCell;
 use std::cmp::Ordering;
-use std::rc::Rc;
 use std::str::FromStr;
+use std::sync::{Arc, Mutex};
 use ui::Draw;
 use util::direction::CompassDirection;
 
@@ -21,7 +21,6 @@ use util::direction::CompassDirection;
 pub struct ActorInner {
     name: String, // Generic name.
 
-    id: usize, // Unique id for this instance.
     c: char,
     color: Color,
 
@@ -48,21 +47,21 @@ pub struct ActorInner {
 /// can coexist with an `Object` and will always be drawn on top of it.
 #[derive(Clone, Debug)]
 pub struct Actor {
-    pub inner: Rc<RefCell<ActorInner>>,
+    pub inner: Arc<Mutex<ActorInner>>,
 }
 
 impl Actor {
     /// Creates a new actor at the given coordinates.
-    pub fn new(game_data: &GameData, coord: Coord, data: &Database) -> GameResult<Actor> {
+    #[cfg_attr(feature = "dev", flame)]
+    pub fn new(coord: Coord, data: &Database) -> GameResult<Actor> {
 
         // Load all data from the database.
 
         let name = data.get_str("name")?;
-        let id = game_data.actor_id();
         let c = data.get_char("c")?;
         let color = Color::from_str(data.get_str("color")?.as_str())?;
 
-        let speed = to_gameratio(data.get_frac("speed")?)?;
+        let speed = bigr_to_gamer(data.get_frac("speed")?)?;
 
         let hp = big_to_u32(data.get_int("hp")?)?;
         let hp_cur = hp as i32;
@@ -75,14 +74,14 @@ impl Actor {
         // Create the actor instance.
 
         let mut actor = Actor {
-            inner: Rc::new(RefCell::new(ActorInner {
+            inner: Arc::new(Mutex::new(ActorInner {
                 name,
-                id,
                 c,
                 color,
 
                 coord,
-                turn: game_data.turn(), // We update this after creating the actor.
+                // We update this after creating the actor.
+                turn: GAMEDATA.read().unwrap().turn(),
                 speed,
 
                 hp_cur,
@@ -103,24 +102,17 @@ impl Actor {
         coord: Coord,
         actor_data: &Database,
     ) -> GameResult<()> {
-        let a = Self::new(dungeon.game_data(), coord, actor_data).context(
-            format!(
-                "Could not load actor:\n{}",
-                actor_data
-            ),
-        )?;
+        let a = Self::new(coord, actor_data).context(format!(
+            "Could not load actor:\n{}",
+            actor_data
+        ))?;
         dungeon.add_actor(a);
         Ok(())
     }
 
-    /// Returns the actor id for this actor.
-    pub fn id(&self) -> usize {
-        self.inner.borrow().id
-    }
-
     /// Returns the name associated with this actor.
     pub fn name(&self) -> String {
-        self.inner.borrow().name.clone()
+        self.inner.lock().unwrap().name.clone()
     }
 
     /// Generates and returns the description of this actor.
@@ -131,42 +123,42 @@ impl Actor {
 
     /// Returns this actor's coordinates.
     pub fn coord(&self) -> Coord {
-        self.inner.borrow().coord
+        self.inner.lock().unwrap().coord
     }
 
     /// Sets this actor's coordinates.
     pub fn set_coord(&mut self, coord: Coord) {
-        self.inner.borrow_mut().coord = coord;
+        self.inner.lock().unwrap().coord = coord;
     }
 
     /// Returns this actor's next turn value.
     pub fn turn(&self) -> GameRatio {
-        self.inner.borrow().turn
+        self.inner.lock().unwrap().turn
     }
 
     /// Updates this actor's turn based on its speed.
     pub fn update_turn(&mut self) {
-        let mut inner = self.inner.borrow_mut();
+        let mut inner = self.inner.lock().unwrap();
         let (turn, speed) = (inner.turn, inner.speed);
         inner.turn = turn + speed;
     }
 
     /// Returns this actor's base speed.
     pub fn speed(&self) -> GameRatio {
-        self.inner.borrow().speed
+        self.inner.lock().unwrap().speed
     }
 
     pub fn visible(&self) -> bool {
-        self.inner.borrow().visible
+        self.inner.lock().unwrap().visible
     }
 
     /// Returns this actor's behavior value.
     pub fn behavior(&self) -> Behavior {
-        self.inner.borrow().behavior
+        self.inner.lock().unwrap().behavior
     }
 
     pub fn set_behavior(&mut self, behavior: Behavior) {
-        self.inner.borrow_mut().behavior = behavior;
+        self.inner.lock().unwrap().behavior = behavior;
     }
 
     /// Acts out the actor's turn.
@@ -197,7 +189,7 @@ impl Actor {
             if let Some(ref _actor) = tile.actor {
                 false
             } else if let Some(ref mut object) = tile.object {
-                let mut object = object.inner.borrow_mut();
+                let mut object = object.inner.lock().unwrap();
                 match object.object_type() {
                     ObjectType::Door => {
                         if object.active() {
@@ -236,10 +228,10 @@ impl Actor {
 
 impl Draw for Actor {
     fn draw_c(&self) -> char {
-        self.inner.borrow().c
+        self.inner.lock().unwrap().c
     }
     fn draw_color(&self) -> Color {
-        self.inner.borrow().color
+        self.inner.lock().unwrap().color
     }
 }
 

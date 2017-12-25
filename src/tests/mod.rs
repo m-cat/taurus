@@ -2,6 +2,7 @@ pub mod actor;
 
 mod common;
 
+use DATABASE;
 use actor::Actor;
 use constants;
 use coord::Coord;
@@ -14,15 +15,13 @@ use util;
 // Test creating all actors, objects, and tiles contained in the database.
 #[test]
 fn create_everything() {
-    let mut dungeon = common::setup_dungeon().unwrap();
-    let mut game_data = dungeon.game_data();
-    let database = game_data.database();
+    let database = DATABASE.read().unwrap();
     let coord = Coord::new(0, 0);
 
     let data = database.get_obj("actors").unwrap();
     for actor in data.values() {
         for _ in 0..5 {
-            let _ = Actor::new(&mut game_data, coord, &actor.get_obj().unwrap());
+            let _ = Actor::new(coord, &actor.get_obj().unwrap());
         }
     }
 
@@ -30,7 +29,7 @@ fn create_everything() {
     for object in data.values() {
         for active in &[true, false] {
             for _ in 0..5 {
-                let _ = Object::new(&game_data, coord, &object.get_obj().unwrap(), *active);
+                let _ = Object::new(coord, &object.get_obj().unwrap(), *active);
             }
         }
     }
@@ -38,14 +37,19 @@ fn create_everything() {
     let data = database.get_obj("tiles").unwrap();
     for tile in data.values() {
         for _ in 0..5 {
-            let _ = Tile::new(&mut game_data, &tile.get_obj().unwrap());
+            let _ = Tile::new(&tile.get_obj().unwrap());
         }
     }
 
     let data = database.get_obj("dungeon_profiles").unwrap();
+    let dungeons = database
+        .get_obj("dungeons")
+        .unwrap()
+        .get_arr("dungeons")
+        .unwrap();
     for dungeon in data.values() {
-        for danger in 0..constants::NUM_DUNGEONS {
-            let _ = Dungeon::new(&mut game_data, danger as u32, &dungeon.get_obj().unwrap());
+        for danger in 0..dungeons.len() {
+            let _ = Dungeon::new(danger as u32, &dungeon.get_obj().unwrap());
         }
     }
 }
@@ -54,7 +58,7 @@ fn create_everything() {
 #[test]
 fn game_queue() {
     let mut dungeon = common::setup_dungeon().unwrap();
-    let database = dungeon.game_data().database();
+    let database = DATABASE.read().unwrap();
     let actor_data = database.get_obj("actors").unwrap();
     let object_data = database.get_obj("objects").unwrap();
 

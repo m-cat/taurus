@@ -50,40 +50,30 @@ macro_rules! try_some {
     }
 }
 
-/// Returns `true` if this is a debug build.
-pub fn is_debug() -> bool {
-    cfg!(debug_assertions)
-}
-
-/// Returns `true` if the `TAURUS_VERBOSE` environment variable is set to 1.
-pub fn is_verbose() -> bool {
-    match ::std::env::var("TAURUS_VERBOSE") {
-        Ok(val) => val == "1",
-        Err(_) => false,
-    }
-}
-
 #[macro_export]
-macro_rules! time_if_verbose {
+macro_rules! dev_time {
     ($expr:expr, $msg:expr) => {
         {
             use $crate::util;
 
-            if util::is_verbose() {
+            #[cfg(all(feature="dev", not(test)))]
+            {
                 use std::time::Instant;
 
-                println!("{}", $msg);
+                println!("\n{}", $msg);
                 let timer_start = Instant::now();
 
                 let res = $expr;
 
                 let timer_end = Instant::now();
                 let duration = timer_end.duration_since(timer_start);
-                println!("Finished. Time elapsed: {}s, {}ms",
+                println!("Finished. Time elapsed: {}s, {}ms\n",
                          duration.as_secs(), duration.subsec_nanos() as f64 / 1_000_000f64);
 
                 res
-            } else {
+            }
+            #[cfg(not(all(feature="dev", not(test))))]
+            {
                 $expr
             }
         }

@@ -152,14 +152,4 @@ mod tests {
         assert!(in_range(1, 0, 2));
         assert!(!in_range(0, 2, 1));
     }
-
-    #[test]
-    fn test_rand_int() {
-        for _ in 1..100 {
-            let a = rand_int(0, 100);
-            let b = rand_int(0, 100);
-            assert!(between(rand_int(a, b), a, b));
-        }
-        assert_eq!(rand_int(0, 0), 0);
-    }
 }

@@ -2,7 +2,7 @@
 
 use GameResult;
 use database::Database;
-use defs::{GameRatio, to_gameratio};
+use defs::*;
 use over::arr::Arr;
 use util::rand::rand_ratio;
 
@@ -13,7 +13,7 @@ pub fn pick_obj_from_tup_arr(arr: &Arr) -> GameResult<Database> {
 
     for i in 0..len {
         let tup = arr.get(i)?.get_tup()?;
-        roll_count = to_gameratio(tup.get(1)?.get_frac()?)? + roll_count;
+        roll_count = bigr_to_gamer(tup.get(1)?.get_frac()?)? + roll_count;
         if roll <= roll_count {
             return Ok(tup.get(0)?.get_obj()?);
         }

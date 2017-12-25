@@ -9,4 +9,79 @@ dungeons: [
         (@profiles.normal .9)
         (@profiles.special .1)
     ]
+
+    # Dungeon 3
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 4
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 5
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 6
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 7
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 8
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 9
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 10
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 11
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 12
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 13
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 14
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 15
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 16
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 17
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 18
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 19
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 20
+    [(@profiles.normal 1.0)]
+    
+    # Dungeon 21
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 22
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 23
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 24
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 25
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 26
+    [(@profiles.normal 1.0)]
+
+    # Dungeon 27
+    [(@profiles.normal 1.0)]
 ]

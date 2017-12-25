@@ -1,5 +1,6 @@
 //! Actor tests.
 
+use DATABASE;
 use actor::Actor;
 use coord::Coord;
 use defs::GameRatio;
@@ -11,7 +12,7 @@ use tests::common;
 #[test]
 fn set_actor_coord() {
     let mut dungeon = common::setup_dungeon().unwrap();
-    let data = dungeon.game_data().database().get_obj("actors").unwrap();
+    let data = DATABASE.read().unwrap().get_obj("actors").unwrap();
     let test = data.get_obj("test").unwrap();
 
     let coord1 = Coord::new(0, 0);
@@ -44,7 +45,7 @@ fn set_actor_coord() {
 fn set_actor_coord_panic() {
     let mut dungeon = common::setup_dungeon().unwrap();
 
-    let data = dungeon.game_data().database().get_obj("actors").unwrap();
+    let data = DATABASE.read().unwrap().get_obj("actors").unwrap();
     let test = data.get_obj("test").unwrap();
 
     let coord1 = Coord::new(0, 0);

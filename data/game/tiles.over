@@ -5,17 +5,13 @@
     staircase: "none"
 }
 
+# Templates
+
 @wall: {
     ^: @default
     c: '#'
     passable: false
     transparent: false
-}
-
-stone_wall: {
-    ^: @wall
-    name: "stone wall"
-    material: @materials.stone
 }
 
 @floor: {
@@ -24,6 +20,16 @@ stone_wall: {
     passable: true
     transparent: true
 }
+
+# Wall
+
+stone_wall: {
+    ^: @wall
+    name: "stone wall"
+    material: @materials.stone
+}
+
+# Floor
 
 stone_floor: {
     ^: @floor

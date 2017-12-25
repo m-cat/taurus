@@ -22,7 +22,7 @@ human: {
 
 elf: {
     min_seqs: 4
-    max_seqs: 8
+    max_seqs: 7
 
     vowel_start: 1/2
 
@@ -32,8 +32,8 @@ elf: {
     mid_consonants: ("bdflmnrsstvx" .8)
     mid_dconsonants: ("br"+"ch"+"ct"+"tr"+"th"+"dr"+"mm"+"tt"+"ll"+"st" .15)
     mid_tconsonants: (start_tconsonants.0 .05)
-    end_consonants: ("lnrss" .8)
-    end_dconsonants: ("rm"+"st" .2)
+    end_consonants: ("lnrss" 1)
+    end_dconsonants: ("" 0)
 
     start_vowels: ("aaeeiiooy" 1)
     mid_vowels: (start_vowels.0 .85)
@@ -54,14 +54,36 @@ dwarf: {
     mid_consonants: ("bdfgklmnprsstv" .5)
     mid_dconsonants: ("br"+"ch"+"kt"+"tr"+"th"+"dr"+"mm"+"tt"+"ll"+"st"+"qu" .3)
     mid_tconsonants: (start_tconsonants.0 .2)
-    end_consonants: ("bdffggklnprsst" .6)
+    end_consonants: ("bdffggklnnprst" .6)
     end_dconsonants: ("ch"+"gh"+"rm"+"st"+"th" .4)
 
     start_vowels: ("aaeeiioouy" 1)
     mid_vowels: ("aeio" .85)
     mid_dvowels: ("io"+"ou" .15)
-    end_vowels: ("iou" .9)
-    end_dvowels: ("oh" .1)
+    end_vowels: ("iu" 1)
+    end_dvowels: ("" 0)
+}
+
+dragon: {
+    min_seqs: 3
+    max_seqs: 5
+
+    vowel_start: 1/4
+
+    start_consonants: ("bdfgghklmnprsstvwz" .4)
+    start_dconsonants: ("kr"+"br"+"ch"+"cl"+"tr"+"th"+"dr"+"sl"+"ph"+"bl"+"cr"+"fr"+"gr"+"st"+"qu"+"vr"+"wh"+"wr" .4)
+    start_tconsonants: ("chr"+"str"+"thr" .2)
+    mid_consonants: ("bdfgklmnprsstv" .5)
+    mid_dconsonants: ("br"+"ch"+"kt"+"tr"+"th"+"dr"+"mm"+"tt"+"ll"+"st"+"qu" .3)
+    mid_tconsonants: (start_tconsonants.0 .2)
+    end_consonants: ("bdffggklnnprst" .6)
+    end_dconsonants: ("ch"+"gh"+"rm"+"st"+"th" .4)
+
+    start_vowels: ("aaeeiioouy" 1)
+    mid_vowels: ("aeio" .85)
+    mid_dvowels: ("io"+"ou" .15)
+    end_vowels: ("iu" .1)
+    end_dvowels: ("oh" .9)
 }
 
 default: human

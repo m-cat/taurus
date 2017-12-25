@@ -14,7 +14,7 @@ pub fn gameratio_max() -> GameRatio {
     Ratio::new(u32::max_value(), 1)
 }
 
-pub fn to_f32(value: BigRational) -> GameResult<f32> {
+pub fn bigr_to_f32(value: BigRational) -> GameResult<f32> {
     let numer = match value.numer().to_f32() {
         Some(n) => n,
         None => return err_convert(value, "Numerator too big"),
@@ -28,7 +28,7 @@ pub fn to_f32(value: BigRational) -> GameResult<f32> {
 }
 
 /// Converts a `BigRational` into a `GameRatio`.
-pub fn to_gameratio(value: BigRational) -> GameResult<GameRatio> {
+pub fn bigr_to_gamer(value: BigRational) -> GameResult<GameRatio> {
     let numer = match value.numer().to_u32() {
         Some(n) => n,
         None => return err_convert(value, "Numerator too big"),
@@ -43,6 +43,13 @@ pub fn to_gameratio(value: BigRational) -> GameResult<GameRatio> {
 
 pub fn big_to_u32(value: BigInt) -> GameResult<u32> {
     match value.to_u32() {
+        Some(n) => Ok(n),
+        None => err_convert(value, "Value is too large"),
+    }
+}
+
+pub fn big_to_i32(value: BigInt) -> GameResult<i32> {
+    match value.to_i32() {
         Some(n) => Ok(n),
         None => err_convert(value, "Value is too large"),
     }

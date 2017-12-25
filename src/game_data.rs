@@ -1,7 +1,8 @@
 //! Module for game-wide data.
 
-use GameResult;
+use {DATABASE, GameResult, handle_error};
 use actor::Actor;
+use console::{ConsoleSettings, DrawConsole};
 use constants;
 use coord::Coord;
 use database::{self, Database, Value};
@@ -11,7 +12,7 @@ use material::MaterialInfo;
 use num_traits::identities::Zero;
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
-use std::rc::Rc;
+use std::sync::Arc;
 use tile::TileInfo;
 use ui::UiSettings;
 
@@ -32,10 +33,8 @@ pub enum GameLoopOutcome {
 }
 
 #[derive(Debug)]
-struct GameDataInner {
-    /// A reference to the main game database containing monster info, tile info, etc.
-    database: Database,
-
+pub struct GameData {
+    console_settings: ConsoleSettings,
     /// A struct containing UI parameters.
     ui_settings: UiSettings,
 
@@ -44,64 +43,54 @@ struct GameDataInner {
 
     /// Reference to the player.
     player: Option<Actor>,
-
     /// Current global game turn.
     turn: GameRatio,
-    /// Number of actors created, used for assigning unique id's.
-    num_actors: usize,
 
     /// Vector of tile info structs, indexed by id.
-    tile_info_list: Vec<Rc<TileInfo>>,
+    tile_info_list: Vec<Arc<TileInfo>>,
+    tile_start_id: Option<usize>,
     /// Vector of material structs, indexed by id.
-    material_info_list: Vec<Rc<MaterialInfo>>,
-}
-
-/// Struct containing game-wide data such as the database and the message list.
-#[derive(Clone, Debug)]
-pub struct GameData {
-    inner: Rc<RefCell<GameDataInner>>,
+    material_info_list: Vec<Arc<MaterialInfo>>,
+    material_start_id: Option<usize>,
 }
 
 impl GameData {
     /// Creates a new `GameData` object.
     pub fn new() -> GameResult<GameData> {
-        let database = database::load_data()?;
-
-        let ui_settings = UiSettings::new(&database.get_obj("settings")?)?;
+        let settings = DATABASE.read().unwrap().get_obj("settings")?;
+        let console_settings = ConsoleSettings::new(&settings)?;
+        let ui_settings = UiSettings::new(&settings)?;
 
         let mut game_data = GameData {
-            inner: Rc::new(RefCell::new(GameDataInner {
-                database: database.clone(),
+            console_settings,
+            ui_settings,
 
-                ui_settings,
+            message_list: VecDeque::with_capacity(constants::MESSAGE_DEQUE_SIZE),
 
-                message_list: VecDeque::with_capacity(constants::MESSAGE_DEQUE_SIZE),
+            player: None,
+            turn: GameRatio::zero(),
 
-                player: None,
-
-                turn: GameRatio::zero(),
-                num_actors: 0,
-
-                tile_info_list: Vec::new(),
-                material_info_list: Vec::new(),
-            })),
+            tile_info_list: Vec::new(),
+            tile_start_id: None,
+            material_info_list: Vec::new(),
+            material_start_id: None,
         };
 
         // As tiles contain materials, initialize materials first.
-        let material_info_list = game_data.init_materials(&database)?;
-        let tile_info_list = game_data.init_tiles(&database)?;
+        let material_info_list = game_data.init_materials()?;
+        let tile_info_list = game_data.init_tiles()?;
 
         Ok(game_data)
     }
 
-    /// Returns a clone of the database.
-    pub fn database(&self) -> Database {
-        self.inner.borrow().database.clone()
+    /// Returns struct containing console settings.
+    pub fn console_settings(&self) -> &ConsoleSettings {
+        &self.console_settings
     }
 
-    /// Returns a clone of the database.
+    /// Returns struct containing UI settings.
     pub fn ui_settings(&self) -> UiSettings {
-        self.inner.borrow().ui_settings
+        self.ui_settings
     }
 
     /// Adds a string to the message deque.
@@ -112,78 +101,91 @@ impl GameData {
     /// # Panics
     /// If the player doesn't exist.
     pub fn player(&self) -> Actor {
-        let inner = self.inner.borrow();
-        inner.player.clone().unwrap()
+        self.player.clone().unwrap()
     }
 
-    pub fn set_player(&self, player: Actor) {
-        self.inner.borrow_mut().player = Some(player)
+    pub fn set_player(&mut self, player: Actor) {
+        self.player = Some(player)
     }
 
     /// Gets the current game turn.
     pub fn turn(&self) -> GameRatio {
-        self.inner.borrow().turn
+        self.turn
     }
 
     /// Sets the game turn.
-    pub fn set_turn(&self, value: GameRatio) {
-        self.inner.borrow_mut().turn = value;
-    }
-
-    /// Generates a new unique actor id.
-    pub fn actor_id(&self) -> usize {
-        let mut inner = self.inner.borrow_mut();
-        let id = inner.num_actors;
-        inner.num_actors += 1;
-        id
+    pub fn set_turn(&mut self, value: GameRatio) {
+        self.turn = value;
     }
 
     /// Returns a reference to the `TileInfo` object with `id`.
-    pub fn tile_info(&self, id: usize) -> Rc<TileInfo> {
-        self.inner.borrow().tile_info_list[id].clone()
+    #[cfg_attr(feature = "dev", flame)]
+    pub fn tile_info(&self, id: usize) -> Arc<TileInfo> {
+        self.tile_info_list[id - self.tile_start_id.unwrap()].clone()
     }
 
     /// Returns a reference to the `MaterialInfo` object with `id`.
-    pub fn material_info(&self, id: usize) -> Rc<MaterialInfo> {
-        self.inner.borrow().material_info_list[id].clone()
+    pub fn material_info(&self, id: usize) -> Arc<MaterialInfo> {
+        self.material_info_list[id - self.material_start_id.unwrap()].clone()
     }
 
-    fn init_tiles(&mut self, database: &Database) -> GameResult<()> {
-        let tiles = database.get_obj("tiles")?;
-        let len = tiles.len();
-        let mut vec_temp: Vec<Option<Rc<TileInfo>>> = vec![None; len];
+    fn init_tiles(&mut self) -> GameResult<()> {
+        let tiles = DATABASE.read().unwrap().get_obj("tiles")?;
+        let mut vec_temp: Vec<(Arc<TileInfo>, usize)> = Vec::new();
+        let mut min = usize::max_value();
 
         for tile_val in tiles.values() {
             if let Value::Obj(ref tile_data) = *tile_val {
-                let tile = Rc::new(TileInfo::new(self, tile_data).context(format!(
+                let tile = Arc::new(TileInfo::new(self, tile_data).context(format!(
                     "Could not load tile:\n{}",
                     tile_data
                 ))?);
-                vec_temp[tile_data.id()] = Some(tile);
+                let id = tile_data.id();
+                if id < min {
+                    min = id;
+                }
+                vec_temp.push((tile, id));
             }
         }
-        let vec_final = vec_temp.into_iter().map(|opt| opt.unwrap()).collect();
-        self.inner.borrow_mut().tile_info_list = vec_final;
+
+        let mut vec_option: Vec<Option<Arc<TileInfo>>> = vec![None; vec_temp.len()];
+        for (tile, id) in vec_temp {
+            vec_option[id - min] = Some(tile);
+        }
+        let vec_final = vec_option.into_iter().map(|opt| opt.unwrap()).collect();
+        self.tile_info_list = vec_final;
+        self.tile_start_id = Some(min);
 
         Ok(())
     }
 
-    fn init_materials(&mut self, database: &Database) -> GameResult<()> {
-        let materials = database.get_obj("materials")?;
-        let len = materials.len();
-        let mut vec_temp: Vec<Option<Rc<MaterialInfo>>> = vec![None; len];
+    fn init_materials(&mut self) -> GameResult<()> {
+        let materials = DATABASE.read().unwrap().get_obj("materials")?;
+        let mut vec_temp: Vec<(Arc<MaterialInfo>, usize)> = Vec::new();
+        let mut min = usize::max_value();
 
         for material_val in materials.values() {
             if let Value::Obj(ref material_data) = *material_val {
-                let material = Rc::new(MaterialInfo::new(material_data).context(format!(
+                let material = Arc::new(MaterialInfo::new(self, material_data).context(format!(
                     "Could not load material:\n{}",
                     material_data
                 ))?);
-                vec_temp[material_data.id()] = Some(material);
+                let id = material_data.id();
+                if id < min {
+                    min = id;
+                }
+                vec_temp.push((material, id));
             }
         }
-        let vec_final = vec_temp.into_iter().map(|opt| opt.unwrap()).collect();
-        self.inner.borrow_mut().material_info_list = vec_final;
+
+        // TODO: Use mem uninitialized to avoid this step.
+        let mut vec_option: Vec<Option<Arc<MaterialInfo>>> = vec![None; vec_temp.len()];
+        for (material, id) in vec_temp {
+            vec_option[id - min] = Some(material);
+        }
+        let vec_final = vec_option.into_iter().map(|opt| opt.unwrap()).collect();
+        self.material_info_list = vec_final;
+        self.material_start_id = Some(min);
 
         Ok(())
     }

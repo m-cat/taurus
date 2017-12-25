@@ -1,6 +1,7 @@
 //! Database module.
 
 pub use over::Obj as Database;
+pub use over::arr::Arr;
 pub use over::value::Value;
 
 use GameResult;

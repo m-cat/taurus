@@ -1,7 +1,9 @@
+black: "#1A1A1A"
 white: "#bdbdb3"
+
+brown: "#987654"
 light_gray: "#858585"
 gray: "#757575"
-brown: "#987654"
 
 blue: "#0000ff"
 green: "#00ff00"

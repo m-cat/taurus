@@ -48,11 +48,7 @@ pub fn rand_int<T>(x: T, y: T) -> T
 where
     T: Integer + SampleRange,
 {
-    if x < y {
-        rand::thread_rng().gen_range(x, y + T::one())
-    } else {
-        rand::thread_rng().gen_range(y, x + T::one())
-    }
+    rand::thread_rng().gen_range(x, y + T::one())
 }
 
 /// Returns a random Ratio in the inclusive range `[x, y]` with the given denominator.
@@ -87,7 +83,13 @@ where
 
 #[cfg(test)]
 mod tests {
-    use util::rand::{dice, rand_int};
+    use super::*;
+    use util::math::between;
+
+    #[quickcheck]
+    fn prop_rand_int(a: i32, b: i32) -> bool {
+        between(rand_int(a.min(b), a.max(b)), a, b)
+    }
 
     #[test]
     fn test_dice() {

@@ -1,10 +1,10 @@
 //! Game objects.
 
-use {GameError, GameResult};
+use {GAMEDATA, GameError, GameResult};
 use console::Color;
 use coord::Coord;
 use database::Database;
-use defs::{GameRatio, to_gameratio};
+use defs::*;
 use dungeon::{ActResult, Dungeon};
 use failure::ResultExt;
 use game_data::GameData;
@@ -12,15 +12,15 @@ use material::MaterialInfo;
 use std::cell::Cell;
 use std::cell::RefCell;
 use std::cmp::Ordering;
-use std::rc::Rc;
 use std::str::FromStr;
+use std::sync::{Arc, Mutex};
 use ui::Draw;
 use util::rand;
 
 #[derive(Debug)]
 pub struct ObjectInner {
     object_type: ObjectType,
-    material: Rc<MaterialInfo>,
+    material: Arc<MaterialInfo>,
     active: bool,
 
     name: String, // Generic name.
@@ -83,32 +83,27 @@ impl Draw for ObjectInner {
 /// the differences between `Object`s and `Actor`s, see module `actor`.
 #[derive(Clone, Debug)]
 pub struct Object {
-    pub inner: Rc<RefCell<ObjectInner>>,
+    pub inner: Arc<Mutex<ObjectInner>>,
 }
 
 impl Object {
     /// Creates a new `Object` at the given coordinates.
-    pub fn new(
-        game_data: &GameData,
-        coord: Coord,
-        object_data: &Database,
-        active: bool,
-    ) -> GameResult<Object> {
+    pub fn new(coord: Coord, object_data: &Database, active: bool) -> GameResult<Object> {
         // Load all data from the database.
 
         let object_type = ObjectType::from_str(object_data.get_str("type")?.as_str())?;
         let material = object_data.get_obj("material")?;
-        let material = game_data.material_info(material.id());
+        let material = GAMEDATA.read().unwrap().material_info(material.id());
 
         let name = object_data.get_str("name")?;
         let c = object_data.get_char("c")?;
 
-        let speed = to_gameratio(object_data.get_frac("speed")?)?;
+        let speed = bigr_to_gamer(object_data.get_frac("speed")?)?;
 
         // Create the object instance.
 
         let mut object = Object {
-            inner: Rc::new(RefCell::new(ObjectInner {
+            inner: Arc::new(Mutex::new(ObjectInner {
                 object_type,
                 material,
                 active,
@@ -117,7 +112,7 @@ impl Object {
                 c,
 
                 coord: coord,
-                turn: game_data.turn(),
+                turn: GAMEDATA.read().unwrap().turn(),
                 speed,
             })),
         };
@@ -132,44 +127,46 @@ impl Object {
         object_data: &Database,
         active: bool,
     ) -> GameResult<()> {
-        let o = Self::new(dungeon.game_data(), coord, object_data, active)
-            .context(format!("Could not load object:\n{}", object_data))?;
+        let o = Self::new(coord, object_data, active).context(format!(
+            "Could not load object:\n{}",
+            object_data
+        ))?;
         dungeon.add_object(o);
         Ok(())
     }
 
     pub fn name(&self) -> String {
-        self.inner.borrow().name.clone()
+        self.inner.lock().unwrap().name.clone()
     }
 
     /// Returns a copy of this object's coordinates.
     pub fn coord(&self) -> Coord {
-        self.inner.borrow().coord()
+        self.inner.lock().unwrap().coord()
     }
 
     pub fn set_coord(&mut self, coord: Coord) {
-        self.inner.borrow_mut().set_coord(coord);
+        self.inner.lock().unwrap().set_coord(coord);
     }
 
     /// Returns this object's next turn value.
     pub fn turn(&self) -> GameRatio {
-        self.inner.borrow().turn
+        self.inner.lock().unwrap().turn
     }
 
     /// Updates this object's turn based on its speed.
     pub fn update_turn(&mut self) {
-        let mut inner = self.inner.borrow_mut();
+        let mut inner = self.inner.lock().unwrap();
         let (turn, speed) = (inner.turn, inner.speed);
         inner.turn = turn + speed;
     }
 
     /// Returns this object's base speed.
     pub fn speed(&self) -> GameRatio {
-        self.inner.borrow().speed
+        self.inner.lock().unwrap().speed
     }
 
     pub fn passable(&self) -> bool {
-        let inner = self.inner.borrow();
+        let inner = self.inner.lock().unwrap();
         match inner.object_type {
             ObjectType::Door => inner.active, // For doors, active means open
             ObjectType::Trap => true,
@@ -177,13 +174,13 @@ impl Object {
     }
 
     pub fn visible(&self) -> bool {
-        self.inner.borrow().visible()
+        self.inner.lock().unwrap().visible()
     }
 
     /// Acts out the object's turn. Yes, objects can act, too.
     /// Could change itself or the dungeon as a side effect.
     pub fn act(&mut self, dungeon: &Dungeon) -> ActResult {
-        let mut inner = self.inner.borrow_mut();
+        let mut inner = self.inner.lock().unwrap();
         // TODO: rework this
         if !inner.active && inner.object_type == ObjectType::Door {
             if dungeon[inner.coord()].actor.is_none() && rand::dice(1, 2) {

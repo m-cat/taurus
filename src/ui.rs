@@ -1,8 +1,9 @@
 //! User interface module.
 
-use GameResult;
-use console::{CONSOLE, Color, DrawConsole};
+use {CONSOLE, GAMEDATA, GameResult};
+use console::Color;
 use constants;
+use coord::Coord;
 use database::Database;
 use defs::big_to_usize;
 use dungeon::Dungeon;
@@ -10,7 +11,9 @@ use game_data::GameData;
 use std::str::FromStr;
 use util::rectangle::Rectangle;
 
-pub fn calc_game_view(game_data: &GameData) -> Rectangle {
+pub fn calc_game_view() -> Rectangle {
+    let game_data = GAMEDATA.read().unwrap();
+
     let settings = game_data.ui_settings();
     let game_width = settings.game_width;
     let game_height = settings.game_height;
@@ -36,7 +39,6 @@ pub struct UiSettings {
 
 impl UiSettings {
     pub fn new(data: &Database) -> GameResult<UiSettings> {
-
         // Load all data from the database.
 
         let game_width = big_to_usize(data.get_int("game_width")?)?;
@@ -62,22 +64,13 @@ pub fn draw_all(dungeon: &Dungeon) {
 
     draw_game(dungeon);
 
-    let mut console = CONSOLE.lock().unwrap();
-    let fps = console.get_fps();
-    console.put_str(
-        0,
-        0,
-        &format!("{}", fps),
-        Color::from_str("#0000FF").unwrap(),
-    );
-    console.flush();
+    CONSOLE.lock().unwrap().flush();
 }
 
 pub fn draw_game(dungeon: &Dungeon) {
     let mut console = CONSOLE.lock().unwrap();
-    let game_data = dungeon.game_data();
 
-    let view = calc_game_view(&game_data);
+    let view = calc_game_view();
 
     let dungeon_width = dungeon.width() as i32;
     let dungeon_height = dungeon.height() as i32;
@@ -87,7 +80,8 @@ pub fn draw_game(dungeon: &Dungeon) {
             debug_assert!(x >= 0);
             debug_assert!(y >= 0);
 
-            let tile = &dungeon[x as usize][y as usize];
+            let coord = Coord::new(x, y);
+            let tile = &dungeon[coord];
 
             let draw_x = x - view.left;
             let draw_y = y - view.top;
@@ -118,7 +112,7 @@ pub fn draw_game(dungeon: &Dungeon) {
 
             // Draw object.
             if let Some(ref object) = tile.object {
-                let object = object.inner.borrow();
+                let object = object.inner.lock().unwrap();
                 if !foreground_drawn && object.visible() {
                     draw_c = object.draw_c();
                     draw_color = object.draw_color();

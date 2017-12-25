@@ -1,12 +1,14 @@
-//! A wrapper around the tcod library.
+//! Console I/O module.
 //!
 //! This module is designed so that it can be replaced with a different console
 //! implementation if necessary - it is an abstraction over tcod.
 
 pub use tcod::input::{self, Event, EventFlags, Key, KeyCode};
 
-use GameError;
+use {GameError, GameResult};
 use constants;
+use database::Database;
+use defs::*;
 use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
@@ -18,17 +20,6 @@ use tcod::Color as TcodColor;
 use tcod::input::check_for_event;
 use util::convert::color_code_to_rgb;
 
-lazy_static! {
-    // Initialize the console.
-    pub static ref CONSOLE: Mutex<DrawConsole> = Mutex::new(DrawConsole::init(
-        constants::SCR_WIDTH,
-        constants::SCR_HEIGHT,
-        constants::TITLE,
-        constants::FONT_DEFAULT,
-        constants::FPS,
-    ));
-}
-
 /// Color struct.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Color {
@@ -38,11 +29,6 @@ pub struct Color {
 }
 
 impl Color {
-    /// Returns a new `Color`.
-    pub fn new(r: u8, g: u8, b: u8) -> Color {
-        Color { r, g, b }
-    }
-
     /// Converts this `Color` to a tcod Color.
     pub fn to_tcod(&self) -> TcodColor {
         let Color { r, g, b } = *self;
@@ -70,6 +56,38 @@ impl fmt::Display for Color {
     }
 }
 
+#[derive(Debug)]
+pub struct ConsoleSettings {
+    title: String,
+    width: i32,
+    height: i32,
+    fps: i32,
+    font: String,
+    background_color: Color,
+}
+
+impl ConsoleSettings {
+    pub fn new(data: &Database) -> GameResult<ConsoleSettings> {
+        // Load all data from the database.
+
+        let title = data.get_str("title")?;
+        let width = big_to_i32(data.get_int("console_width")?)?;
+        let height = big_to_i32(data.get_int("console_height")?)?;
+        let fps = big_to_i32(data.get_int("fps")?)?;
+        let font = data.get_str("default_font")?;
+        let background_color = Color::from_str(&data.get_str("background_color")?)?;
+
+        Ok(ConsoleSettings {
+            title,
+            width,
+            height,
+            fps,
+            font,
+            background_color,
+        })
+    }
+}
+
 /// Console object responsible for display and input.
 pub struct DrawConsole {
     root: RootConsole,
@@ -77,19 +95,19 @@ pub struct DrawConsole {
 
 impl DrawConsole {
     /// Initialize a console.
-    pub fn init(width: usize, height: usize, title: &str, font: &str, fps: usize) -> DrawConsole {
-        tcod::system::set_fps(fps as i32);
+    pub fn new(settings: &ConsoleSettings) -> DrawConsole {
+        tcod::system::set_fps(settings.fps);
 
         let mut console = DrawConsole {
             root: RootConsole::initializer()
-                .size(width as i32, height as i32)
-                .title(title)
-                .font(font, FontLayout::Tcod)
+                .size(settings.width, settings.height)
+                .title(settings.title.clone())
+                .font(settings.font.clone(), FontLayout::Tcod)
                 .font_type(FontType::Greyscale)
-                .renderer(Renderer::OpenGL)
+                .renderer(Renderer::GLSL)
                 .init(),
         };
-        console.set_default_background(Color::from_str("#000000").unwrap());
+        console.set_default_background(settings.background_color);
 
         console
     }
