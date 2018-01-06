@@ -101,6 +101,7 @@ pub fn run_game() -> GameResult<()> {
     // Initialize the console.
     lazy_static::initialize(&CONSOLE);
 
+    #[cfg(feature = "dev")]
     for race in &["human", "elf", "dwarf", "dragon"] {
         let name_profile = DATABASE.read().unwrap().get_obj("name_profiles")?.get_obj(
             race,
