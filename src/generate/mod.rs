@@ -13,6 +13,7 @@ use failure::{Fail, ResultExt};
 use game_data::GameData;
 use generate::util::*;
 use object::Object;
+use player;
 use std::{fmt, thread, time};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -28,32 +29,36 @@ use util::rectangle::Rectangle;
 /// Generates a connected series of dungeons.
 #[cfg_attr(feature = "dev", flame)]
 pub fn gen_dungeon_list(
-    dungeon_list: DungeonList,
+    mut dungeon_list: DungeonList,
     dungeons_arr: &Arr,
     num_dungeons: usize,
 ) -> GameResult<DungeonList> {
     // Generate each depth.
 
-    let mut thread_list = Vec::with_capacity(num_dungeons);
-    let dungeon_list = Arc::new(Mutex::new(dungeon_list));
-    let (tx, rx) = mpsc::channel();
-
     for n in 0..num_dungeons {
-        let dungeon_list = dungeon_list.clone();
-        let dungeons_arr = dungeons_arr.clone();
-        let tx = tx.clone();
-
-        // TODO: Limit threads to num of cores. Use a threadpool here?
-        thread_list.push(thread::spawn(move || {
-            let result = create_dungeon(dungeon_list, dungeons_arr, n);
-            tx.send(result).unwrap();
-        }));
-    }
-    for n in 0..num_dungeons {
-        rx.recv()??;
+        create_dungeon(&mut dungeon_list, &dungeons_arr, n)?;
     }
 
-    let mut dungeon_list = Arc::try_unwrap(dungeon_list).unwrap().into_inner()?;
+    // let mut thread_list = Vec::with_capacity(num_dungeons);
+    // let dungeon_list = Arc::new(Mutex::new(dungeon_list));
+    // let (tx, rx) = mpsc::channel();
+
+    // for n in 0..num_dungeons {
+    //     let dungeon_list = Arc::clone(&dungeon_list);
+    //     let dungeons_arr = dungeons_arr.clone();
+    //     let tx = tx.clone();
+
+    //     // TODO: Limit threads to num of cores. Use a threadpool here?
+    //     thread_list.push(thread::spawn(move || {
+    //         let result = create_dungeon(&dungeon_list, &dungeons_arr, n);
+    //         tx.send(result).unwrap();
+    //     }));
+    // }
+    // for n in 0..num_dungeons {
+    //     rx.recv()??;
+    // }
+
+    // let mut dungeon_list = Arc::try_unwrap(dungeon_list).unwrap().into_inner()?;
 
     // Generate stairs and pits, skipping the last depth.
 
@@ -75,16 +80,16 @@ pub fn gen_dungeon_list(
 }
 
 fn create_dungeon(
-    dungeon_list: Arc<Mutex<DungeonList>>,
-    dungeons_arr: Arr,
+    dungeon_list: &mut DungeonList,
+    dungeons_arr: &Arr,
     index: usize,
 ) -> GameResult<()> {
-    let profile = get_dungeon_profile(&dungeons_arr, index)?;
+    let profile = get_dungeon_profile(dungeons_arr, index)?;
     let dungeon = Dungeon::new(index as u32, &profile).context(format!(
         "Failed to create dungeon at depth {}",
         index
     ))?;
-    dungeon_list.lock().unwrap().push(dungeon);
+    dungeon_list.push(dungeon);
 
     Ok(())
 }
@@ -93,8 +98,8 @@ fn create_dungeon(
 #[cfg_attr(feature = "dev", flame)]
 pub fn gen_dungeon(mut dungeon: &mut Dungeon, profile: &Database) -> GameResult<()> {
     match dungeon.dungeon_type {
-        DungeonType::Room => gen_dungeon_room(&mut dungeon, &profile)?,
-        DungeonType::Empty => gen_dungeon_empty(&mut dungeon, &profile)?,
+        DungeonType::Room => gen_dungeon_room(&mut dungeon, profile)?,
+        DungeonType::Empty => gen_dungeon_empty(&mut dungeon, profile)?,
     }
 
     Ok(())
@@ -132,12 +137,14 @@ fn gen_actor_random_coord(dungeon: &Dungeon, actor_data: &Database) -> GameResul
 fn gen_player(dungeon_list: &mut DungeonList, depth: usize) -> GameResult<Actor> {
     dungeon_list.current_depth = depth;
 
-    let dungeon = &dungeon_list[depth];
+    let mut dungeon = &mut dungeon_list[depth];
     let player_data = DATABASE.read().unwrap().get_obj("player")?;
 
-    let player = gen_actor_random_coord(&dungeon, &player_data)?;
+    let mut player = gen_actor_random_coord(dungeon, &player_data)?;
 
     GAMEDATA.write().unwrap().set_player(player.clone());
+
+    player::calc_fov(&mut player, &mut dungeon);
 
     Ok(player)
 }
@@ -154,6 +161,7 @@ fn get_dungeon_profile(dungeons_arr: &Arr, index: usize) -> GameResult<Database>
     ))?)
 }
 
+#[inline]
 pub fn gen_dungeon_empty(dungeon: &mut Dungeon, profile: &Database) -> GameResult<()> {
     dungeon.init_grid(20, 20, &profile.get_obj("wall_tile")?)?;
 
@@ -173,6 +181,7 @@ struct DungeonRoomParams {
 
 /// Generates a dungeon level using the "room method".
 #[cfg_attr(feature = "dev", flame)]
+#[inline]
 pub fn gen_dungeon_room(dungeon: &mut Dungeon, profile: &Database) -> GameResult<()> {
     let mut room_list: Vec<Rectangle> = Vec::new();
     let mut object_list: Vec<Object> = Vec::new();
@@ -249,6 +258,7 @@ pub fn gen_dungeon_room(dungeon: &mut Dungeon, profile: &Database) -> GameResult
 
 // Generates a room adjacent to `room`, or returns `None`.
 #[cfg_attr(feature = "dev", flame)]
+#[inline]
 fn gen_room_adjacent(
     dungeon: &mut Dungeon,
     room: &Rectangle,
@@ -261,8 +271,8 @@ fn gen_room_adjacent(
     let top: i32;
     let left: i32;
 
-    let width = gen_room_width(&params) as i32;
-    let height = gen_room_height(&params) as i32;
+    let width = gen_room_width(params) as i32;
+    let height = gen_room_height(params) as i32;
 
     match *direction {
         W => {
@@ -295,6 +305,7 @@ fn gen_room_adjacent(
 
 // Generates a door between two adjacent rooms in given `Direction`.
 #[cfg_attr(feature = "dev", flame)]
+#[inline]
 fn gen_room_adjacent_door(
     dungeon: &mut Dungeon,
     room: &Rectangle,
@@ -349,12 +360,14 @@ fn gen_room_adjacent_door(
 }
 
 // Checks if `room` does not collide with any rooms in `room_list`.
+#[inline]
 fn check_room_free(room: &Rectangle, room_list: &[Rectangle]) -> bool {
     !room_list.iter().any(|other| room.overlaps(other))
 }
 
 // Initializes `dungeon`'s dungeon grid based on the rooms in `room_list`.
 #[cfg_attr(feature = "dev", flame)]
+#[inline]
 fn init_dungeon_from_rooms(
     dungeon: &mut Dungeon,
     room_list: &[Rectangle],
@@ -394,15 +407,16 @@ fn init_dungeon_from_rooms(
     let floor = GAMEDATA.read().unwrap().tile_info(
         profile.get_obj("floor_tile")?.id(),
     );
-    gen_init_dungeon_rooms(dungeon, floor, room_list, dx, dy);
+    gen_init_dungeon_rooms(dungeon, &floor, room_list, dx, dy);
 
     Ok((dx, dy))
 }
 
 #[cfg_attr(feature = "dev", flame)]
+#[inline]
 fn gen_init_dungeon_rooms(
     dungeon: &mut Dungeon,
-    floor: Arc<TileInfo>,
+    floor: &Arc<TileInfo>,
     room_list: &[Rectangle],
     dx: i32,
     dy: i32,
@@ -410,23 +424,26 @@ fn gen_init_dungeon_rooms(
     for room in room_list {
         for x in room.left..room.right + 1 {
             for y in room.top..room.bottom + 1 {
-                dungeon[Coord::new(x + dx, y + dy)].info = floor.clone();
+                dungeon[Coord::new(x + dx, y + dy)].info = Arc::clone(floor);
             }
         }
     }
 }
 
 /// Generates the number of rooms for the dungeon level specified by `index`.
+#[inline]
 fn gen_num_rooms(params: &DungeonRoomParams) -> usize {
     rand_int(params.min_num_rooms, params.max_num_rooms)
 }
 
 /// Generates a random width for a room based on the dungeon level specified by `index`.
+#[inline]
 fn gen_room_width(params: &DungeonRoomParams) -> usize {
     rand_int(params.min_width, params.max_width)
 }
 
 /// Generates a random height for a room based on the dungeon level specified by `index`.
+#[inline]
 fn gen_room_height(params: &DungeonRoomParams) -> usize {
     rand_int(params.min_height, params.max_height)
 }

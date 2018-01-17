@@ -9,16 +9,8 @@ use num::Integer;
 /// # Examples
 /// assert_eq!(-2, min!(0, 2, -2, -1));
 macro_rules! min {
-    ( $x:expr, $( $e:expr ),+ ) => {
-        {
-            let mut res = $x;
-            $(
-                if $e.min(res) == $e {
-                    res = $e;
-                }
-            )+
-            res
-        }
+    ( $( $e:expr ),+ ) => {
+        *[$( $e ),+].iter().min().unwrap()
     }
 }
 
@@ -27,16 +19,8 @@ macro_rules! min {
 /// # Examples
 /// assert_eq!(2, max!(0, 2, -2, -1));
 macro_rules! max {
-    ( $x:expr, $( $e:expr ),+ ) => {
-        {
-            let mut res = $x;
-            $(
-                if $e.max(res) == $e {
-                    res = $e;
-                }
-            )+
-            res
-        }
+    ( $( $e:expr ),+ ) => {
+        *[$( $e ),+].iter().max().unwrap()
     }
 }
 

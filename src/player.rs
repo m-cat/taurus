@@ -18,9 +18,10 @@ use util;
 use util::direction::CompassDirection;
 
 /// Acts out the player's turn.
-pub fn player_act(player: &mut Actor, dungeon: &mut Dungeon) -> ActResult {
+pub fn player_act(mut player: &mut Actor, dungeon: &mut Dungeon) -> ActResult {
     let mut end_turn = false;
 
+    // Initialize input flags to check for.
     let mut input_flags = EventFlags::empty();
     input_flags.insert(input::KEY);
     input_flags.insert(input::MOUSE_PRESS);
@@ -41,9 +42,8 @@ pub fn player_act(player: &mut Actor, dungeon: &mut Dungeon) -> ActResult {
                 return ActResult::WindowClosed;
             }
 
-            match console.check_for_event(input_flags) {
-                Some((flags, event)) => break (flags, event),
-                None => (),
+            if let Some((flags, event)) = console.check_for_event(input_flags) {
+                break (flags, event);
             }
 
             // Sleep a bit so we don't tax the CPU.
@@ -58,6 +58,10 @@ pub fn player_act(player: &mut Actor, dungeon: &mut Dungeon) -> ActResult {
         }
 
         end_turn = end;
+
+        // Calculate FOV.
+
+        calc_fov(&mut player, dungeon);
     }
 
     ActResult::None
@@ -73,6 +77,7 @@ pub fn player_process_event(
     match event {
         Event::Key(key) => {
             if flags.contains(input::KEY_PRESS) {
+                #[allow(match_same_arms)]
                 match key.code {
                     Left => return player.try_move_dir(dungeon, CompassDirection::W),
                     Up => return player.try_move_dir(dungeon, CompassDirection::N),
@@ -103,7 +108,7 @@ pub fn player_process_event(
             }
         }
         Event::Mouse(mouse) => {
-            // Print info about all structures at mouse.
+            // Print debug info about all structures at mouse.
             #[cfg(feature = "dev")]
             {
                 let view = ui::calc_game_view();
@@ -132,4 +137,18 @@ pub fn player_process_event(
     }
 
     (ActResult::None, false)
+}
+
+/// Calculates FOV around the player.
+/// This should be called whenever the player moves.
+/// Messages, for example, are only added if the player sees the event.
+pub fn calc_fov(player: &Actor, dungeon: &mut Dungeon) {
+    // TODO: Replace libtcod FOV algorithm.
+    // We only need to get FOV for a small section of the dungeon.
+
+    let inner = player.inner.lock().unwrap();
+    let origin = inner.coord;
+    let fov_radius = inner.fov_radius as i32;
+
+    dungeon.calc_fov(origin, fov_radius);
 }

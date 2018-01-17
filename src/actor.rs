@@ -19,24 +19,25 @@ use util::direction::CompassDirection;
 
 #[derive(Debug)]
 pub struct ActorInner {
-    name: String, // Generic name.
+    pub name: String, // Generic name.
 
-    c: char,
-    color: Color,
+    pub c: char,
+    pub color: Color,
 
-    coord: Coord, // Coordinate location in level.
-    turn: GameRatio,
-    speed: GameRatio,
+    pub coord: Coord, // Coordinate location in level.
+    pub turn: GameRatio,
+    pub speed: GameRatio,
 
     // STATS
-    hp_cur: i32, // Current health. This value can be negative!
-    hp_max: u32,
+    pub hp_cur: i32, // Current health. This value can be negative!
+    pub hp_max: u32,
+    pub fov_radius: u32,
 
     // COMBAT STATE
-    visible: bool,
+    pub visible: bool,
 
     // AI ATTRIBUTES
-    behavior: Behavior,
+    pub behavior: Behavior,
 }
 
 /// Actor object.
@@ -66,6 +67,7 @@ impl Actor {
         let hp = big_to_u32(data.get_int("hp")?)?;
         let hp_cur = hp as i32;
         let hp_max = hp;
+        let fov_radius = big_to_u32(data.get_int("fov_radius")?)?;
 
         let visible = data.get_bool("visible")?;
 
@@ -86,6 +88,7 @@ impl Actor {
 
                 hp_cur,
                 hp_max,
+                fov_radius,
 
                 visible,
 

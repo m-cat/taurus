@@ -27,5 +27,6 @@ mod tests {
         assert_eq!("", capitalize(""));
         assert_eq!("Cap", capitalize("cap"));
         assert_eq!("Yabba dabba", capitalize("yabba dabba"));
+        assert_eq!("Doo", capitalize("Doo"));
     }
 }

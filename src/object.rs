@@ -29,6 +29,8 @@ pub struct ObjectInner {
     coord: Coord,
     turn: GameRatio,
     speed: GameRatio,
+
+    pub transparent: bool,
 }
 
 impl ObjectInner {
@@ -47,11 +49,7 @@ impl ObjectInner {
     }
 
     pub fn visible(&self) -> bool {
-        if self.object_type == ObjectType::Door && !self.active {
-            false
-        } else {
-            true
-        }
+        !(self.object_type == ObjectType::Door && !self.active)
     }
 
     pub fn active(&self) -> bool {
@@ -100,6 +98,8 @@ impl Object {
 
         let speed = bigr_to_gamer(object_data.get_frac("speed")?)?;
 
+        let transparent = object_data.get_bool("transparent")?;
+
         // Create the object instance.
 
         let mut object = Object {
@@ -114,6 +114,8 @@ impl Object {
                 coord: coord,
                 turn: GAMEDATA.read().unwrap().turn(),
                 speed,
+
+                transparent,
             })),
         };
         object.update_turn();
@@ -175,6 +177,11 @@ impl Object {
 
     pub fn visible(&self) -> bool {
         self.inner.lock().unwrap().visible()
+    }
+
+    pub fn transparent(&self) -> bool {
+        let inner = self.inner.lock().unwrap();
+        inner.transparent || !inner.visible()
     }
 
     /// Acts out the object's turn. Yes, objects can act, too.

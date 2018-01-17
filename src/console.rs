@@ -104,7 +104,7 @@ impl DrawConsole {
                 .title(settings.title.clone())
                 .font(settings.font.clone(), FontLayout::Tcod)
                 .font_type(FontType::Greyscale)
-                .renderer(Renderer::GLSL)
+                .renderer(Renderer::OpenGL)
                 .init(),
         };
         console.set_default_background(settings.background_color);

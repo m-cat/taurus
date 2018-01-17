@@ -81,7 +81,7 @@ dragon: {
 
     start_vowels: ("aaeeiioouy" 1)
     mid_vowels: ("aeio" .85)
-    mid_dvowels: ("io"+"ou" .15)
+    mid_dvowels: ("ou" .15)
     end_vowels: ("iu" .1)
     end_dvowels: ("oh" .9)
 }

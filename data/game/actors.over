@@ -8,6 +8,7 @@
 @default: {
     speed: 1.0
     visible: true
+    fov_radius: 16
 }
 
 # Used in tests only

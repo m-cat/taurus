@@ -15,15 +15,17 @@ use object::Object;
 use std::cell::{Cell, RefCell};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
+use std::fmt;
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 use std::rc::Rc;
 use std::str::FromStr;
+use tcod::map::FovAlgorithm;
+use tcod::map::Map;
 use tile::Tile;
 use util::rand::rand_int;
 
 /// Struct containing a single depth of the dungeon.
 /// This struct is also responsible for running the actor priority queue.
-#[derive(Debug)]
 pub struct Dungeon {
     pub danger_level: u32,
     pub dungeon_type: DungeonType,
@@ -32,21 +34,37 @@ pub struct Dungeon {
     width: usize,
     height: usize,
 
+    pub fov_grid: Map,
+    pub fov_start: Coord,
+    pub fov_end: Coord,
+
     // Not serialized.
     actor_queue: BinaryHeap<Actor>,
     object_queue: BinaryHeap<Object>,
 }
 
+// impl fmt::Debug for Dungeon {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         write!(f, "Dungeon {{ width: {}, height: {} }}", self.width, self.height)
+//     }
+// }
+
 impl Dungeon {
     #[cfg_attr(feature = "dev", flame)]
     pub fn new(danger_level: u32, profile_data: &Database) -> GameResult<Dungeon> {
         let dungeon_type = DungeonType::from_str(&profile_data.get_str("type")?)?;
+        let ui_settings = GAMEDATA.read().unwrap().ui_settings;
+        let fov_width = (ui_settings.game_width / 2) as i32;
+        let fov_height = (ui_settings.game_height / 2) as i32;
 
         let mut dungeon = Dungeon {
             danger_level,
             dungeon_type,
 
             tile_grid: Vec::with_capacity(0),
+            fov_grid: Map::new(fov_width * 2 + 1, fov_height * 2 + 1),
+            fov_start: Default::default(),
+            fov_end: Default::default(),
             width: 0,
             height: 0,
 
@@ -54,7 +72,7 @@ impl Dungeon {
             object_queue: BinaryHeap::new(),
         };
 
-        gen_dungeon(&mut dungeon, &profile_data)?;
+        gen_dungeon(&mut dungeon, profile_data)?;
 
         Ok(dungeon)
     }
@@ -89,9 +107,71 @@ impl Dungeon {
         self.height
     }
 
+    pub fn visible(&self, coord: Coord) -> bool {
+        let Coord { x, y } = coord;
+        if x < max!(self.fov_start.x, 0) || y < max!(self.fov_start.y, 0) ||
+            x > min!(self.fov_end.x + 1, self.width as i32) ||
+            y > min!(self.fov_end.y + 1, self.height as i32)
+        {
+            return false;
+        }
+
+        self.fov_grid.is_in_fov(
+            x - self.fov_start.x,
+            y - self.fov_start.y,
+        )
+    }
+
+    pub fn set_visible(&mut self, coord: Coord, transparent: bool) {
+        self.fov_grid.set(
+            coord.x - self.fov_start.x,
+            coord.y - self.fov_start.y,
+            transparent,
+            false,
+        );
+    }
+
     pub fn in_bounds(&self, coord: Coord) -> bool {
         let Coord { x, y } = coord;
         x >= 0 && y >= 0 && x < self.width() as i32 && y < self.height() as i32
+    }
+
+    pub fn calc_fov(&mut self, origin: Coord, fov_radius: i32) {
+        let radius = Coord::new(fov_radius, fov_radius);
+        let start = origin - radius;
+        let end = origin + radius;
+
+        self.fov_start = start;
+        self.fov_end = end;
+
+        self.fov_grid.clear(false, false);
+
+        for x in max!(start.x, 0)..min!(end.x + 1, self.width as i32) {
+            for y in max!(start.y, 0)..min!(end.y + 1, self.height as i32) {
+                let coord = Coord::new(x, y);
+                let mut transparent = false;
+
+                // Set tile transparency.
+                if self[coord].transparent() {
+                    transparent = true;
+                }
+                // If object is not transparent, override.
+                if let Some(ref object) = self[coord].object {
+                    if !object.transparent() {
+                        transparent = false
+                    }
+                }
+                self.set_visible(coord, transparent);
+            }
+        }
+
+        self.fov_grid.compute_fov(
+            origin.x - start.x,
+            origin.y - start.y,
+            fov_radius,
+            true,
+            FovAlgorithm::Diamond,
+        );
     }
 
     /// Returns the number of actors in the dungeon.
@@ -212,13 +292,13 @@ impl Dungeon {
         // Determine whether an actor or an object is about to move.
         if actor_turn.is_none() {
             *actor_turn = Some(match self.actor_queue.peek() {
-                Some(ref actor) => actor.turn(),
+                Some(actor) => actor.turn(),
                 None => return GameLoopOutcome::NoActors,
             })
         }
         if object_turn.is_none() {
             *object_turn = Some(match self.object_queue.peek() {
-                Some(ref object) => object.turn(),
+                Some(object) => object.turn(),
                 None => gameratio_max(),
             })
         }
@@ -323,7 +403,6 @@ impl<'a> IndexMut<&'a Coord> for Dungeon {
 }
 
 /// List of dungeons.
-#[derive(Debug)]
 pub struct DungeonList {
     dungeon_list: Vec<Dungeon>,
     pub current_depth: usize,

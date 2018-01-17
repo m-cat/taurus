@@ -1,7 +1,7 @@
 //! Coordinate utility.
 
 use std::fmt;
-use std::ops::Add;
+use std::ops::{Add, Sub};
 use util::direction::Direction;
 use util::math::in_one;
 
@@ -46,6 +46,17 @@ impl Add for Coord {
         Coord {
             x: self.x + other.x,
             y: self.y + other.y,
+        }
+    }
+}
+
+impl Sub for Coord {
+    type Output = Coord;
+
+    fn sub(self, other: Self) -> Self::Output {
+        Coord {
+            x: self.x - other.x,
+            y: self.y - other.y,
         }
     }
 }

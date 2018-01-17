@@ -18,6 +18,8 @@
     c: '+'
 
     speed: 1.0
+
+    transparent: false
 }
 
 wooden_door: {
@@ -35,6 +37,8 @@ wooden_door: {
     material: @materials.wood
 
     c: '?'
+
+    transparent: false
 }
 
 test: @test

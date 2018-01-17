@@ -86,9 +86,12 @@ mod tests {
     use super::*;
     use util::math::between;
 
-    #[quickcheck]
-    fn prop_rand_int(a: i32, b: i32) -> bool {
-        between(rand_int(a.min(b), a.max(b)), a, b)
+    #[test]
+    fn test_rand_int() {
+        for _ in 1..100 {
+            let (a, b) = (rand_int(0, 1000), rand_int(0, 1000));
+            assert!(between(rand_int(a.min(b), a.max(b)), a, b))
+        }
     }
 
     #[test]

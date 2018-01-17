@@ -10,19 +10,12 @@
 // // Non-lexical lifetimes
 // #![feature(nll)]
 
-// Quickcheck
-#![cfg_attr(test, feature(plugin))]
-#![cfg_attr(test, plugin(quickcheck_macros))]
-
 // Flame
 #![cfg_attr(feature="dev", feature(plugin, custom_attribute))]
 #![cfg_attr(feature="dev", plugin(flamer))]
 
 #[cfg(feature = "dev")]
 extern crate flame;
-
-#[cfg(test)]
-extern crate quickcheck;
 
 // Required dependencies
 #[macro_use]
@@ -85,7 +78,7 @@ lazy_static! {
     /// Drawing console.
     pub static ref CONSOLE: Mutex<DrawConsole> = {
         let game_data = GAMEDATA.read().unwrap();
-        Mutex::new(dev_time!(DrawConsole::new(&game_data.console_settings()),
+        Mutex::new(dev_time!(DrawConsole::new(&game_data.console_settings),
                              "Initializing draw console..."))
     };
 }
@@ -101,13 +94,13 @@ pub fn run_game() -> GameResult<()> {
     // Initialize the console.
     lazy_static::initialize(&CONSOLE);
 
+    // Display random names. TODO: remove this
     #[cfg(feature = "dev")]
     for race in &["human", "elf", "dwarf", "dragon"] {
         let name_profile = DATABASE.read().unwrap().get_obj("name_profiles")?.get_obj(
             race,
         )?;
 
-        // Display random names. TODO: remove this
         println!("{} names:", util::string::capitalize(race));
         for _ in 1..10 {
             println!("{}", name_gen::name_gen(&name_profile)?);

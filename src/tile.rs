@@ -64,8 +64,13 @@ impl TileInfo {
     pub fn full_name(&self) -> String {
         format!("{} {}", self.material.adjective, self.name)
     }
+}
 
-    pub fn color(&self) -> Color {
+impl Draw for TileInfo {
+    fn draw_c(&self) -> char {
+        self.c
+    }
+    fn draw_color(&self) -> Color {
         self.material.color
     }
 }
@@ -80,16 +85,16 @@ impl TileInfo {
 pub struct Tile {
     /// A reference to the `TileInfo`.
     pub info: Arc<TileInfo>,
-
     /// Last seen tile here. This also tells us whether this tile has been seen before.
     pub last_seen: Option<Arc<TileInfo>>,
 
+    /// Elevation of this tile in the heightmap. 0 is ground level, < 0 is below ground.
+    pub height: i32,
+
+    // Not serialized:
     pub actor: Option<Actor>,
     pub object: Option<Object>,
     pub item_stash: Option<Box<ItemStash>>,
-
-    /// Elevation of this tile in the heightmap. 0 is ground level, < 0 is below ground.
-    pub height: i32,
 }
 
 impl Tile {
@@ -101,14 +106,13 @@ impl Tile {
 
         Ok(Tile {
             info,
-
             last_seen: None,
+
+            height: 0,
 
             actor: None,
             object: None,
             item_stash: None,
-
-            height: 0,
         })
     }
 
@@ -132,15 +136,6 @@ impl Tile {
 
     pub fn staircase(&self) -> Staircase {
         self.info.staircase
-    }
-}
-
-impl Draw for Tile {
-    fn draw_c(&self) -> char {
-        self.info.c
-    }
-    fn draw_color(&self) -> Color {
-        self.info.color()
     }
 }
 

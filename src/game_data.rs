@@ -34,9 +34,9 @@ pub enum GameLoopOutcome {
 
 #[derive(Debug)]
 pub struct GameData {
-    console_settings: ConsoleSettings,
+    pub console_settings: ConsoleSettings,
     /// A struct containing UI parameters.
-    ui_settings: UiSettings,
+    pub ui_settings: UiSettings,
 
     /// Message deque storing a fixed number of messages.
     message_list: VecDeque<String>,
@@ -49,6 +49,7 @@ pub struct GameData {
     /// Vector of tile info structs, indexed by id.
     tile_info_list: Vec<Arc<TileInfo>>,
     tile_start_id: Option<usize>,
+
     /// Vector of material structs, indexed by id.
     material_info_list: Vec<Arc<MaterialInfo>>,
     material_start_id: Option<usize>,
@@ -77,20 +78,10 @@ impl GameData {
         };
 
         // As tiles contain materials, initialize materials first.
-        let material_info_list = game_data.init_materials()?;
-        let tile_info_list = game_data.init_tiles()?;
+        game_data.init_materials()?;
+        game_data.init_tiles()?;
 
         Ok(game_data)
-    }
-
-    /// Returns struct containing console settings.
-    pub fn console_settings(&self) -> &ConsoleSettings {
-        &self.console_settings
-    }
-
-    /// Returns struct containing UI settings.
-    pub fn ui_settings(&self) -> UiSettings {
-        self.ui_settings
     }
 
     /// Adds a string to the message deque.
@@ -121,12 +112,14 @@ impl GameData {
     /// Returns a reference to the `TileInfo` object with `id`.
     #[cfg_attr(feature = "dev", flame)]
     pub fn tile_info(&self, id: usize) -> Arc<TileInfo> {
-        self.tile_info_list[id - self.tile_start_id.unwrap()].clone()
+        Arc::clone(&self.tile_info_list[id - self.tile_start_id.unwrap()])
     }
 
     /// Returns a reference to the `MaterialInfo` object with `id`.
     pub fn material_info(&self, id: usize) -> Arc<MaterialInfo> {
-        self.material_info_list[id - self.material_start_id.unwrap()].clone()
+        Arc::clone(
+            &self.material_info_list[id - self.material_start_id.unwrap()],
+        )
     }
 
     fn init_tiles(&mut self) -> GameResult<()> {

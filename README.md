@@ -27,7 +27,7 @@ Basic demo is working. You can move around with the arrow keys.
 
 ### Todo
 
-* Implement field of vision.
+* Implement field of vision (almost done, still need remembered tiles).
 * Implement the UI.
 * Enemies/AI.
 

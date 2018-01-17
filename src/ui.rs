@@ -14,7 +14,7 @@ use util::rectangle::Rectangle;
 pub fn calc_game_view() -> Rectangle {
     let game_data = GAMEDATA.read().unwrap();
 
-    let settings = game_data.ui_settings();
+    let settings = game_data.ui_settings;
     let game_width = settings.game_width;
     let game_height = settings.game_height;
 
@@ -86,36 +86,51 @@ pub fn draw_game(dungeon: &Dungeon) {
             let draw_x = x - view.left;
             let draw_y = y - view.top;
 
-            // Common case is that we draw a tile, so initialize with tile's values.
-            let mut draw_c = tile.draw_c();
-            let mut draw_color = tile.draw_color();
+            let mut draw_c;
+            let mut draw_color;
 
-            let mut foreground_drawn = false;
-
-            // Draw actor.
-            if let Some(ref actor) = tile.actor {
-                if actor.visible() {
-                    draw_c = actor.draw_c();
-                    draw_color = actor.draw_color();
-                    foreground_drawn = true;
+            if !dungeon.visible(coord) {
+                // Tile not currently visible.
+                match tile.last_seen {
+                    Some(ref info) => {
+                        draw_c = info.draw_c();
+                        draw_color = info.draw_color();
+                    }
+                    None => continue,
                 }
-            }
+            } else {
+                // Tile currently visible.
 
-            // Draw item stash.
-            if let Some(ref stash) = tile.item_stash {
-                if !foreground_drawn {
-                    draw_c = stash.draw_c();
-                    draw_color = stash.draw_color();
-                    foreground_drawn = true;
+                // Common case is that we draw a tile, so initialize with tile's values.
+                draw_c = tile.info.draw_c();
+                draw_color = tile.info.draw_color();
+                let mut foreground_drawn = false;
+
+                // Draw actor.
+                if let Some(ref actor) = tile.actor {
+                    if actor.visible() {
+                        draw_c = actor.draw_c();
+                        draw_color = actor.draw_color();
+                        foreground_drawn = true;
+                    }
                 }
-            }
 
-            // Draw object.
-            if let Some(ref object) = tile.object {
-                let object = object.inner.lock().unwrap();
-                if !foreground_drawn && object.visible() {
-                    draw_c = object.draw_c();
-                    draw_color = object.draw_color();
+                // Draw item stash.
+                if let Some(ref stash) = tile.item_stash {
+                    if !foreground_drawn {
+                        draw_c = stash.draw_c();
+                        draw_color = stash.draw_color();
+                        foreground_drawn = true;
+                    }
+                }
+
+                // Draw object.
+                if let Some(ref object) = tile.object {
+                    let object = object.inner.lock().unwrap();
+                    if !foreground_drawn && object.visible() {
+                        draw_c = object.draw_c();
+                        draw_color = object.draw_color();
+                    }
                 }
             }
 
