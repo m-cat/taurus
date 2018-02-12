@@ -8,6 +8,7 @@ use database::Database;
 use defs::big_to_usize;
 use dungeon::Dungeon;
 use game_data::GameData;
+use std::cell::Cell;
 use std::str::FromStr;
 use util::rectangle::Rectangle;
 
@@ -81,7 +82,7 @@ pub fn draw_game(dungeon: &Dungeon) {
             debug_assert!(y >= 0);
 
             let coord = Coord::new(x, y);
-            let tile = &dungeon[coord];
+            let mut tile = &dungeon[coord];
 
             let draw_x = x - view.left;
             let draw_y = y - view.top;
@@ -91,10 +92,18 @@ pub fn draw_game(dungeon: &Dungeon) {
 
             if !dungeon.visible(coord) {
                 // Tile not currently visible.
-                match tile.last_seen {
-                    Some(ref info) => {
-                        draw_c = info.draw_c();
-                        draw_color = info.draw_color();
+
+                match tile.last_seen.get() {
+                    Some((c, color)) => {
+                        draw_c = c;
+
+                        // Darken the last seen tile color.
+                        let factor: f32 = 0.5;
+                        draw_color = Color {
+                            r: (color.r as f32 * factor) as u8,
+                            g: (color.g as f32 * factor) as u8,
+                            b: (color.b as f32 * factor) as u8,
+                        };
                     }
                     None => continue,
                 }
@@ -132,6 +141,8 @@ pub fn draw_game(dungeon: &Dungeon) {
                         draw_color = object.draw_color();
                     }
                 }
+
+                tile.last_seen.set(Some((draw_c, draw_color)));
             }
 
             console.draw_char(draw_x, draw_y, draw_c, draw_color);

@@ -9,7 +9,7 @@ use game_data::GameData;
 use item::ItemStash;
 use material::MaterialInfo;
 use object::Object;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::str::FromStr;
 use std::sync::Arc;
 use ui::Draw;
@@ -86,7 +86,7 @@ pub struct Tile {
     /// A reference to the `TileInfo`.
     pub info: Arc<TileInfo>,
     /// Last seen tile here. This also tells us whether this tile has been seen before.
-    pub last_seen: Option<Arc<TileInfo>>,
+    pub last_seen: Cell<Option<(char, Color)>>,
 
     /// Elevation of this tile in the heightmap. 0 is ground level, < 0 is below ground.
     pub height: i32,
@@ -106,7 +106,7 @@ impl Tile {
 
         Ok(Tile {
             info,
-            last_seen: None,
+            last_seen: Cell::new(None),
 
             height: 0,
 
