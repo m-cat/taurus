@@ -100,9 +100,9 @@ pub fn draw_game(dungeon: &Dungeon) {
                         // Darken the last seen tile color.
                         let factor: f32 = 0.5;
                         draw_color = Color {
-                            r: (color.r as f32 * factor) as u8,
-                            g: (color.g as f32 * factor) as u8,
-                            b: (color.b as f32 * factor) as u8,
+                            r: (f32::from(color.r) * factor) as u8,
+                            g: (f32::from(color.g) * factor) as u8,
+                            b: (f32::from(color.b) * factor) as u8,
                         };
                     }
                     None => continue,

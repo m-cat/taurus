@@ -50,7 +50,6 @@ pub struct Dungeon {
 // }
 
 impl Dungeon {
-    #[cfg_attr(feature = "dev", flame)]
     pub fn new(danger_level: u32, profile_data: &Database) -> GameResult<Dungeon> {
         let dungeon_type = DungeonType::from_str(&profile_data.get_str("type")?)?;
         let ui_settings = GAMEDATA.read().unwrap().ui_settings;
@@ -77,7 +76,6 @@ impl Dungeon {
         Ok(dungeon)
     }
 
-    #[cfg_attr(feature = "dev", flame)]
     pub fn init_grid(
         &mut self,
         width: usize,
@@ -149,12 +147,10 @@ impl Dungeon {
         for x in max!(start.x, 0)..min!(end.x + 1, self.width as i32) {
             for y in max!(start.y, 0)..min!(end.y + 1, self.height as i32) {
                 let coord = Coord::new(x, y);
-                let mut transparent = false;
 
                 // Set tile transparency.
-                if self[coord].transparent() {
-                    transparent = true;
-                }
+                let mut transparent = self[coord].transparent();
+
                 // If object is not transparent, override.
                 if let Some(ref object) = self[coord].object {
                     if !object.transparent() {
@@ -180,7 +176,6 @@ impl Dungeon {
     }
 
     /// Adds actor to both the tile grid and the priority queue.
-    #[cfg_attr(feature = "dev", flame)]
     pub fn add_actor(&mut self, actor: Actor) {
         let coord = actor.coord();
         debug_assert!(self[coord].actor.is_none()); // Actors can't share tiles.
@@ -410,7 +405,6 @@ pub struct DungeonList {
 
 impl DungeonList {
     /// Creates a new `DungeonList` with `n` dungeons.
-    #[cfg_attr(feature = "dev", flame)]
     pub fn new() -> GameResult<DungeonList> {
         let dungeons = DATABASE
             .read()

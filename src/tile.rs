@@ -99,7 +99,6 @@ pub struct Tile {
 
 impl Tile {
     /// Returns a new `Tile` object.
-    #[cfg_attr(feature = "dev", flame)]
     pub fn new(tile_data: &Database) -> GameResult<Tile> {
         let id = tile_data.id();
         let info = GAMEDATA.read().unwrap().tile_info(id);

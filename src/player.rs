@@ -18,7 +18,7 @@ use util;
 use util::direction::CompassDirection;
 
 /// Acts out the player's turn.
-pub fn player_act(mut player: &mut Actor, dungeon: &mut Dungeon) -> ActResult {
+pub fn player_act(player: &mut Actor, dungeon: &mut Dungeon) -> ActResult {
     let mut end_turn = false;
 
     // Initialize input flags to check for.
@@ -61,7 +61,7 @@ pub fn player_act(mut player: &mut Actor, dungeon: &mut Dungeon) -> ActResult {
 
         // Calculate FOV.
 
-        calc_fov(&mut player, dungeon);
+        calc_fov(player, dungeon);
     }
 
     ActResult::None

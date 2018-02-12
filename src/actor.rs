@@ -53,7 +53,6 @@ pub struct Actor {
 
 impl Actor {
     /// Creates a new actor at the given coordinates.
-    #[cfg_attr(feature = "dev", flame)]
     pub fn new(coord: Coord, data: &Database) -> GameResult<Actor> {
 
         // Load all data from the database.

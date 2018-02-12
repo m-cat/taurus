@@ -110,7 +110,6 @@ impl GameData {
     }
 
     /// Returns a reference to the `TileInfo` object with `id`.
-    #[cfg_attr(feature = "dev", flame)]
     pub fn tile_info(&self, id: usize) -> Arc<TileInfo> {
         Arc::clone(&self.tile_info_list[id - self.tile_start_id.unwrap()])
     }

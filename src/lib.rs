@@ -11,8 +11,8 @@
 // #![feature(nll)]
 
 // Flame
-#![cfg_attr(feature="dev", feature(plugin, custom_attribute))]
-#![cfg_attr(feature="dev", plugin(flamer))]
+#![cfg_attr(feature = "dev", feature(plugin, custom_attribute))]
+#![cfg_attr(feature = "dev", plugin(flamer))]
 
 #[cfg(feature = "dev")]
 extern crate flame;
@@ -144,7 +144,6 @@ pub fn run_game() -> GameResult<()> {
     Ok(())
 }
 
-#[cfg_attr(feature = "dev", flame)]
 fn init_new_game() -> GameResult<DungeonList> {
     // Generate game.
     let dungeon_list = dev_time!(DungeonList::new()?, "Generating game world...");

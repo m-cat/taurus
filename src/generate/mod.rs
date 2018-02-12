@@ -27,7 +27,6 @@ use util::rand::{Choose, dice, rand_int, rand_ratio};
 use util::rectangle::Rectangle;
 
 /// Generates a connected series of dungeons.
-#[cfg_attr(feature = "dev", flame)]
 pub fn gen_dungeon_list(
     mut dungeon_list: DungeonList,
     dungeons_arr: &Arr,
@@ -36,7 +35,7 @@ pub fn gen_dungeon_list(
     // Generate each depth.
 
     for n in 0..num_dungeons {
-        create_dungeon(&mut dungeon_list, &dungeons_arr, n)?;
+        create_dungeon(&mut dungeon_list, dungeons_arr, n)?;
     }
 
     // let mut thread_list = Vec::with_capacity(num_dungeons);
@@ -95,7 +94,6 @@ fn create_dungeon(
 }
 
 /// Generates a single depth of the dungeon.
-#[cfg_attr(feature = "dev", flame)]
 pub fn gen_dungeon(mut dungeon: &mut Dungeon, profile: &Database) -> GameResult<()> {
     match dungeon.dungeon_type {
         DungeonType::Room => gen_dungeon_room(&mut dungeon, profile)?,
@@ -133,23 +131,21 @@ fn gen_actor_random_coord(dungeon: &Dungeon, actor_data: &Database) -> GameResul
 }
 
 /// Creates the player and places him in a random location of the dungeon.
-#[cfg_attr(feature = "dev", flame)]
 fn gen_player(dungeon_list: &mut DungeonList, depth: usize) -> GameResult<Actor> {
     dungeon_list.current_depth = depth;
 
     let mut dungeon = &mut dungeon_list[depth];
     let player_data = DATABASE.read().unwrap().get_obj("player")?;
 
-    let mut player = gen_actor_random_coord(dungeon, &player_data)?;
+    let player = gen_actor_random_coord(dungeon, &player_data)?;
 
     GAMEDATA.write().unwrap().set_player(player.clone());
 
-    player::calc_fov(&mut player, &mut dungeon);
+    player::calc_fov(&player, &mut dungeon);
 
     Ok(player)
 }
 
-#[cfg_attr(feature = "dev", flame)]
 fn get_dungeon_profile(dungeons_arr: &Arr, index: usize) -> GameResult<Database> {
     let dungeons_file = "dungeons.over";
 
@@ -180,7 +176,6 @@ struct DungeonRoomParams {
 }
 
 /// Generates a dungeon level using the "room method".
-#[cfg_attr(feature = "dev", flame)]
 #[inline]
 pub fn gen_dungeon_room(dungeon: &mut Dungeon, profile: &Database) -> GameResult<()> {
     let mut room_list: Vec<Rectangle> = Vec::new();
@@ -257,7 +252,6 @@ pub fn gen_dungeon_room(dungeon: &mut Dungeon, profile: &Database) -> GameResult
 }
 
 // Generates a room adjacent to `room`, or returns `None`.
-#[cfg_attr(feature = "dev", flame)]
 #[inline]
 fn gen_room_adjacent(
     dungeon: &mut Dungeon,
@@ -304,7 +298,6 @@ fn gen_room_adjacent(
 }
 
 // Generates a door between two adjacent rooms in given `Direction`.
-#[cfg_attr(feature = "dev", flame)]
 #[inline]
 fn gen_room_adjacent_door(
     dungeon: &mut Dungeon,
@@ -366,7 +359,6 @@ fn check_room_free(room: &Rectangle, room_list: &[Rectangle]) -> bool {
 }
 
 // Initializes `dungeon`'s dungeon grid based on the rooms in `room_list`.
-#[cfg_attr(feature = "dev", flame)]
 #[inline]
 fn init_dungeon_from_rooms(
     dungeon: &mut Dungeon,
@@ -412,7 +404,6 @@ fn init_dungeon_from_rooms(
     Ok((dx, dy))
 }
 
-#[cfg_attr(feature = "dev", flame)]
 #[inline]
 fn gen_init_dungeon_rooms(
     dungeon: &mut Dungeon,

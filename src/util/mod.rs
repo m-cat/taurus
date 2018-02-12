@@ -68,7 +68,7 @@ macro_rules! dev_time {
                 let timer_end = Instant::now();
                 let duration = timer_end.duration_since(timer_start);
                 println!("Finished. Time elapsed: {}s, {}ms\n",
-                         duration.as_secs(), duration.subsec_nanos() as f64 / 1_000_000f64);
+                         duration.as_secs(), f64::from(duration.subsec_nanos()) / 1_000_000f64);
 
                 res
             }

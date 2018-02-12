@@ -189,10 +189,10 @@ impl Object {
     pub fn act(&mut self, dungeon: &Dungeon) -> ActResult {
         let mut inner = self.inner.lock().unwrap();
         // TODO: rework this
-        if !inner.active && inner.object_type == ObjectType::Door {
-            if dungeon[inner.coord()].actor.is_none() && rand::dice(1, 2) {
-                inner.active = true;
-            }
+        if !inner.active && inner.object_type == ObjectType::Door &&
+            dungeon[inner.coord()].actor.is_none() && rand::dice(1, 2)
+        {
+            inner.active = true;
         }
 
         ActResult::None
