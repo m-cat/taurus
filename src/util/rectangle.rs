@@ -19,10 +19,10 @@ impl Rectangle {
         let (top, bottom) = min_max(top, bottom);
 
         Rectangle {
-            left: left,
-            top: top,
-            right: right,
-            bottom: bottom,
+            left,
+            top,
+            right,
+            bottom,
         }
     }
 

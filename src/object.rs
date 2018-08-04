@@ -49,7 +49,7 @@ impl ObjectInner {
     }
 
     pub fn visible(&self) -> bool {
-        !(self.object_type == ObjectType::Door && !self.active)
+        self.active || self.object_type != ObjectType::Door
     }
 
     pub fn active(&self) -> bool {
@@ -111,7 +111,7 @@ impl Object {
                 name,
                 c,
 
-                coord: coord,
+                coord,
                 turn: GAMEDATA.read().unwrap().turn(),
                 speed,
 
