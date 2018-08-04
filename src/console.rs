@@ -5,7 +5,6 @@
 
 pub use tcod::input::{self, Event, EventFlags, Key, KeyCode};
 
-use {GameError, GameResult};
 use constants;
 use database::Database;
 use defs::*;
@@ -15,10 +14,11 @@ use std::rc::Rc;
 use std::str::FromStr;
 use std::sync::Mutex;
 use tcod;
-use tcod::{Console, FontLayout, FontType, Renderer, RootConsole};
-use tcod::Color as TcodColor;
 use tcod::input::check_for_event;
+use tcod::Color as TcodColor;
+use tcod::{Console, FontLayout, FontType, Renderer, RootConsole};
 use util::convert::color_code_to_rgb;
+use {GameError, GameResult};
 
 /// Color struct.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]

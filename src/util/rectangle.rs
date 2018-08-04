@@ -42,8 +42,8 @@ impl Rectangle {
     /// Note that we allow walls to overlap, but not so the interiors of the `Rectangle`s
     /// are connected.
     pub fn overlaps(&self, other: &Self) -> bool {
-        overlaps(self.left - 1, self.right, other.left - 1, other.right) &&
-            overlaps(self.top - 1, self.bottom, other.top - 1, other.bottom)
+        overlaps(self.left - 1, self.right, other.left - 1, other.right)
+            && overlaps(self.top - 1, self.bottom, other.top - 1, other.bottom)
     }
 }
 
@@ -52,10 +52,7 @@ impl fmt::Display for Rectangle {
         write!(
             f,
             "({}, {}), ({}, {})",
-            self.left,
-            self.top,
-            self.right,
-            self.bottom
+            self.left, self.top, self.right, self.bottom
         )
     }
 }

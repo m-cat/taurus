@@ -36,46 +36,45 @@ macro_rules! map {
 
 /// Tries evaluating `e` `n` times, returning `Some(s)` the first time `e` evaluates to `Some`.
 macro_rules! try_some {
-    ( $e:expr, $n:expr ) => {
-        {
-            let mut ret = None;
-            for _ in 0..$n {
-                if let Some(s) = $e {
-                    ret = Some(s);
-                    break;
-                }
+    ($e:expr, $n:expr) => {{
+        let mut ret = None;
+        for _ in 0..$n {
+            if let Some(s) = $e {
+                ret = Some(s);
+                break;
             }
-            ret
         }
-    }
+        ret
+    }};
 }
 
 #[macro_export]
 macro_rules! dev_time {
-    ($expr:expr, $msg:expr) => {
+    ($expr:expr, $msg:expr) => {{
+        use $crate::util;
+
+        #[cfg(all(feature = "dev", not(test)))]
         {
-            use $crate::util;
+            use std::time::Instant;
 
-            #[cfg(all(feature="dev", not(test)))]
-            {
-                use std::time::Instant;
+            println!("\n{}", $msg);
+            let timer_start = Instant::now();
 
-                println!("\n{}", $msg);
-                let timer_start = Instant::now();
+            let res = $expr;
 
-                let res = $expr;
+            let timer_end = Instant::now();
+            let duration = timer_end.duration_since(timer_start);
+            println!(
+                "Finished. Time elapsed: {}s, {}ms\n",
+                duration.as_secs(),
+                f64::from(duration.subsec_nanos()) / 1_000_000f64
+            );
 
-                let timer_end = Instant::now();
-                let duration = timer_end.duration_since(timer_start);
-                println!("Finished. Time elapsed: {}s, {}ms\n",
-                         duration.as_secs(), f64::from(duration.subsec_nanos()) / 1_000_000f64);
-
-                res
-            }
-            #[cfg(not(all(feature="dev", not(test))))]
-            {
-                $expr
-            }
+            res
         }
-    }
+        #[cfg(not(all(feature = "dev", not(test))))]
+        {
+            $expr
+        }
+    }};
 }

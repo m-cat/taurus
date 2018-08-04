@@ -2,11 +2,11 @@
 
 #![allow(unknown_lints)]
 
-use num::{Bounded, Integer};
 use num::rational::Ratio;
+use num::{Bounded, Integer};
 use rand;
-use rand::Rng;
 use rand::distributions::range::SampleRange;
+use rand::Rng;
 use std::fmt::Display;
 
 /// Trait allowing access to random elements and/or indices in implementing containers.

@@ -1,9 +1,9 @@
-use DATABASE;
-use GameResult;
 use dungeon::Dungeon;
 use game_data::GameData;
 use generate;
 use std::io;
+use GameResult;
+use DATABASE;
 
 pub fn setup_dungeon() -> GameResult<Dungeon> {
     let profile = DATABASE

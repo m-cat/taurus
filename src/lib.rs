@@ -6,7 +6,6 @@
 // TODO: Get to the point where we can remove this without it causing an avalanche of warnings.
 #![allow(unknown_lints)]
 #![allow(dead_code, doc_markdown, unused_imports, unused_variables)]
-
 // // Non-lexical lifetimes
 // #![feature(nll)]
 
@@ -55,7 +54,7 @@ mod constants;
 mod tests;
 
 use console::DrawConsole;
-use database::{Database, load_data};
+use database::{load_data, Database};
 use dungeon::{Dungeon, DungeonList};
 use error::GameError;
 use game_data::{GameData, GameLoopOutcome};
@@ -97,9 +96,11 @@ pub fn run_game() -> GameResult<()> {
     // Display random names. TODO: remove this
     #[cfg(feature = "dev")]
     for race in &["human", "elf", "dwarf", "dragon"] {
-        let name_profile = DATABASE.read().unwrap().get_obj("name_profiles")?.get_obj(
-            race,
-        )?;
+        let name_profile = DATABASE
+            .read()
+            .unwrap()
+            .get_obj("name_profiles")?
+            .get_obj(race)?;
 
         println!("{} names:", util::string::capitalize(race));
         for _ in 1..10 {

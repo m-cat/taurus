@@ -1,5 +1,5 @@
-extern crate taurus;
 extern crate failure;
+extern crate taurus;
 
 use taurus::handle_error;
 

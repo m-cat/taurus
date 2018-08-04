@@ -1,11 +1,10 @@
 //! Dungeon object.
 
-use {DATABASE, GAMEDATA, GameLoopOutcome, GameResult};
 use actor::*;
 use console::DrawConsole;
 use coord::Coord;
 use database::Database;
-use defs::{GameRatio, gameratio_max};
+use defs::{gameratio_max, GameRatio};
 use error::GameError;
 use failure::ResultExt;
 use game_data::GameData;
@@ -23,6 +22,7 @@ use tcod::map::FovAlgorithm;
 use tcod::map::Map;
 use tile::Tile;
 use util::rand::rand_int;
+use {GameLoopOutcome, GameResult, DATABASE, GAMEDATA};
 
 /// Struct containing a single depth of the dungeon.
 /// This struct is also responsible for running the actor priority queue.
@@ -85,10 +85,8 @@ impl Dungeon {
         self.width = width;
         self.height = height;
         self.tile_grid = vec![
-            Tile::new(tile_data).context(format!(
-            "Could not load tile:\n{}",
-            tile_data
-        ))?;
+            Tile::new(tile_data)
+                .context(format!("Could not load tile:\n{}", tile_data))?;
             width * height
         ];
 
@@ -107,17 +105,16 @@ impl Dungeon {
 
     pub fn visible(&self, coord: Coord) -> bool {
         let Coord { x, y } = coord;
-        if x < max!(self.fov_start.x, 0) || y < max!(self.fov_start.y, 0) ||
-            x > min!(self.fov_end.x + 1, self.width as i32) ||
-            y > min!(self.fov_end.y + 1, self.height as i32)
+        if x < max!(self.fov_start.x, 0)
+            || y < max!(self.fov_start.y, 0)
+            || x > min!(self.fov_end.x + 1, self.width as i32)
+            || y > min!(self.fov_end.y + 1, self.height as i32)
         {
             return false;
         }
 
-        self.fov_grid.is_in_fov(
-            x - self.fov_start.x,
-            y - self.fov_start.y,
-        )
+        self.fov_grid
+            .is_in_fov(x - self.fov_start.x, y - self.fov_start.y)
     }
 
     pub fn set_visible(&mut self, coord: Coord, transparent: bool) {

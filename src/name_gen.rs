@@ -2,13 +2,13 @@
 
 #![allow(unknown_lints)]
 
-use GameResult;
 use database::Database;
 use defs::*;
 use failure::ResultExt;
 use num_traits::One;
 use util::rand::*;
 use util::string;
+use GameResult;
 
 /// Returns a randomly-generated name.
 #[allow(collapsible_if)]
@@ -16,9 +16,9 @@ pub fn name_gen(profile: &Database) -> GameResult<String> {
     fn helper(profile: &Database, name: &str) -> GameResult<(String, GameRatio)> {
         let tup = profile.get_tup(name)?;
         Ok((
-            tup.get(0)?.get_str().context(
-                format!("String for {}", name),
-            )?,
+            tup.get(0)?
+                .get_str()
+                .context(format!("String for {}", name))?,
             bigr_to_gamer(tup.get(1)?.get_frac()?)?,
         ))
     }

@@ -1,6 +1,5 @@
 //! User interface module.
 
-use {CONSOLE, GAMEDATA, GameResult};
 use console::Color;
 use constants;
 use coord::Coord;
@@ -11,6 +10,7 @@ use game_data::GameData;
 use std::cell::Cell;
 use std::str::FromStr;
 use util::rectangle::Rectangle;
+use {GameResult, CONSOLE, GAMEDATA};
 
 pub fn calc_game_view() -> Rectangle {
     let game_data = GAMEDATA.read().unwrap();

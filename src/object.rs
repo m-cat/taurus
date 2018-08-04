@@ -1,6 +1,5 @@
 //! Game objects.
 
-use {GAMEDATA, GameError, GameResult};
 use console::Color;
 use coord::Coord;
 use database::Database;
@@ -16,6 +15,7 @@ use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 use ui::Draw;
 use util::rand;
+use {GameError, GameResult, GAMEDATA};
 
 #[derive(Debug)]
 pub struct ObjectInner {
@@ -129,10 +129,8 @@ impl Object {
         object_data: &Database,
         active: bool,
     ) -> GameResult<()> {
-        let o = Self::new(coord, object_data, active).context(format!(
-            "Could not load object:\n{}",
-            object_data
-        ))?;
+        let o = Self::new(coord, object_data, active)
+            .context(format!("Could not load object:\n{}", object_data))?;
         dungeon.add_object(o);
         Ok(())
     }
@@ -189,8 +187,10 @@ impl Object {
     pub fn act(&mut self, dungeon: &Dungeon) -> ActResult {
         let mut inner = self.inner.lock().unwrap();
         // TODO: rework this
-        if !inner.active && inner.object_type == ObjectType::Door &&
-            dungeon[inner.coord()].actor.is_none() && rand::dice(1, 2)
+        if !inner.active
+            && inner.object_type == ObjectType::Door
+            && dungeon[inner.coord()].actor.is_none()
+            && rand::dice(1, 2)
         {
             inner.active = true;
         }
@@ -223,7 +223,6 @@ impl PartialOrd for Object {
         Some(self.cmp(other))
     }
 }
-
 
 /// Enum listing possible object types.
 #[derive(Clone, Copy, Debug, PartialEq)]

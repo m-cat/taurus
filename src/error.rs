@@ -1,7 +1,7 @@
 //! Error module.
 
-use GameResult;
 use std::fmt::Display;
+use GameResult;
 
 /// Error type used throughout the game.
 #[derive(Debug, Fail)]
@@ -16,12 +16,10 @@ pub fn err_convert<T, R>(val: T, msg: &'static str) -> GameResult<R>
 where
     T: Display,
 {
-    Err(
-        GameError::ConversionError {
-            val: format!("{}", val),
-            msg,
-        }.into(),
-    )
+    Err(GameError::ConversionError {
+        val: format!("{}", val),
+        msg,
+    }.into())
 }
 
 pub fn err_unexpected<R>(msg: &'static str) -> GameResult<R> {

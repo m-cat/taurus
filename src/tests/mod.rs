@@ -2,7 +2,6 @@ pub mod actor;
 
 mod common;
 
-use DATABASE;
 use actor::Actor;
 use constants;
 use coord::Coord;
@@ -11,6 +10,7 @@ use dungeon::Dungeon;
 use object::Object;
 use tile::Tile;
 use util;
+use DATABASE;
 
 // Test creating all actors, objects, and tiles contained in the database.
 #[test]

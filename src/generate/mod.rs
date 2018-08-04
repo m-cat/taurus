@@ -2,29 +2,29 @@
 
 mod util;
 
-use {DATABASE, GAMEDATA, GameResult};
 use actor::Actor;
 use coord::Coord;
 use database::{Arr, Database};
 use defs::*;
 use dungeon::{Dungeon, DungeonList, DungeonType};
-use error::{GameError, err_unexpected};
+use error::{err_unexpected, GameError};
 use failure::{Fail, ResultExt};
 use game_data::GameData;
 use generate::util::*;
 use object::Object;
 use player;
-use std::{fmt, thread, time};
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::sync::{Arc, Mutex, mpsc};
+use std::sync::{mpsc, Arc, Mutex};
+use std::{fmt, thread, time};
 use tile::{Tile, TileInfo};
 use ui::draw_game;
 use util::direction::CardinalDirection;
 use util::direction::CardinalDirection::*;
 use util::math::{min_max, overlaps};
-use util::rand::{Choose, dice, rand_int, rand_ratio};
+use util::rand::{dice, rand_int, rand_ratio, Choose};
 use util::rectangle::Rectangle;
+use {GameResult, DATABASE, GAMEDATA};
 
 /// Generates a connected series of dungeons.
 pub fn gen_dungeon_list(
@@ -84,10 +84,8 @@ fn create_dungeon(
     index: usize,
 ) -> GameResult<()> {
     let profile = get_dungeon_profile(dungeons_arr, index)?;
-    let dungeon = Dungeon::new(index as u32, &profile).context(format!(
-        "Failed to create dungeon at depth {}",
-        index
-    ))?;
+    let dungeon = Dungeon::new(index as u32, &profile)
+        .context(format!("Failed to create dungeon at depth {}", index))?;
     dungeon_list.push(dungeon);
 
     Ok(())
@@ -122,10 +120,8 @@ fn gen_actor_random_coord(dungeon: &Dungeon, actor_data: &Database) -> GameResul
         None => return err_unexpected("Ran out of tiles for new actors"),
     };
 
-    let a = Actor::new(coord, actor_data).context(format!(
-        "Could not load actor:\n{}",
-        actor_data
-    ))?;
+    let a =
+        Actor::new(coord, actor_data).context(format!("Could not load actor:\n{}", actor_data))?;
 
     Ok(a)
 }
@@ -151,10 +147,8 @@ fn get_dungeon_profile(dungeons_arr: &Arr, index: usize) -> GameResult<Database>
 
     let arr = dungeons_arr.get(index)?.get_arr()?;
 
-    Ok(pick_obj_from_tup_arr(&arr).context(format!(
-        "Parsing \"dungeons\" Arr in \"{}\"",
-        dungeons_file
-    ))?)
+    Ok(pick_obj_from_tup_arr(&arr)
+        .context(format!("Parsing \"dungeons\" Arr in \"{}\"", dungeons_file))?)
 }
 
 #[inline]
@@ -220,8 +214,7 @@ pub fn gen_dungeon_room(dungeon: &mut Dungeon, profile: &Database) -> GameResult
                     &params,
                 )?,
                 3
-            )
-            {
+            ) {
                 room_list.push(new_room);
                 break;
             };
@@ -341,15 +334,14 @@ fn gen_room_adjacent_door(
     }
 
     let coord = Coord::new(x, y);
-    let door = pick_obj_from_tup_arr(&profile.get_arr("doors")?).context(
-        "Parsing \"doors\" Arr in \"dungeon_profiles.over\"",
-    )?;
+    let door = pick_obj_from_tup_arr(&profile.get_arr("doors")?)
+        .context("Parsing \"doors\" Arr in \"dungeon_profiles.over\"")?;
 
     // TODO: Clone a model object here.
-    Ok(Object::new(coord, &door, dice(8, 10)).context(format!(
-        "Could not load object:\n{}",
-        door
-    ))?)
+    Ok(
+        Object::new(coord, &door, dice(8, 10))
+            .context(format!("Could not load object:\n{}", door))?,
+    )
 }
 
 // Checks if `room` does not collide with any rooms in `room_list`.
@@ -387,18 +379,15 @@ fn init_dungeon_from_rooms(
     let width = (max_right + min_left.abs() + 1) as usize + 2;
     let height = (max_bottom + min_top.abs() + 1) as usize + 2;
 
-    dungeon.init_grid(
-        width,
-        height,
-        &profile.get_obj("wall_tile")?,
-    )?;
+    dungeon.init_grid(width, height, &profile.get_obj("wall_tile")?)?;
 
     let dx = min_left.abs() + 1;
     let dy = min_top.abs() + 1;
 
-    let floor = GAMEDATA.read().unwrap().tile_info(
-        profile.get_obj("floor_tile")?.id(),
-    );
+    let floor = GAMEDATA
+        .read()
+        .unwrap()
+        .tile_info(profile.get_obj("floor_tile")?.id());
     gen_init_dungeon_rooms(dungeon, &floor, room_list, dx, dy);
 
     Ok((dx, dy))

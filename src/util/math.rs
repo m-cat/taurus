@@ -29,7 +29,11 @@ pub fn min_max<T>(a: T, b: T) -> (T, T)
 where
     T: Integer + Copy,
 {
-    if a.min(b) == a { (a, b) } else { (b, a) }
+    if a.min(b) == a {
+        (a, b)
+    } else {
+        (b, a)
+    }
 }
 
 /// Returns true if two inclusive ranges `[a1, a2]` and `[b1, b2]` overlap.
@@ -48,7 +52,11 @@ where
     T: Integer,
 {
     // Note that something like (b-a).abs() wouldn't work for unsigned types.
-    if b >= a { b - a } else { a - b }
+    if b >= a {
+        b - a
+    } else {
+        a - b
+    }
 }
 
 /// Returns true if `n` is between `a` and `b`, inclusive.

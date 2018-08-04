@@ -1,6 +1,5 @@
 //! Game tiles.
 
-use {GAMEDATA, GameResult};
 use actor::Actor;
 use console::Color;
 use database::Database;
@@ -13,6 +12,7 @@ use std::cell::{Cell, RefCell};
 use std::str::FromStr;
 use std::sync::Arc;
 use ui::Draw;
+use {GameResult, GAMEDATA};
 
 /// Struct containing the tile information for a class of tiles.
 #[derive(Debug)]

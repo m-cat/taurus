@@ -1,11 +1,11 @@
 //! Game materials.
 
-use GameResult;
 use console::Color;
 use database::Database;
 use defs::bigr_to_f32;
 use game_data::GameData;
 use std::str::FromStr;
+use GameResult;
 
 #[derive(Debug)]
 pub struct MaterialInfo {

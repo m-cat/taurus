@@ -1,6 +1,5 @@
 //! Game actors.
 
-use {GAMEDATA, GameError, GameResult};
 use console::{Color, DrawConsole};
 use coord::Coord;
 use database::Database;
@@ -16,6 +15,7 @@ use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 use ui::Draw;
 use util::direction::CompassDirection;
+use {GameError, GameResult, GAMEDATA};
 
 #[derive(Debug)]
 pub struct ActorInner {
@@ -54,7 +54,6 @@ pub struct Actor {
 impl Actor {
     /// Creates a new actor at the given coordinates.
     pub fn new(coord: Coord, data: &Database) -> GameResult<Actor> {
-
         // Load all data from the database.
 
         let name = data.get_str("name")?;
@@ -104,10 +103,8 @@ impl Actor {
         coord: Coord,
         actor_data: &Database,
     ) -> GameResult<()> {
-        let a = Self::new(coord, actor_data).context(format!(
-            "Could not load actor:\n{}",
-            actor_data
-        ))?;
+        let a =
+            Self::new(coord, actor_data).context(format!("Could not load actor:\n{}", actor_data))?;
         dungeon.add_actor(a);
         Ok(())
     }

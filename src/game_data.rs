@@ -1,6 +1,5 @@
 //! Module for game-wide data.
 
-use {DATABASE, GameResult, handle_error};
 use actor::Actor;
 use console::{ConsoleSettings, DrawConsole};
 use constants;
@@ -15,6 +14,7 @@ use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use tile::TileInfo;
 use ui::UiSettings;
+use {handle_error, GameResult, DATABASE};
 
 /// Result of the main game loop.
 pub enum GameLoopOutcome {
@@ -116,9 +116,7 @@ impl GameData {
 
     /// Returns a reference to the `MaterialInfo` object with `id`.
     pub fn material_info(&self, id: usize) -> Arc<MaterialInfo> {
-        Arc::clone(
-            &self.material_info_list[id - self.material_start_id.unwrap()],
-        )
+        Arc::clone(&self.material_info_list[id - self.material_start_id.unwrap()])
     }
 
     fn init_tiles(&mut self) -> GameResult<()> {
@@ -128,10 +126,10 @@ impl GameData {
 
         for tile_val in tiles.values() {
             if let Value::Obj(ref tile_data) = *tile_val {
-                let tile = Arc::new(TileInfo::new(self, tile_data).context(format!(
-                    "Could not load tile:\n{}",
-                    tile_data
-                ))?);
+                let tile = Arc::new(
+                    TileInfo::new(self, tile_data)
+                        .context(format!("Could not load tile:\n{}", tile_data))?,
+                );
                 let id = tile_data.id();
                 if id < min {
                     min = id;
@@ -158,10 +156,10 @@ impl GameData {
 
         for material_val in materials.values() {
             if let Value::Obj(ref material_data) = *material_val {
-                let material = Arc::new(MaterialInfo::new(self, material_data).context(format!(
-                    "Could not load material:\n{}",
-                    material_data
-                ))?);
+                let material = Arc::new(
+                    MaterialInfo::new(self, material_data)
+                        .context(format!("Could not load material:\n{}", material_data))?,
+                );
                 let id = material_data.id();
                 if id < min {
                     min = id;
