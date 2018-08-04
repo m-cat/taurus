@@ -9,9 +9,9 @@
 normal: {
     type: @types.room
     min_width: 2
-    max_width: 5
+    max_width: 8
     min_height: 2
-    max_height: 5
+    max_height: 8
     min_num_rooms: 30
     max_num_rooms: 30
 

@@ -1,4 +1,4 @@
-run: format clippy test build graph clean
+run: format clippy test build clean
 	cargo run
 
 build:

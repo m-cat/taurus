@@ -120,7 +120,7 @@ pub fn player_process_event(
                 if dungeon.in_bounds(coord) {
                     let tile = &dungeon[coord];
 
-                    println!("\nTile at {}, {} contains:", game_x, game_y);
+                    println!("\nTile at ({}, {}) contains:", game_x, game_y);
                     if let Some(ref actor) = tile.actor {
                         println!(" - Actor: {:#?}", actor);
                     }
