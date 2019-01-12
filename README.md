@@ -10,8 +10,8 @@ A roguelike game made in Rust!
 
 Make sure you have the build dependencies:
 
-* Rust: https://www.rust-lang.org/en-US/install.html
-* Libtcod: https://github.com/tomassedovic/tcod-rs#how-to-use-this
+* Rust: [Install](https://www.rust-lang.org/en-US/install.html)
+* Libtcod: [Install](https://github.com/tomassedovic/tcod-rs#how-to-use-this)
 
 Download the source:
 
@@ -38,7 +38,7 @@ I learned Rust by doing this project but I don't have enough interest in rogueli
 
 ### Todo
 
-* Implement the UI. 
+* Implement the UI.
 * Messages system.
 * Examining tiles with mouse.
 * Enemies/AI.
