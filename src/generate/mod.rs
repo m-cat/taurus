@@ -2,29 +2,29 @@
 
 mod util;
 
-use actor::Actor;
-use coord::Coord;
-use database::{Arr, Database};
-use defs::*;
-use dungeon::{Dungeon, DungeonList, DungeonType};
-use error::{err_unexpected, GameError};
+use crate::actor::Actor;
+use crate::coord::Coord;
+use crate::database::{Arr, Database};
+use crate::defs::*;
+use crate::dungeon::{Dungeon, DungeonList, DungeonType};
+use crate::error::{err_unexpected, GameError};
+use crate::game_data::GameData;
+use crate::generate::util::*;
+use crate::object::Object;
+use crate::player;
+use crate::tile::{Tile, TileInfo};
+use crate::ui::draw_game;
+use crate::util::direction::CardinalDirection;
+use crate::util::direction::CardinalDirection::*;
+use crate::util::math::{min_max, overlaps};
+use crate::util::rand::{dice, rand_int, rand_ratio, Choose};
+use crate::util::rectangle::Rectangle;
+use crate::{GameResult, DATABASE, GAMEDATA};
 use failure::{Fail, ResultExt};
-use game_data::GameData;
-use generate::util::*;
-use object::Object;
-use player;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::{mpsc, Arc, Mutex};
 use std::{fmt, thread, time};
-use tile::{Tile, TileInfo};
-use ui::draw_game;
-use util::direction::CardinalDirection;
-use util::direction::CardinalDirection::*;
-use util::math::{min_max, overlaps};
-use util::rand::{dice, rand_int, rand_ratio, Choose};
-use util::rectangle::Rectangle;
-use {GameResult, DATABASE, GAMEDATA};
 
 /// Generates a connected series of dungeons.
 pub fn gen_dungeon_list(
@@ -62,10 +62,10 @@ pub fn gen_dungeon_list(
     // Generate stairs and pits, skipping the last depth.
 
     /*
-    for n in 0..dungeon_list.len() - 1 {
-    gen_pits(dungeon_list, n);
-}
-     */
+        for n in 0..dungeon_list.len() - 1 {
+        gen_pits(dungeon_list, n);
+    }
+         */
 
     // Add player.
 
@@ -228,7 +228,7 @@ pub fn gen_dungeon_room(dungeon: &mut Dungeon, profile: &Database) -> GameResult
     // Update coordinates for actors, objects, and items
 
     // Add doors
-    for mut object in object_list {
+    for object in object_list {
         let coord = {
             let mut object = object.inner.lock().unwrap();
             let new_coord = object.coord() + Coord::new(dx, dy);
@@ -338,10 +338,8 @@ fn gen_room_adjacent_door(
         .context("Parsing \"doors\" Arr in \"dungeon_profiles.over\"")?;
 
     // TODO: Clone a model object here.
-    Ok(
-        Object::new(coord, &door, dice(8, 10))
-            .context(format!("Could not load object:\n{}", door))?,
-    )
+    Ok(Object::new(coord, &door, dice(8, 10))
+        .context(format!("Could not load object:\n{}", door))?)
 }
 
 // Checks if `room` does not collide with any rooms in `room_list`.

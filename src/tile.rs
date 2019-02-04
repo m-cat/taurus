@@ -1,18 +1,18 @@
 //! Game tiles.
 
-use actor::Actor;
-use console::Color;
-use database::Database;
-use error::GameError;
-use game_data::GameData;
-use item::ItemStash;
-use material::MaterialInfo;
-use object::Object;
+use crate::actor::Actor;
+use crate::console::Color;
+use crate::database::Database;
+use crate::error::GameError;
+use crate::game_data::GameData;
+use crate::item::ItemStash;
+use crate::material::MaterialInfo;
+use crate::object::Object;
+use crate::ui::Draw;
+use crate::{GameResult, GAMEDATA};
 use std::cell::{Cell, RefCell};
 use std::str::FromStr;
 use std::sync::Arc;
-use ui::Draw;
-use {GameResult, GAMEDATA};
 
 /// Struct containing the tile information for a class of tiles.
 #[derive(Debug)]
@@ -159,7 +159,7 @@ impl FromStr for Staircase {
                 return Err(GameError::ConversionError {
                     val: s.into(),
                     msg: "Invalid staircase value",
-                })
+                });
             }
         })
     }

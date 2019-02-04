@@ -1,16 +1,19 @@
 //! Dungeon object.
 
-use actor::*;
-use console::DrawConsole;
-use coord::Coord;
-use database::Database;
-use defs::{gameratio_max, GameRatio};
-use error::GameError;
+use crate::actor::*;
+use crate::console::DrawConsole;
+use crate::coord::Coord;
+use crate::database::Database;
+use crate::defs::{gameratio_max, GameRatio};
+use crate::error::GameError;
+use crate::game_data::GameData;
+use crate::generate::{gen_dungeon, gen_dungeon_list};
+use crate::item::{Item, ItemStack};
+use crate::object::Object;
+use crate::tile::Tile;
+use crate::util::rand::rand_int;
+use crate::{GameLoopOutcome, GameResult, DATABASE, GAMEDATA};
 use failure::ResultExt;
-use game_data::GameData;
-use generate::{gen_dungeon, gen_dungeon_list};
-use item::{Item, ItemStack};
-use object::Object;
 use std::cell::{Cell, RefCell};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
@@ -20,9 +23,6 @@ use std::rc::Rc;
 use std::str::FromStr;
 use tcod::map::FovAlgorithm;
 use tcod::map::Map;
-use tile::Tile;
-use util::rand::rand_int;
-use {GameLoopOutcome, GameResult, DATABASE, GAMEDATA};
 
 /// Struct containing a single depth of the dungeon.
 /// This struct is also responsible for running the actor priority queue.
@@ -463,7 +463,7 @@ impl FromStr for DungeonType {
                 return Err(GameError::ConversionError {
                     val: s.into(),
                     msg: "Invalid dungeon type",
-                })
+                });
             }
         })
     }

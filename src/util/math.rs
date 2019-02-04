@@ -92,7 +92,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use util::rand::rand_int;
+    use crate::util::rand::rand_int;
 
     #[test]
     fn test_max() {

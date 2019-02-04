@@ -26,10 +26,11 @@ pub fn hex_str_to_int(s: &str) -> Option<u32> {
             return None;
         }
 
-        res = res * 16 + match chars.next() {
-            Some(ch) => u32::from(hex_char_to_int(ch)?),
-            None => return Some(res),
-        };
+        res = res * 16
+            + match chars.next() {
+                Some(ch) => u32::from(hex_char_to_int(ch)?),
+                None => return Some(res),
+            };
         c += 1;
     }
 }
@@ -48,28 +49,31 @@ pub fn color_code_to_rgb(s: &str) -> Option<(u8, u8, u8)> {
         _ => return None,
     };
 
-    r = r * 16 + match chars.next() {
-        Some(ch) => hex_char_to_int(ch)?,
-        _ => return None,
-    };
+    r = r * 16
+        + match chars.next() {
+            Some(ch) => hex_char_to_int(ch)?,
+            _ => return None,
+        };
 
     let mut g = match chars.next() {
         Some(ch) => hex_char_to_int(ch)?,
         _ => return None,
     };
-    g = g * 16 + match chars.next() {
-        Some(ch) => hex_char_to_int(ch)?,
-        _ => return None,
-    };
+    g = g * 16
+        + match chars.next() {
+            Some(ch) => hex_char_to_int(ch)?,
+            _ => return None,
+        };
 
     let mut b = match chars.next() {
         Some(ch) => hex_char_to_int(ch)?,
         _ => return None,
     };
-    b = b * 16 + match chars.next() {
-        Some(ch) => hex_char_to_int(ch)?,
-        _ => return None,
-    };
+    b = b * 16
+        + match chars.next() {
+            Some(ch) => hex_char_to_int(ch)?,
+            _ => return None,
+        };
 
     if chars.next().is_some() {
         return None;

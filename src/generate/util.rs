@@ -1,10 +1,10 @@
 //! Generation utility functions.
 
-use database::Database;
-use defs::*;
+use crate::database::Database;
+use crate::defs::*;
+use crate::util::rand::rand_ratio;
+use crate::GameResult;
 use over::arr::Arr;
-use util::rand::rand_ratio;
-use GameResult;
 
 pub fn pick_obj_from_tup_arr(arr: &Arr) -> GameResult<Database> {
     let mut roll_count = GameRatio::new(0, 1);

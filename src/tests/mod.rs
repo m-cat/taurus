@@ -2,15 +2,15 @@ pub mod actor;
 
 mod common;
 
-use actor::Actor;
-use constants;
-use coord::Coord;
-use defs::GameRatio;
-use dungeon::Dungeon;
-use object::Object;
-use tile::Tile;
-use util;
-use DATABASE;
+use crate::actor::Actor;
+use crate::constants;
+use crate::coord::Coord;
+use crate::defs::GameRatio;
+use crate::dungeon::Dungeon;
+use crate::object::Object;
+use crate::tile::Tile;
+use crate::util;
+use crate::DATABASE;
 
 // Test creating all actors, objects, and tiles contained in the database.
 #[test]
@@ -73,13 +73,15 @@ fn game_queue() {
         &mut dungeon,
         coord2,
         &actor_data.get_obj("test_slow").unwrap(),
-    ).unwrap();
+    )
+    .unwrap();
     Object::insert_new(
         &mut dungeon,
         coord1,
         &object_data.get_obj("test_slow").unwrap(),
         util::rand::dice(1, 2),
-    ).unwrap();
+    )
+    .unwrap();
 
     assert_eq!(dungeon.peek_object().name(), "test_slow");
     assert_eq!(dungeon.peek_object().turn(), GameRatio::new(37, 10));

@@ -1,21 +1,21 @@
 //! Game actors.
 
-use console::{Color, DrawConsole};
-use coord::Coord;
-use database::Database;
-use defs::*;
-use dungeon::{ActResult, Dungeon};
+use crate::console::{Color, DrawConsole};
+use crate::coord::Coord;
+use crate::database::Database;
+use crate::defs::*;
+use crate::dungeon::{ActResult, Dungeon};
+use crate::game_data::GameData;
+use crate::object::ObjectType;
+use crate::player;
+use crate::ui::Draw;
+use crate::util::direction::CompassDirection;
+use crate::{GameError, GameResult, GAMEDATA};
 use failure::ResultExt;
-use game_data::GameData;
-use object::ObjectType;
-use player;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
-use ui::Draw;
-use util::direction::CompassDirection;
-use {GameError, GameResult, GAMEDATA};
 
 #[derive(Debug)]
 pub struct ActorInner {
@@ -103,8 +103,8 @@ impl Actor {
         coord: Coord,
         actor_data: &Database,
     ) -> GameResult<()> {
-        let a =
-            Self::new(coord, actor_data).context(format!("Could not load actor:\n{}", actor_data))?;
+        let a = Self::new(coord, actor_data)
+            .context(format!("Could not load actor:\n{}", actor_data))?;
         dungeon.add_actor(a);
         Ok(())
     }
@@ -288,7 +288,7 @@ impl FromStr for Behavior {
                 return Err(GameError::ConversionError {
                     val: s.into(),
                     msg: "Invalid behavior value",
-                })
+                });
             }
         })
     }

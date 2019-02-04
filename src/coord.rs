@@ -1,9 +1,9 @@
 //! Coordinate utility.
 
+use crate::util::direction::Direction;
+use crate::util::math::in_one;
 use std::fmt;
 use std::ops::{Add, Sub};
-use util::direction::Direction;
-use util::math::in_one;
 
 /// Simple coordinate struct.
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
@@ -63,8 +63,8 @@ impl Sub for Coord {
 
 #[cfg(test)]
 mod tests {
-    use coord::*;
-    use util::direction::CompassDirection as Dir;
+    use crate::coord::*;
+    use crate::util::direction::CompassDirection as Dir;
 
     #[test]
     fn equals() {

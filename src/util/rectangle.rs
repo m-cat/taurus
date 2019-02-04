@@ -1,5 +1,5 @@
+use crate::util::math::{min_max, overlaps};
 use std::fmt;
-use util::math::{min_max, overlaps};
 
 /// A struct for storing data for a single `Room`, used in dungeon generation.
 /// Note that the four bounding boxes correspond to the `Rectangle`'s interior

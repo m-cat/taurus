@@ -84,7 +84,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use util::math::between;
+    use crate::util::math::between;
 
     #[test]
     fn test_rand_int() {

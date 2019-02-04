@@ -5,9 +5,11 @@
 
 pub use tcod::input::{self, Event, EventFlags, Key, KeyCode};
 
-use constants;
-use database::Database;
-use defs::*;
+use crate::constants;
+use crate::database::Database;
+use crate::defs::*;
+use crate::util::convert::color_code_to_rgb;
+use crate::{GameError, GameResult};
 use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
@@ -17,8 +19,6 @@ use tcod;
 use tcod::input::check_for_event;
 use tcod::Color as TcodColor;
 use tcod::{Console, FontLayout, FontType, Renderer, RootConsole};
-use util::convert::color_code_to_rgb;
-use {GameError, GameResult};
 
 /// Color struct.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]

@@ -1,21 +1,21 @@
 //! Module for player-specific logic.
 
-use actor::{Actor, Behavior};
-use console::KeyCode::*;
-use console::*;
-use constants;
-use coord::Coord;
-use dungeon::{ActResult, Dungeon};
+use crate::actor::{Actor, Behavior};
+use crate::console::KeyCode::*;
+use crate::console::*;
+use crate::constants;
+use crate::coord::Coord;
+use crate::dungeon::{ActResult, Dungeon};
+use crate::game_data::GameData;
+use crate::ui;
+use crate::util;
+use crate::util::direction::CompassDirection;
+use crate::{GameResult, CONSOLE};
 #[cfg(feature = "dev")]
 use flame;
-use game_data::GameData;
 use std::fs::File;
 use std::rc::Rc;
 use std::{thread, time};
-use ui;
-use util;
-use util::direction::CompassDirection;
-use {GameResult, CONSOLE};
 
 /// Acts out the player's turn.
 pub fn player_act(player: &mut Actor, dungeon: &mut Dungeon) -> ActResult {

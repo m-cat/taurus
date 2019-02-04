@@ -1,9 +1,9 @@
-use dungeon::Dungeon;
-use game_data::GameData;
-use generate;
+use crate::dungeon::Dungeon;
+use crate::game_data::GameData;
+use crate::generate;
+use crate::GameResult;
+use crate::DATABASE;
 use std::io;
-use GameResult;
-use DATABASE;
 
 pub fn setup_dungeon() -> GameResult<Dungeon> {
     let profile = DATABASE

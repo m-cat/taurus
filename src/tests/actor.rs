@@ -1,11 +1,11 @@
 //! Actor tests.
 
-use actor::Actor;
-use coord::Coord;
-use defs::GameRatio;
+use crate::actor::Actor;
+use crate::coord::Coord;
+use crate::defs::GameRatio;
+use crate::tests::common;
+use crate::DATABASE;
 use std::rc::Rc;
-use tests::common;
-use DATABASE;
 
 // Test `set_actor_coord`.
 // TODO: Implement the "test" actor, un-ignore this test

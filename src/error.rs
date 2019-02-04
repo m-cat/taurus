@@ -1,7 +1,7 @@
 //! Error module.
 
+use crate::GameResult;
 use std::fmt::Display;
-use GameResult;
 
 /// Error type used throughout the game.
 #[derive(Debug, Fail)]
@@ -19,7 +19,8 @@ where
     Err(GameError::ConversionError {
         val: format!("{}", val),
         msg,
-    }.into())
+    }
+    .into())
 }
 
 pub fn err_unexpected<R>(msg: &'static str) -> GameResult<R> {

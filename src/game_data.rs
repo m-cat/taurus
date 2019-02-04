@@ -1,20 +1,20 @@
 //! Module for game-wide data.
 
-use actor::Actor;
-use console::{ConsoleSettings, DrawConsole};
-use constants;
-use coord::Coord;
-use database::{self, Database, Value};
-use defs::GameRatio;
+use crate::actor::Actor;
+use crate::console::{ConsoleSettings, DrawConsole};
+use crate::constants;
+use crate::coord::Coord;
+use crate::database::{self, Database, Value};
+use crate::defs::GameRatio;
+use crate::material::MaterialInfo;
+use crate::tile::TileInfo;
+use crate::ui::UiSettings;
+use crate::{handle_error, GameResult, DATABASE};
 use failure::ResultExt;
-use material::MaterialInfo;
 use num_traits::identities::Zero;
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
-use tile::TileInfo;
-use ui::UiSettings;
-use {handle_error, GameResult, DATABASE};
 
 /// Result of the main game loop.
 pub enum GameLoopOutcome {

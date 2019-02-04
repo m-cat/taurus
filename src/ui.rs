@@ -1,16 +1,16 @@
 //! User interface module.
 
-use console::Color;
-use constants;
-use coord::Coord;
-use database::Database;
-use defs::big_to_usize;
-use dungeon::Dungeon;
-use game_data::GameData;
+use crate::console::Color;
+use crate::constants;
+use crate::coord::Coord;
+use crate::database::Database;
+use crate::defs::big_to_usize;
+use crate::dungeon::Dungeon;
+use crate::game_data::GameData;
+use crate::util::rectangle::Rectangle;
+use crate::{GameResult, CONSOLE, GAMEDATA};
 use std::cell::Cell;
 use std::str::FromStr;
-use util::rectangle::Rectangle;
-use {GameResult, CONSOLE, GAMEDATA};
 
 pub fn calc_game_view() -> Rectangle {
     let game_data = GAMEDATA.read().unwrap();
@@ -82,7 +82,7 @@ pub fn draw_game(dungeon: &Dungeon) {
             debug_assert!(y >= 0);
 
             let coord = Coord::new(x, y);
-            let mut tile = &dungeon[coord];
+            let tile = &dungeon[coord];
 
             let draw_x = x - view.left;
             let draw_y = y - view.top;

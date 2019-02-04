@@ -1,21 +1,21 @@
 //! Game objects.
 
-use console::Color;
-use coord::Coord;
-use database::Database;
-use defs::*;
-use dungeon::{ActResult, Dungeon};
+use crate::console::Color;
+use crate::coord::Coord;
+use crate::database::Database;
+use crate::defs::*;
+use crate::dungeon::{ActResult, Dungeon};
+use crate::game_data::GameData;
+use crate::material::MaterialInfo;
+use crate::ui::Draw;
+use crate::util::rand;
+use crate::{GameError, GameResult, GAMEDATA};
 use failure::ResultExt;
-use game_data::GameData;
-use material::MaterialInfo;
 use std::cell::Cell;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
-use ui::Draw;
-use util::rand;
-use {GameError, GameResult, GAMEDATA};
 
 #[derive(Debug)]
 pub struct ObjectInner {
@@ -243,7 +243,7 @@ impl FromStr for ObjectType {
                 return Err(GameError::ConversionError {
                     val: s.into(),
                     msg: "Invalid object type.",
-                })
+                });
             }
         })
     }

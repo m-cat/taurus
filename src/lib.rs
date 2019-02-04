@@ -53,11 +53,11 @@ mod constants;
 #[cfg(test)]
 mod tests;
 
-use console::DrawConsole;
-use database::{load_data, Database};
-use dungeon::{Dungeon, DungeonList};
-use error::GameError;
-use game_data::{GameData, GameLoopOutcome};
+use crate::console::DrawConsole;
+use crate::database::{load_data, Database};
+use crate::dungeon::{Dungeon, DungeonList};
+use crate::error::GameError;
+use crate::game_data::{GameData, GameLoopOutcome};
 use std::sync::{Arc, Mutex, RwLock};
 
 /// A generic result type used throughout the game.

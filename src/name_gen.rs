@@ -2,13 +2,13 @@
 
 #![allow(unknown_lints)]
 
-use database::Database;
-use defs::*;
+use crate::database::Database;
+use crate::defs::*;
+use crate::util::rand::*;
+use crate::util::string;
+use crate::GameResult;
 use failure::ResultExt;
 use num_traits::One;
-use util::rand::*;
-use util::string;
-use GameResult;
 
 /// Returns a randomly-generated name.
 #[allow(collapsible_if)]

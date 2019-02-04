@@ -1,10 +1,10 @@
 //! Crate for project-wide definitions.
 
-use error::err_convert;
+use crate::error::err_convert;
+use crate::GameResult;
 use num::bigint::BigInt;
 use num::rational::{BigRational, Ratio};
 use num_traits::ToPrimitive;
-use GameResult;
 
 /// Rational to store current turn.
 pub type GameRatio = Ratio<u32>;

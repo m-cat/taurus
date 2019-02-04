@@ -1,7 +1,7 @@
 //! Module containing Item structs.
 
-use console::Color;
-use ui::Draw;
+use crate::console::Color;
+use crate::ui::Draw;
 
 #[derive(Clone, Debug)]
 pub struct Item {
