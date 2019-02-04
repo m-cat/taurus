@@ -207,7 +207,7 @@ pub fn gen_dungeon_room(dungeon: &mut Dungeon, profile: &Database) -> GameResult
                 gen_room_adjacent(
                     dungeon,
                     &room,
-                    direction,
+                    *direction,
                     &room_list,
                     &mut object_list,
                     profile,
@@ -249,7 +249,7 @@ pub fn gen_dungeon_room(dungeon: &mut Dungeon, profile: &Database) -> GameResult
 fn gen_room_adjacent(
     dungeon: &mut Dungeon,
     room: &Rectangle,
-    direction: &CardinalDirection,
+    direction: CardinalDirection,
     room_list: &[Rectangle],
     object_list: &mut Vec<Object>,
     profile: &Database,
@@ -261,7 +261,7 @@ fn gen_room_adjacent(
     let width = gen_room_width(params) as i32;
     let height = gen_room_height(params) as i32;
 
-    match *direction {
+    match direction {
         W => {
             left = room.left - width - 1;
             top = rand_int(room.top - height + 1, room.bottom);
@@ -296,13 +296,13 @@ fn gen_room_adjacent_door(
     dungeon: &mut Dungeon,
     room: &Rectangle,
     new_room: &Rectangle,
-    direction: &CardinalDirection,
+    direction: CardinalDirection,
     profile: &Database,
 ) -> GameResult<Object> {
     let x;
     let y;
 
-    match *direction {
+    match direction {
         W => {
             x = room.left - 1;
             y = rand_int(
@@ -400,8 +400,8 @@ fn gen_init_dungeon_rooms(
     dy: i32,
 ) {
     for room in room_list {
-        for x in room.left..room.right + 1 {
-            for y in room.top..room.bottom + 1 {
+        for x in room.left..=room.right {
+            for y in room.top..=room.bottom {
                 dungeon[Coord::new(x + dx, y + dy)].info = Arc::clone(floor);
             }
         }

@@ -30,8 +30,8 @@ pub struct Color {
 
 impl Color {
     /// Converts this `Color` to a tcod Color.
-    pub fn to_tcod(&self) -> TcodColor {
-        let Color { r, g, b } = *self;
+    pub fn to_tcod(self) -> TcodColor {
+        let Color { r, g, b } = self;
         TcodColor::new(r, g, b)
     }
 }

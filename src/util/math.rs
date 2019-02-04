@@ -1,7 +1,5 @@
 //! Math utility functions.
 
-#![allow(unknown_lints)]
-
 use num::Integer;
 
 /// Returns the min of all given elements.
@@ -39,7 +37,7 @@ where
 /// Returns true if two inclusive ranges `[a1, a2]` and `[b1, b2]` overlap.
 pub fn overlaps<T>(a1: T, a2: T, b1: T, b2: T) -> bool
 where
-    T: Integer + Copy,
+    T: Copy + Integer,
 {
     let (x1, x2) = min_max(a1, a2);
     let (y1, y2) = min_max(b1, b2);
@@ -60,10 +58,9 @@ where
 }
 
 /// Returns true if `n` is between `a` and `b`, inclusive.
-#[allow(needless_pass_by_value)]
 pub fn between<T>(n: T, a: T, b: T) -> bool
 where
-    T: Integer,
+    T: Copy + Integer,
 {
     if b >= a {
         n >= a && n <= b
@@ -73,10 +70,9 @@ where
 }
 
 /// Returns true if `a` and `b` are within `n` units of each other.
-#[allow(needless_pass_by_value)]
 pub fn in_range<T>(a: T, b: T, n: T) -> bool
 where
-    T: Integer,
+    T: Copy + Integer,
 {
     diff(a, b) <= n
 }
@@ -84,7 +80,7 @@ where
 /// Returns true if `a` and `b` are within one unit of each other.
 pub fn in_one<T>(a: T, b: T) -> bool
 where
-    T: Integer,
+    T: Copy + Integer,
 {
     in_range(a, b, T::one())
 }

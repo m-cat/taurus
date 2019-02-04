@@ -1,7 +1,5 @@
 //! Random number utility functions.
 
-#![allow(unknown_lints)]
-
 use num::rational::Ratio;
 use num::{Bounded, Integer};
 use rand;
@@ -63,10 +61,9 @@ where
 }
 
 /// Returns true with `x` in `y` chance.
-#[allow(needless_pass_by_value)]
 pub fn dice<T>(x: T, y: T) -> bool
 where
-    T: Integer + SampleRange + Display,
+    T: Copy + Display + Integer + SampleRange,
 {
     debug_assert!(x <= y, format!("Assert failed: dice({}, {})", x, y));
     rand_int(T::one(), y) <= x

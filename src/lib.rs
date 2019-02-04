@@ -4,12 +4,8 @@
 // #![deny(missing_docs)]
 
 // TODO: Get to the point where we can remove this without it causing an avalanche of warnings.
-#![allow(unknown_lints)]
-#![allow(dead_code, doc_markdown, unused_imports, unused_variables)]
-// // Non-lexical lifetimes
-// #![feature(nll)]
-
-// Flame
+#![allow(dead_code, clippy::doc_markdown, unused_imports, unused_variables)]
+// Flamer
 #![cfg_attr(feature = "dev", feature(plugin, custom_attribute))]
 #![cfg_attr(feature = "dev", plugin(flamer))]
 

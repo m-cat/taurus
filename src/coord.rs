@@ -18,12 +18,12 @@ impl Coord {
     }
 
     /// Returns true if two `Coord`s are adjacent and NOT equal.
-    pub fn is_adjacent(&self, other: &Self) -> bool {
+    pub fn is_adjacent(self, other: Self) -> bool {
         in_one(self.x, other.x) && in_one(self.y, other.y) && self != other
     }
 
     /// Gets the `Coord` `n` steps in direction `dir`.
-    pub fn coord_in_dir<D>(&self, dir: &D, n: i32) -> Coord
+    pub fn coord_in_dir<D>(self, dir: &D, n: i32) -> Coord
     where
         D: Direction,
     {
@@ -81,11 +81,11 @@ mod tests {
         let coord4 = Coord::new(2, 2);
         let coord5 = Coord::new(1, 0);
 
-        assert!(coord1.is_adjacent(&coord2));
-        assert!(coord1.is_adjacent(&coord3));
-        assert!(coord1.is_adjacent(&coord5));
-        assert!(!coord2.is_adjacent(&coord3));
-        assert!(!coord3.is_adjacent(&coord4));
+        assert!(coord1.is_adjacent(coord2));
+        assert!(coord1.is_adjacent(coord3));
+        assert!(coord1.is_adjacent(coord5));
+        assert!(!coord2.is_adjacent(coord3));
+        assert!(!coord3.is_adjacent(coord4));
     }
 
     #[test]

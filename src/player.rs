@@ -77,7 +77,7 @@ pub fn player_process_event(
     match event {
         Event::Key(key) => {
             if flags.contains(input::KEY_PRESS) {
-                #[allow(match_same_arms)]
+                #[allow(clippy::match_same_arms)]
                 match key.code {
                     Left => return player.try_move_dir(dungeon, CompassDirection::W),
                     Up => return player.try_move_dir(dungeon, CompassDirection::N),
@@ -95,8 +95,6 @@ pub fn player_process_event(
                                 .unwrap();
                             println!("Done.");
                         }
-
-                        ()
                     }
 
                     _ => (),
