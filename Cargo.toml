@@ -5,9 +5,13 @@ license = "MIT"
 name = "taurus"
 readme = "README.md"
 repository = "https://github.com/m-cat/taurus"
-version = "0.1.0"
+version = "0.1.1"
 
 edition = "2018"
+
+[[bin]]
+name = "taurus"
+path = "src/bin/main.rs"
 
 [dependencies]
 failure = "0.1"
