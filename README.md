@@ -1,6 +1,11 @@
 # Taurus
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![LoC](https://tokei.rs/b1/github/m-cat/taurus)](https://github.com/m-cat/taurus)
+[![Build Status](https://travis-ci.com/m-cat/taurus.svg?branch=master)](https://travis-ci.com/m-cat/taurus)
+[![crates.io](https://img.shields.io/crates/v/taurus.svg)](https://crates.io/crates/taurus)
+[![Downloads](https://img.shields.io/crates/d/taurus.svg)](https://crates.io/crates/taurus)
+[![Issues](https://img.shields.io/github/issues-raw/m-cat/taurus.svg)](https://github.com/m-cat/taurus/issues)
+[![LoC](https://tokei.rs/b1/github/m-cat/taurus)](https://github.com/m-cat/taurus)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A roguelike game made in Rust!
 
