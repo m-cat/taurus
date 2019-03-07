@@ -18,6 +18,20 @@ Make sure you have the build dependencies:
 * Rust: [Install](https://www.rust-lang.org/en-US/install.html)
 * Libtcod: [Install](https://github.com/tomassedovic/tcod-rs#how-to-use-this)
 
+Download...
+
+```
+cargo install taurus
+```
+
+... and play:
+
+```
+taurus
+```
+
+### Running from source
+
 Download the source:
 
 ```
