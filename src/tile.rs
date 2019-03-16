@@ -2,7 +2,6 @@
 
 use crate::actor::Actor;
 use crate::console::Color;
-use crate::database::Database;
 use crate::error::GameError;
 use crate::game_data::GameData;
 use crate::item::ItemStash;
@@ -10,6 +9,7 @@ use crate::material::MaterialInfo;
 use crate::object::Object;
 use crate::ui::Draw;
 use crate::{GameResult, GAMEDATA};
+use over::Obj;
 use std::cell::{Cell, RefCell};
 use std::str::FromStr;
 use std::sync::Arc;
@@ -31,7 +31,7 @@ pub struct TileInfo {
 }
 
 impl TileInfo {
-    pub fn new(game_data: &GameData, tile_data: &Database) -> GameResult<TileInfo> {
+    pub fn new(game_data: &GameData, tile_data: &Obj) -> GameResult<TileInfo> {
         let _material = tile_data.get_obj("material")?;
         let mname = _material.get_str("name")?;
         let id = _material.id();
@@ -99,7 +99,7 @@ pub struct Tile {
 
 impl Tile {
     /// Returns a new `Tile` object.
-    pub fn new(tile_data: &Database) -> GameResult<Tile> {
+    pub fn new(tile_data: &Obj) -> GameResult<Tile> {
         let id = tile_data.id();
         let info = GAMEDATA.read().unwrap().tile_info(id);
 
@@ -115,7 +115,7 @@ impl Tile {
         })
     }
 
-    pub fn set_tile_info(&mut self, tile_data: &Database) -> GameResult<()> {
+    pub fn set_tile_info(&mut self, tile_data: &Obj) -> GameResult<()> {
         let id = tile_data.id();
 
         self.info = GAMEDATA.read().unwrap().tile_info(id);

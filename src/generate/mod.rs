@@ -4,7 +4,6 @@ mod util;
 
 use crate::actor::Actor;
 use crate::coord::Coord;
-use crate::database::{Arr, Database};
 use crate::defs::*;
 use crate::dungeon::{Dungeon, DungeonList, DungeonType};
 use crate::error::{err_unexpected, GameError};
@@ -21,6 +20,7 @@ use crate::util::rand::{dice, rand_int, rand_ratio, Choose};
 use crate::util::rectangle::Rectangle;
 use crate::{GameResult, DATABASE, GAMEDATA};
 use failure::{Fail, ResultExt};
+use over::{arr::Arr, Obj};
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::{mpsc, Arc, Mutex};
@@ -92,7 +92,7 @@ fn create_dungeon(
 }
 
 /// Generates a single depth of the dungeon.
-pub fn gen_dungeon(mut dungeon: &mut Dungeon, profile: &Database) -> GameResult<()> {
+pub fn gen_dungeon(mut dungeon: &mut Dungeon, profile: &Obj) -> GameResult<()> {
     match dungeon.dungeon_type {
         DungeonType::Room => gen_dungeon_room(&mut dungeon, profile)?,
         DungeonType::Empty => gen_dungeon_empty(&mut dungeon, profile)?,
@@ -109,7 +109,7 @@ fn gen_pits(dungeon_list: &mut DungeonList, index: usize) {
 }
 
 /// Creates an actor of type `name` and places it in a random open location in `dungeon`.
-fn gen_actor_random_coord(dungeon: &Dungeon, actor_data: &Database) -> GameResult<Actor> {
+fn gen_actor_random_coord(dungeon: &Dungeon, actor_data: &Obj) -> GameResult<Actor> {
     let coord = dungeon.random_open_coord_actor();
 
     debug_assert!(coord.is_some());
@@ -142,7 +142,7 @@ fn gen_player(dungeon_list: &mut DungeonList, depth: usize) -> GameResult<Actor>
     Ok(player)
 }
 
-fn get_dungeon_profile(dungeons_arr: &Arr, index: usize) -> GameResult<Database> {
+fn get_dungeon_profile(dungeons_arr: &Arr, index: usize) -> GameResult<Obj> {
     let dungeons_file = "dungeons.over";
 
     let arr = dungeons_arr.get(index)?.get_arr()?;
@@ -152,7 +152,7 @@ fn get_dungeon_profile(dungeons_arr: &Arr, index: usize) -> GameResult<Database>
 }
 
 #[inline]
-pub fn gen_dungeon_empty(dungeon: &mut Dungeon, profile: &Database) -> GameResult<()> {
+pub fn gen_dungeon_empty(dungeon: &mut Dungeon, profile: &Obj) -> GameResult<()> {
     dungeon.init_grid(20, 20, &profile.get_obj("wall_tile")?)?;
 
     Ok(())
@@ -171,7 +171,7 @@ struct DungeonRoomParams {
 
 /// Generates a dungeon level using the "room method".
 #[inline]
-pub fn gen_dungeon_room(dungeon: &mut Dungeon, profile: &Database) -> GameResult<()> {
+pub fn gen_dungeon_room(dungeon: &mut Dungeon, profile: &Obj) -> GameResult<()> {
     let mut room_list: Vec<Rectangle> = Vec::new();
     let mut object_list: Vec<Object> = Vec::new();
     let direction_list = vec![N, E, S, W];
@@ -252,7 +252,7 @@ fn gen_room_adjacent(
     direction: CardinalDirection,
     room_list: &[Rectangle],
     object_list: &mut Vec<Object>,
-    profile: &Database,
+    profile: &Obj,
     params: &DungeonRoomParams,
 ) -> GameResult<Option<Rectangle>> {
     let top: i32;
@@ -297,7 +297,7 @@ fn gen_room_adjacent_door(
     room: &Rectangle,
     new_room: &Rectangle,
     direction: CardinalDirection,
-    profile: &Database,
+    profile: &Obj,
 ) -> GameResult<Object> {
     let x;
     let y;
@@ -353,7 +353,7 @@ fn check_room_free(room: &Rectangle, room_list: &[Rectangle]) -> bool {
 fn init_dungeon_from_rooms(
     dungeon: &mut Dungeon,
     room_list: &[Rectangle],
-    profile: &Database,
+    profile: &Obj,
 ) -> GameResult<(i32, i32)> {
     let (mut min_left, mut min_top, mut max_right, mut max_bottom) = (0, 0, 0, 0);
 

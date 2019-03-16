@@ -3,7 +3,6 @@
 use crate::actor::*;
 use crate::console::DrawConsole;
 use crate::coord::Coord;
-use crate::database::Database;
 use crate::defs::{gameratio_max, GameRatio};
 use crate::error::GameError;
 use crate::game_data::GameData;
@@ -14,6 +13,7 @@ use crate::tile::Tile;
 use crate::util::rand::rand_int;
 use crate::{GameLoopOutcome, GameResult, DATABASE, GAMEDATA};
 use failure::ResultExt;
+use over::Obj;
 use std::cell::{Cell, RefCell};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
@@ -50,7 +50,7 @@ pub struct Dungeon {
 // }
 
 impl Dungeon {
-    pub fn new(danger_level: u32, profile_data: &Database) -> GameResult<Dungeon> {
+    pub fn new(danger_level: u32, profile_data: &Obj) -> GameResult<Dungeon> {
         let dungeon_type = DungeonType::from_str(&profile_data.get_str("type")?)?;
         let ui_settings = GAMEDATA.read().unwrap().ui_settings;
         let fov_width = (ui_settings.game_width / 2) as i32;
@@ -76,12 +76,7 @@ impl Dungeon {
         Ok(dungeon)
     }
 
-    pub fn init_grid(
-        &mut self,
-        width: usize,
-        height: usize,
-        tile_data: &Database,
-    ) -> GameResult<()> {
+    pub fn init_grid(&mut self, width: usize, height: usize, tile_data: &Obj) -> GameResult<()> {
         self.width = width;
         self.height = height;
         self.tile_grid = vec![

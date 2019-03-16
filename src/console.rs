@@ -6,10 +6,10 @@
 pub use tcod::input::{self, Event, EventFlags, Key, KeyCode};
 
 use crate::constants;
-use crate::database::Database;
 use crate::defs::*;
 use crate::util::convert::color_code_to_rgb;
 use crate::{GameError, GameResult};
+use over::Obj;
 use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
@@ -67,7 +67,7 @@ pub struct ConsoleSettings {
 }
 
 impl ConsoleSettings {
-    pub fn new(data: &Database) -> GameResult<ConsoleSettings> {
+    pub fn new(data: &Obj) -> GameResult<ConsoleSettings> {
         // Load all data from the database.
 
         let title = data.get_str("title")?;

@@ -1,10 +1,10 @@
 //! Game materials.
 
 use crate::console::Color;
-use crate::database::Database;
 use crate::defs::bigr_to_f32;
 use crate::game_data::GameData;
 use crate::GameResult;
+use over::Obj;
 use std::str::FromStr;
 
 #[derive(Debug)]
@@ -17,7 +17,7 @@ pub struct MaterialInfo {
 }
 
 impl MaterialInfo {
-    pub fn new(game_data: &GameData, material_data: &Database) -> GameResult<MaterialInfo> {
+    pub fn new(game_data: &GameData, material_data: &Obj) -> GameResult<MaterialInfo> {
         let name = material_data.get_str("name")?;
         let adjective = material_data.get_str("adjective")?;
 

@@ -1,17 +1,17 @@
 //! Name generation.
 
-use crate::database::Database;
 use crate::defs::*;
 use crate::util::rand::*;
 use crate::util::string;
 use crate::GameResult;
 use failure::ResultExt;
 use num_traits::One;
+use over::Obj;
 
 /// Returns a randomly-generated name.
 #[allow(clippy::collapsible_if)]
-pub fn name_gen(profile: &Database) -> GameResult<String> {
-    fn helper(profile: &Database, name: &str) -> GameResult<(String, GameRatio)> {
+pub fn name_gen(profile: &Obj) -> GameResult<String> {
+    fn helper(profile: &Obj, name: &str) -> GameResult<(String, GameRatio)> {
         let tup = profile.get_tup(name)?;
         Ok((
             tup.get(0)?

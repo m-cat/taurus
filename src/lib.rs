@@ -31,7 +31,6 @@ pub mod util;
 pub mod actor;
 pub mod console;
 pub mod coord;
-pub mod database;
 pub mod defs;
 pub mod dungeon;
 pub mod error;
@@ -50,10 +49,10 @@ mod constants;
 mod tests;
 
 use crate::console::DrawConsole;
-use crate::database::{load_data, Database};
 use crate::dungeon::{Dungeon, DungeonList};
 use crate::error::GameError;
 use crate::game_data::{GameData, GameLoopOutcome};
+use over::Obj;
 use std::sync::{Arc, Mutex, RwLock};
 
 /// A generic result type used throughout the game.
@@ -61,7 +60,7 @@ pub type GameResult<T> = Result<T, failure::Error>;
 
 lazy_static! {
     /// Global database reference;
-    static ref DATABASE: RwLock<Database> = {
+    static ref DATABASE: RwLock<Obj> = {
         RwLock::new(handle_error(dev_time!(load_data(), "Loading database...")))
     };
 
@@ -141,6 +140,11 @@ pub fn run_game() -> GameResult<()> {
     Ok(())
 }
 
+/// Loads all data for the game.
+fn load_data() -> GameResult<Obj> {
+    Ok(Obj::from_file("data/game/main.over")?)
+}
+
 fn init_new_game() -> GameResult<DungeonList> {
     // Generate game.
     let dungeon_list = dev_time!(DungeonList::new()?, "Generating game world...");
@@ -156,7 +160,7 @@ pub fn handle_error<T>(result: Result<T, failure::Error>) -> T {
         println!("------");
         println!("Error:");
         let mut i = 1;
-        for cause in error.causes() {
+        for cause in error.iter_chain() {
             println!("{}{}", "  ".repeat(i), cause);
             i += 1;
         }

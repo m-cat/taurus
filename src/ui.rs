@@ -3,12 +3,12 @@
 use crate::console::Color;
 use crate::constants;
 use crate::coord::Coord;
-use crate::database::Database;
 use crate::defs::big_to_usize;
 use crate::dungeon::Dungeon;
 use crate::game_data::GameData;
 use crate::util::rectangle::Rectangle;
 use crate::{GameResult, CONSOLE, GAMEDATA};
+use over::Obj;
 use std::cell::Cell;
 use std::str::FromStr;
 
@@ -39,7 +39,7 @@ pub struct UiSettings {
 }
 
 impl UiSettings {
-    pub fn new(data: &Database) -> GameResult<UiSettings> {
+    pub fn new(data: &Obj) -> GameResult<UiSettings> {
         // Load all data from the database.
 
         let game_width = big_to_usize(data.get_int("game_width")?)?;

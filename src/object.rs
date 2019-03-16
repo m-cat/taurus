@@ -2,7 +2,6 @@
 
 use crate::console::Color;
 use crate::coord::Coord;
-use crate::database::Database;
 use crate::defs::*;
 use crate::dungeon::{ActResult, Dungeon};
 use crate::game_data::GameData;
@@ -11,6 +10,7 @@ use crate::ui::Draw;
 use crate::util::rand;
 use crate::{GameError, GameResult, GAMEDATA};
 use failure::ResultExt;
+use over::Obj;
 use std::cell::Cell;
 use std::cell::RefCell;
 use std::cmp::Ordering;
@@ -86,7 +86,7 @@ pub struct Object {
 
 impl Object {
     /// Creates a new `Object` at the given coordinates.
-    pub fn new(coord: Coord, object_data: &Database, active: bool) -> GameResult<Object> {
+    pub fn new(coord: Coord, object_data: &Obj, active: bool) -> GameResult<Object> {
         // Load all data from the database.
 
         let object_type = ObjectType::from_str(object_data.get_str("type")?.as_str())?;
@@ -126,7 +126,7 @@ impl Object {
     pub fn insert_new(
         dungeon: &mut Dungeon,
         coord: Coord,
-        object_data: &Database,
+        object_data: &Obj,
         active: bool,
     ) -> GameResult<()> {
         let o = Self::new(coord, object_data, active)

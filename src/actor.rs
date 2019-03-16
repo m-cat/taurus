@@ -2,7 +2,6 @@
 
 use crate::console::{Color, DrawConsole};
 use crate::coord::Coord;
-use crate::database::Database;
 use crate::defs::*;
 use crate::dungeon::{ActResult, Dungeon};
 use crate::game_data::GameData;
@@ -12,6 +11,7 @@ use crate::ui::Draw;
 use crate::util::direction::CompassDirection;
 use crate::{GameError, GameResult, GAMEDATA};
 use failure::ResultExt;
+use over::Obj;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::str::FromStr;
@@ -53,7 +53,7 @@ pub struct Actor {
 
 impl Actor {
     /// Creates a new actor at the given coordinates.
-    pub fn new(coord: Coord, data: &Database) -> GameResult<Actor> {
+    pub fn new(coord: Coord, data: &Obj) -> GameResult<Actor> {
         // Load all data from the database.
 
         let name = data.get_str("name")?;
@@ -98,11 +98,7 @@ impl Actor {
         Ok(actor)
     }
 
-    pub fn insert_new(
-        dungeon: &mut Dungeon,
-        coord: Coord,
-        actor_data: &Database,
-    ) -> GameResult<()> {
+    pub fn insert_new(dungeon: &mut Dungeon, coord: Coord, actor_data: &Obj) -> GameResult<()> {
         let a = Self::new(coord, actor_data)
             .context(format!("Could not load actor:\n{}", actor_data))?;
         dungeon.add_actor(a);
