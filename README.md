@@ -9,7 +9,7 @@
 
 A roguelike game made in Rust!
 
-![Descent](https://github.com/m-cat/taurus/blob/master/screenshot.png)
+![Taurus](https://github.com/m-cat/taurus/blob/master/screenshot.png)
 
 ## Instructions
 
