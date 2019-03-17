@@ -16,7 +16,7 @@ A roguelike game made in Rust!
 Make sure you have the build dependencies:
 
 * Rust: [Install](https://www.rust-lang.org/en-US/install.html)
-* Libtcod: [Install](https://github.com/tomassedovic/tcod-rs#how-to-use-this)
+* Libtcod's dependencies: [Install](https://github.com/tomassedovic/tcod-rs#how-to-use-this)
 
 Download...
 

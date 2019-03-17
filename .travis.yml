@@ -6,6 +6,17 @@ os:
   - linux
   - osx
   - windows
+addons:
+  apt:
+    packages:
+      - gcc
+      - g++
+      - make
+      - libsdl2-dev
+  homebrew:
+    packages:
+      - pkg-config
+      - sdl2
 language: rust
 rust:
   - stable
