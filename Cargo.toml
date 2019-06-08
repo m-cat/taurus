@@ -15,14 +15,14 @@ path = "src/bin/main.rs"
 
 [dependencies]
 failure = "0.1"
-flame = { version = "0.1.9", optional = true }
-flamer = { version = "0.2.0", optional = true }
-lazy_static = "1.0"
+flame = { version = "0.2.2", optional = true }
+flamer = { version = "0.3.0", optional = true }
+lazy_static = "1"
 num = "0.2"
 num-traits = "0.2"
-over = "0.6.4"
-rand = "0.4"
-tcod = "0.13"
+over = "0.6"
+rand = "0.6"
+tcod = "0.14"
 
 [features]
 default = []

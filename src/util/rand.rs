@@ -3,7 +3,8 @@
 use num::rational::Ratio;
 use num::{Bounded, Integer};
 use rand;
-use rand::distributions::range::SampleRange;
+use rand::distributions::uniform::SampleUniform;
+use rand::seq::SliceRandom;
 use rand::Rng;
 use std::fmt::Display;
 
@@ -21,7 +22,7 @@ pub trait Choose<T> {
 
 impl<T> Choose<T> for Vec<T> {
     fn choose(&self) -> Option<&T> {
-        rand::thread_rng().choose(self)
+        self.as_slice().choose(&mut rand::thread_rng())
     }
 
     fn choose_index(&self) -> Option<usize> {
@@ -44,7 +45,7 @@ impl<T> Choose<T> for Vec<T> {
 /// Returns a random Integer in the range `[x, y]` inclusive.
 pub fn rand_int<T>(x: T, y: T) -> T
 where
-    T: Integer + SampleRange,
+    T: Integer + SampleUniform,
 {
     rand::thread_rng().gen_range(x, y + T::one())
 }
@@ -55,7 +56,7 @@ where
 /// This function can result in an overflow - use only for known inputs.
 pub fn rand_ratio<T>(x: T, y: T, d: T) -> Ratio<T>
 where
-    T: Clone + Copy + Integer + SampleRange,
+    T: Clone + Copy + Integer + SampleUniform,
 {
     Ratio::new(rand_int(x * d, y * d), d)
 }
@@ -63,7 +64,7 @@ where
 /// Returns true with `x` in `y` chance.
 pub fn dice<T>(x: T, y: T) -> bool
 where
-    T: Copy + Display + Integer + SampleRange,
+    T: Copy + Display + Integer + SampleUniform,
 {
     debug_assert!(x <= y, format!("Assert failed: dice({}, {})", x, y));
     rand_int(T::one(), y) <= x
@@ -72,7 +73,7 @@ where
 /// Returns true with `x` chance, where 0 <= `x` <= 1.
 pub fn chance<T>(x: Ratio<T>) -> bool
 where
-    T: Bounded + Clone + Copy + Integer + SampleRange,
+    T: Bounded + Clone + Copy + Integer + SampleUniform,
 {
     let max = T::max_value() - T::one();
     Ratio::new(rand_int(T::min_value(), max), max) <= x
